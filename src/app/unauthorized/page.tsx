@@ -8,13 +8,13 @@ export default function UnauthorizedPage() {
       <div className="max-w-md text-center">
         <p className="text-sm font-medium text-zinc-500">403</p>
         <h1 className="mt-2 text-2xl font-semibold text-zinc-950">
-          Unauthorized access
+          접근 권한이 없습니다
         </h1>
         <p className="mt-3 text-sm text-zinc-600">
-          Your current role does not have permission to view this workspace area.
+          현재 계정 역할로는 이 업무 공간을 볼 수 없습니다.
         </p>
         <Link className={buttonVariants({ className: "mt-6" })} href="/dashboard">
-          Return to dashboard
+          대시보드로 돌아가기
         </Link>
       </div>
     </main>
