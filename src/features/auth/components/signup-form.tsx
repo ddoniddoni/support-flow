@@ -20,19 +20,23 @@ function getSignupErrorMessage(message: string) {
     return "이미 가입된 이메일입니다. 로그인으로 진행해 주세요.";
   }
 
+  if (normalizedMessage.includes("invalid") && normalizedMessage.includes("email")) {
+    return "이메일 형식이 올바르지 않습니다. 다른 이메일을 입력해 주세요.";
+  }
+
   if (normalizedMessage.includes("password")) {
-    return "비밀번호가 Supabase 보안 정책을 통과하지 못했습니다. 더 긴 비밀번호를 사용해 주세요.";
+    return "비밀번호가 보안 기준을 통과하지 못했습니다. 더 긴 비밀번호를 사용해 주세요.";
   }
 
   if (normalizedMessage.includes("database")) {
-    return "회원 프로필 생성 중 오류가 발생했습니다. Supabase SQL 스키마와 트리거가 실행됐는지 확인해 주세요.";
+    return "회원가입 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.";
   }
 
   if (normalizedMessage.includes("rate limit")) {
     return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
   }
 
-  return `회원가입을 완료하지 못했습니다. Supabase 응답: ${message}`;
+  return "회원가입을 완료하지 못했습니다. 입력한 정보를 다시 확인해 주세요.";
 }
 
 export function SignupForm() {
@@ -70,6 +74,10 @@ export function SignupForm() {
     });
 
     if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Supabase signup error:", error.message);
+      }
+
       setFormError(getSignupErrorMessage(error.message));
       return;
     }
