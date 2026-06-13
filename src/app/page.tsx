@@ -31,27 +31,27 @@ import {
 
 const metrics = [
   {
-    label: "Open tickets",
+    label: "접수된 문의",
     value: "42",
-    detail: "12 urgent or high priority",
+    detail: "긴급 또는 높음 우선순위 12건",
     icon: Ticket,
   },
   {
-    label: "In progress",
+    label: "처리 중",
     value: "18",
-    detail: "Across 6 active agents",
+    detail: "상담원 6명이 대응 중",
     icon: Clock3,
   },
   {
-    label: "Resolved today",
+    label: "오늘 해결",
     value: "27",
-    detail: "Median first response 22m",
+    detail: "첫 응답 중앙값 22분",
     icon: CheckCircle2,
   },
   {
-    label: "Internal notes",
+    label: "내부 메모",
     value: "84",
-    detail: "Operational context captured",
+    detail: "운영 맥락을 팀 내부에 기록",
     icon: MessageSquareText,
   },
 ];
@@ -59,29 +59,43 @@ const metrics = [
 const tickets = [
   {
     id: "SUP-1048",
-    title: "Billing export fails for Q2 invoices",
-    customer: "Northstar Labs",
+    title: "2분기 청구서 내보내기가 실패합니다",
+    customer: "노스스타랩스",
     status: "in_progress",
     priority: "urgent",
-    assignee: "Mina Park",
+    assignee: "박미나",
   },
   {
     id: "SUP-1047",
-    title: "SSO users intermittently redirected",
-    customer: "AtlasCloud",
+    title: "SSO 사용자가 간헐적으로 로그인 화면으로 돌아갑니다",
+    customer: "아틀라스클라우드",
     status: "open",
     priority: "high",
-    assignee: "Unassigned",
+    assignee: "미배정",
   },
   {
     id: "SUP-1046",
-    title: "Need audit log for workspace role changes",
-    customer: "BrightOps",
+    title: "워크스페이스 권한 변경 이력이 필요합니다",
+    customer: "브라이트옵스",
     status: "resolved",
     priority: "medium",
-    assignee: "Daniel Kim",
+    assignee: "김다니엘",
   },
 ];
+
+const statusLabels: Record<string, string> = {
+  open: "접수",
+  in_progress: "처리 중",
+  resolved: "해결",
+  closed: "종료",
+};
+
+const priorityLabels: Record<string, string> = {
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+  urgent: "긴급",
+};
 
 function priorityTone(priority: string) {
   if (priority === "urgent") return "border-red-200 bg-red-50 text-red-700";
@@ -102,16 +116,16 @@ export default function Home() {
               <div>
                 <p className="text-sm font-medium text-zinc-500">SupportFlow</p>
                 <h1 className="text-2xl font-semibold tracking-normal text-zinc-950">
-                  Support operations dashboard
+                  고객지원 운영 대시보드
                 </h1>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link className={buttonVariants({ variant: "outline" })} href="/login">
-                Login
+                로그인
               </Link>
               <Link className={buttonVariants()} href="/dashboard">
-                Open dashboard
+                대시보드 열기
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
@@ -141,20 +155,20 @@ export default function Home() {
       <section className="mx-auto grid max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[1fr_360px] lg:px-8">
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>Priority queue</CardTitle>
+            <CardTitle>우선 처리 문의</CardTitle>
             <CardDescription>
-              Table-first ticket workflow with role-aware actions planned.
+              문의 목록을 중심으로 담당자, 상태, 우선순위를 빠르게 확인하는 운영 화면입니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ticket</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Assignee</TableHead>
+                  <TableHead>문의</TableHead>
+                  <TableHead>고객사</TableHead>
+                  <TableHead>상태</TableHead>
+                  <TableHead>우선순위</TableHead>
+                  <TableHead>담당자</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -170,14 +184,14 @@ export default function Home() {
                     </TableCell>
                     <TableCell>{ticket.customer}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{ticket.status}</Badge>
+                      <Badge variant="outline">{statusLabels[ticket.status]}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         className={priorityTone(ticket.priority)}
                         variant="outline"
                       >
-                        {ticket.priority}
+                        {priorityLabels[ticket.priority]}
                       </Badge>
                     </TableCell>
                     <TableCell>{ticket.assignee}</TableCell>
@@ -196,25 +210,24 @@ export default function Home() {
                   className="size-5 text-emerald-600"
                   aria-hidden="true"
                 />
-                Role model
+                역할별 권한
               </CardTitle>
               <CardDescription>
-                Customer, agent, and admin paths are scaffolded for protected
-                routing.
+                고객, 상담원, 관리자의 접근 범위가 분리된 운영 구조를 준비합니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               <div className="flex items-center justify-between">
-                <span>Customer</span>
-                <Badge variant="secondary">Own tickets</Badge>
+                <span>고객</span>
+                <Badge variant="secondary">내 문의</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span>Agent</span>
-                <Badge variant="secondary">Assigned queue</Badge>
+                <span>상담원</span>
+                <Badge variant="secondary">배정 문의</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span>Admin</span>
-                <Badge variant="secondary">All operations</Badge>
+                <span>관리자</span>
+                <Badge variant="secondary">전체 운영</Badge>
               </div>
             </CardContent>
           </Card>
@@ -226,15 +239,14 @@ export default function Home() {
                   className="size-5 text-amber-600"
                   aria-hidden="true"
                 />
-                Next implementation step
+                다음 구현 단계
               </CardTitle>
               <CardAction>
                 <Badge variant="outline">Phase 2</Badge>
               </CardAction>
             </CardHeader>
             <CardContent className="text-sm text-zinc-600">
-              Connect Supabase auth, define database tables, and replace sample
-              dashboard data with TanStack Query hooks.
+              Supabase 인증과 실제 문의 데이터를 연결하고 TanStack Query 기반 화면으로 확장합니다.
             </CardContent>
           </Card>
         </div>
