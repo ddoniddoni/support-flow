@@ -250,11 +250,13 @@ When implementing features:
 
 ## Git workflow
 
-Use `main` as the stable branch and `develop` as the integration branch.
+Use `develop` as the main working and integration branch for this project.
+Do not use `master` for project work.
 
-Do not work directly on `main` or `develop` unless explicitly requested.
+Do not work directly on `develop` for Phase work unless explicitly requested.
 
-Each Phase or focused task should use a dedicated branch.
+Each Phase must use a dedicated branch before implementation starts.
+Small non-Phase tasks may also use a focused branch.
 
 Branch naming examples:
 
@@ -278,6 +280,7 @@ For each Phase or focused task:
 6. Push the task branch to the remote repository.
 7. Merge the task branch into `develop`.
 8. Push `develop`.
+9. Leave the working tree clean before starting the next Phase.
 
 Before starting a new Phase:
 

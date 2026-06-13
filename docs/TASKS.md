@@ -1,5 +1,13 @@
 # SupportFlow Tasks
 
+## Phase workflow
+
+- Start every Phase from the latest `develop`.
+- Create a dedicated Phase branch before implementation.
+- Push the Phase branch after the work is committed.
+- Merge the Phase branch back into `develop` after verification.
+- Push `develop` after the merge.
+
 ## Phase 1: Project setup
 
 - [ ] Create Next.js project with TypeScript
