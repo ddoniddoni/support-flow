@@ -141,6 +141,29 @@ npm.cmd run dev
 - `any`는 피하고, 도메인 타입을 명확히 정의합니다.
 - 주요 화면마다 로딩, 에러, 빈 상태, 권한 없음 상태를 함께 고려합니다.
 
+## Git 작업 방식
+
+이 프로젝트는 `master`를 사용하지 않고, `develop`을 기본 통합 브랜치처럼 사용합니다.
+
+Phase 단위 작업은 항상 별도 브랜치에서 진행합니다.
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b phase/03-auth
+```
+
+작업이 끝나면 검증 후 Phase 브랜치를 원격에 push하고, `develop`에 merge한 뒤 `develop`도 다시 push합니다.
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+git push -u origin phase/03-auth
+git checkout develop
+git merge phase/03-auth
+git push origin develop
+```
+
 ## 데모 계정
 
 Supabase 인증과 seed data가 준비되면 아래 형식으로 데모 계정을 추가할 예정입니다.
