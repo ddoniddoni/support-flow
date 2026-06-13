@@ -1,6 +1,9 @@
 import { EmptyState } from "@/components/common/empty-state";
+import { requireServerProfile } from "@/features/auth/api/server-auth";
 
-export default function NewTicketPage() {
+export default async function NewTicketPage() {
+  await requireServerProfile();
+
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
       <EmptyState

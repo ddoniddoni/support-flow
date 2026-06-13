@@ -14,6 +14,10 @@ export async function getCurrentUser(
   } = await supabase.auth.getUser();
 
   if (error) {
+    if (error.name === "AuthSessionMissingError") {
+      return null;
+    }
+
     throw error;
   }
 
@@ -33,7 +37,7 @@ export async function getCurrentProfile(
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;

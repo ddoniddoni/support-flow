@@ -30,12 +30,12 @@
 
 ## Phase 3: Authentication
 
-- [ ] Implement signup page
-- [ ] Implement login page
-- [ ] Implement logout
-- [ ] Fetch current user profile
-- [ ] Protect authenticated routes
-- [ ] Redirect unauthorized users
+- [x] Implement signup page
+- [x] Implement login page
+- [x] Implement logout
+- [x] Fetch current user profile
+- [x] Protect authenticated routes
+- [x] Redirect unauthorized users
 
 ## Phase 4: Role-based access
 

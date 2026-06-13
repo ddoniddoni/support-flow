@@ -80,7 +80,45 @@ before update on public.tickets
 for each row
 execute function public.set_updated_at();
 
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email, name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
+    coalesce((new.raw_user_meta_data ->> 'role')::public.user_role, 'customer')
+  )
+  on conflict (id) do nothing;
+
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row
+execute function public.handle_new_user();
+
 alter table public.profiles enable row level security;
 alter table public.tickets enable row level security;
 alter table public.ticket_replies enable row level security;
 alter table public.ticket_logs enable row level security;
+
+create policy "Profiles are visible to the owner"
+on public.profiles
+for select
+to authenticated
+using (auth.uid() = id);
+
+create policy "Profiles can be updated by the owner"
+on public.profiles
+for update
+to authenticated
+using (auth.uid() = id)
+with check (auth.uid() = id);

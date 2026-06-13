@@ -1,6 +1,9 @@
 import { EmptyState } from "@/components/common/empty-state";
+import { requireServerRole } from "@/features/auth/api/server-auth";
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await requireServerRole(["admin"]);
+
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
       <EmptyState
