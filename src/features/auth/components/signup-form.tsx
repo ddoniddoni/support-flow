@@ -13,6 +13,28 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 import { signupSchema, type SignupInput } from "../schemas/auth-schema";
 
+function getSignupErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("already registered")) {
+    return "이미 가입된 이메일입니다. 로그인으로 진행해 주세요.";
+  }
+
+  if (normalizedMessage.includes("password")) {
+    return "비밀번호가 Supabase 보안 정책을 통과하지 못했습니다. 더 긴 비밀번호를 사용해 주세요.";
+  }
+
+  if (normalizedMessage.includes("database")) {
+    return "회원 프로필 생성 중 오류가 발생했습니다. Supabase SQL 스키마와 트리거가 실행됐는지 확인해 주세요.";
+  }
+
+  if (normalizedMessage.includes("rate limit")) {
+    return "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  return `회원가입을 완료하지 못했습니다. Supabase 응답: ${message}`;
+}
+
 export function SignupForm() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
@@ -48,7 +70,7 @@ export function SignupForm() {
     });
 
     if (error) {
-      setFormError("회원가입을 완료하지 못했습니다. 입력값을 확인해 주세요.");
+      setFormError(getSignupErrorMessage(error.message));
       return;
     }
 
