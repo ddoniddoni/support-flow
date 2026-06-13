@@ -48,6 +48,7 @@ SupportFlow의 핵심 목표는 “실무에서 다룰 법한 관리자 화면�
 ## 핵심 기능
 
 - 이메일 기반 로그인 및 회원가입
+- Supabase Auth 기반 로그아웃
 - 고객, 상담원, 관리자 역할 모델
 - 보호 라우트와 권한 없음 페이지
 - 티켓 생성 폼
@@ -65,7 +66,7 @@ SupportFlow의 핵심 목표는 “실무에서 다룰 법한 관리자 화면�
 
 현재는 Next.js 프로젝트 기반과 주요 라우트, UI 컴포넌트, 도메인 타입, Supabase 클라이언트, TanStack Query Provider, 티켓 폼 스키마, 기본 페이지 구조가 준비되어 있습니다.
 
-Supabase 테이블 초안과 TypeScript Database 타입도 함께 준비되어 있어, 다음 단계에서는 인증 화면을 실제 Supabase auth 흐름에 연결하고 샘플 UI를 TanStack Query 기반의 실제 티켓 데이터 흐름으로 확장할 예정입니다.
+Supabase 테이블 초안과 TypeScript Database 타입도 함께 준비되어 있고, 로그인/회원가입/로그아웃 흐름은 Supabase Auth와 연결되어 있습니다. 보호가 필요한 주요 업무 화면은 로그인 전 접근 시 로그인 화면으로 이동합니다.
 
 ## 폴더 구조
 

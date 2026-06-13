@@ -1,12 +1,19 @@
-import { EmptyState } from "@/components/common/empty-state";
+import { AuthFormShell } from "@/features/auth/components/auth-form-shell";
+import { LoginForm } from "@/features/auth/components/login-form";
+import { redirectAuthenticatedUser } from "@/features/auth/api/server-auth";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  await redirectAuthenticatedUser();
+
   return (
-    <main className="min-h-screen bg-zinc-50 p-6">
-      <EmptyState
-        title="로그인 화면 준비 중"
-        description="이메일과 비밀번호로 로그인하고, 입력 검증과 오류 메시지, 제출 중 상태를 함께 제공할 예정입니다."
-      />
-    </main>
+    <AuthFormShell
+      title="로그인"
+      description="지원팀 업무 공간에 접속하려면 계정으로 로그인해 주세요."
+      footerText="아직 계정이 없나요?"
+      footerHref="/signup"
+      footerLinkText="회원가입"
+    >
+      <LoginForm />
+    </AuthFormShell>
   );
 }

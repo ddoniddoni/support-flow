@@ -1,10 +1,13 @@
 import { EmptyState } from "@/components/common/empty-state";
+import { requireServerProfile } from "@/features/auth/api/server-auth";
 
 export default async function TicketDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireServerProfile();
+
   const { id } = await params;
 
   return (
