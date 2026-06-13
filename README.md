@@ -65,7 +65,7 @@ SupportFlow의 핵심 목표는 “실무에서 다룰 법한 관리자 화면�
 
 현재는 Next.js 프로젝트 기반과 주요 라우트, UI 컴포넌트, 도메인 타입, Supabase 클라이언트, TanStack Query Provider, 티켓 폼 스키마, 기본 페이지 구조가 준비되어 있습니다.
 
-앞으로 Supabase 인증과 실제 데이터 연동을 연결하고, 샘플 UI를 TanStack Query 기반의 실제 티켓 데이터 흐름으로 확장할 예정입니다.
+Supabase 테이블 초안과 TypeScript Database 타입도 함께 준비되어 있어, 다음 단계에서는 인증 화면을 실제 Supabase auth 흐름에 연결하고 샘플 UI를 TanStack Query 기반의 실제 티켓 데이터 흐름으로 확장할 예정입니다.
 
 ## 폴더 구조
 
@@ -114,6 +114,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 환경 변수를 수정한 뒤에는 개발 서버를 다시 시작해야 합니다.
+
+초기 테이블은 Supabase SQL editor에서 `docs/SUPABASE_SCHEMA.sql`을 실행해 준비할 수 있습니다.
 
 ## 실행 방법
 
@@ -173,4 +175,5 @@ Deployment URL: 준비 예정
 프로젝트 기획과 작업 목록은 아래 문서에서 관리합니다.
 
 - `docs/PROJECT_SPEC.md`
+- `docs/SUPABASE_SCHEMA.sql`
 - `docs/TASKS.md`

@@ -12,13 +12,13 @@
 
 ## Phase 2: Supabase setup
 
-- [ ] Configure Supabase client
-- [ ] Create auth helper functions
-- [ ] Define database types
-- [ ] Prepare profiles table
-- [ ] Prepare tickets table
-- [ ] Prepare ticket_replies table
-- [ ] Prepare ticket_logs table
+- [x] Configure Supabase client
+- [x] Create auth helper functions
+- [x] Define database types
+- [x] Prepare profiles table
+- [x] Prepare tickets table
+- [x] Prepare ticket_replies table
+- [x] Prepare ticket_logs table
 
 ## Phase 3: Authentication
 
