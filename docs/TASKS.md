@@ -1,0 +1,126 @@
+# SupportFlow Tasks
+
+## Phase 1: Project setup
+
+- [ ] Create Next.js project with TypeScript
+- [ ] Configure Tailwind CSS
+- [ ] Install and configure shadcn/ui
+- [ ] Set up base layout
+- [ ] Set up route groups if useful
+- [ ] Create common layout components
+- [ ] Create basic README
+
+## Phase 2: Supabase setup
+
+- [ ] Configure Supabase client
+- [ ] Create auth helper functions
+- [ ] Define database types
+- [ ] Prepare profiles table
+- [ ] Prepare tickets table
+- [ ] Prepare ticket_replies table
+- [ ] Prepare ticket_logs table
+
+## Phase 3: Authentication
+
+- [ ] Implement signup page
+- [ ] Implement login page
+- [ ] Implement logout
+- [ ] Fetch current user profile
+- [ ] Protect authenticated routes
+- [ ] Redirect unauthorized users
+
+## Phase 4: Role-based access
+
+- [ ] Define role type: customer, agent, admin
+- [ ] Create role guard utility
+- [ ] Restrict customer to own tickets
+- [ ] Restrict agent to assigned tickets
+- [ ] Allow admin to access all tickets
+- [ ] Create unauthorized page
+
+## Phase 5: Ticket creation
+
+- [ ] Create ticket schema with Zod
+- [ ] Create ticket form with React Hook Form
+- [ ] Add validation messages
+- [ ] Add submit loading state
+- [ ] Add success/error toast
+- [ ] Redirect after successful creation
+
+## Phase 6: Ticket list
+
+- [ ] Create ticket list API
+- [ ] Create useTickets hook with TanStack Query
+- [ ] Create ticket table
+- [ ] Add search
+- [ ] Add status filter
+- [ ] Add priority filter
+- [ ] Add category filter
+- [ ] Add pagination
+- [ ] Store filters in URL query parameters
+- [ ] Add loading skeleton
+- [ ] Add error state
+- [ ] Add empty state
+
+## Phase 7: Ticket detail
+
+- [ ] Create ticket detail API
+- [ ] Create useTicket hook
+- [ ] Show ticket metadata
+- [ ] Show replies
+- [ ] Show internal notes
+- [ ] Show activity logs
+- [ ] Add detail skeleton
+- [ ] Add not-found state
+
+## Phase 8: Ticket actions
+
+- [ ] Change ticket status
+- [ ] Assign agent
+- [ ] Change priority
+- [ ] Add optimistic update where appropriate
+- [ ] Add activity log after important changes
+- [ ] Handle failed mutation rollback
+
+## Phase 9: Replies and internal notes
+
+- [ ] Create reply form
+- [ ] Create internal note form
+- [ ] Separate customer-visible replies and internal notes
+- [ ] Add validation
+- [ ] Add loading state
+- [ ] Update ticket detail after submission
+
+## Phase 10: Dashboard
+
+- [ ] Create dashboard stats API
+- [ ] Show total tickets
+- [ ] Show open tickets
+- [ ] Show in-progress tickets
+- [ ] Show resolved tickets
+- [ ] Show urgent tickets
+- [ ] Show category distribution
+- [ ] Show status distribution
+
+## Phase 11: Polish
+
+- [ ] Improve responsive layout
+- [ ] Add mobile table alternative if needed
+- [ ] Add 404 page
+- [ ] Add unauthorized page
+- [ ] Add loading.tsx and error.tsx where useful
+- [ ] Remove unused code
+- [ ] Remove any unnecessary `any`
+- [ ] Run lint
+- [ ] Run build
+
+## Phase 12: Portfolio documentation
+
+- [ ] Write project intro
+- [ ] Add demo accounts
+- [ ] Add feature list
+- [ ] Add tech stack explanation
+- [ ] Add folder structure explanation
+- [ ] Add troubleshooting section
+- [ ] Add deployment link
+- [ ] Add screenshots
