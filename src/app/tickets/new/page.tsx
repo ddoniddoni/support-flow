@@ -7,11 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { requireServerProfile } from "@/features/auth/api/server-auth";
+import { requireServerRole } from "@/features/auth/api/server-auth";
 import { CreateTicketForm } from "@/features/tickets/components/create-ticket-form";
 
 export default async function NewTicketPage() {
-  await requireServerProfile();
+  await requireServerRole(["customer"]);
 
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
