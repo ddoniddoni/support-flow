@@ -3,7 +3,7 @@ import type { Tables } from "@/types/database";
 import type { TicketPriority, TicketStatus } from "@/types/domain";
 
 import type { CreateTicketInput } from "../schemas/ticket-schema";
-import type { TicketSortOption } from "../types";
+import type { TicketDetailData, TicketSortOption } from "../types";
 
 export async function createTicket(input: CreateTicketInput) {
   const supabase = createSupabaseBrowserClient();
@@ -121,5 +121,79 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
     page,
     pageSize,
     pageCount: Math.max(Math.ceil((count ?? 0) / pageSize), 1),
+  };
+}
+
+export async function getTicketDetail({
+  ticketId,
+  profile,
+}: {
+  ticketId: string;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+}): Promise<TicketDetailData> {
+  const supabase = createSupabaseBrowserClient();
+
+  let ticketQuery = supabase.from("tickets").select("*").eq("id", ticketId);
+
+  if (profile.role === "customer") {
+    ticketQuery = ticketQuery.eq("customer_id", profile.id);
+  }
+
+  if (profile.role === "agent") {
+    ticketQuery = ticketQuery.eq("assignee_id", profile.id);
+  }
+
+  const { data: ticket, error: ticketError } = await ticketQuery.maybeSingle();
+
+  if (ticketError) {
+    throw ticketError;
+  }
+
+  if (!ticket) {
+    return {
+      ticket: null,
+      replies: [],
+      internalNotes: [],
+      logs: [],
+    };
+  }
+
+  let repliesQuery = supabase
+    .from("ticket_replies")
+    .select("*")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true });
+
+  if (profile.role === "customer") {
+    repliesQuery = repliesQuery.eq("is_internal", false);
+  }
+
+  const { data: replies, error: repliesError } = await repliesQuery;
+
+  if (repliesError) {
+    throw repliesError;
+  }
+
+  const { data: logs, error: logsError } =
+    profile.role === "customer"
+      ? { data: [], error: null }
+      : await supabase
+          .from("ticket_logs")
+          .select("*")
+          .eq("ticket_id", ticketId)
+          .order("created_at", { ascending: false });
+
+  if (logsError) {
+    throw logsError;
+  }
+
+  return {
+    ticket,
+    replies: (replies ?? []).filter((reply) => !reply.is_internal),
+    internalNotes:
+      profile.role === "customer"
+        ? []
+        : (replies ?? []).filter((reply) => reply.is_internal),
+    logs: logs ?? [],
   };
 }

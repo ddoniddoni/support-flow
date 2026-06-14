@@ -161,3 +161,73 @@ using (
     and profiles.role = 'admin'
   )
 );
+
+create policy "Customers can view public replies on own tickets"
+on public.ticket_replies
+for select
+to authenticated
+using (
+  is_internal = false
+  and exists (
+    select 1
+    from public.tickets
+    where tickets.id = ticket_replies.ticket_id
+    and tickets.customer_id = auth.uid()
+  )
+);
+
+create policy "Agents can view replies on assigned tickets"
+on public.ticket_replies
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.tickets
+    join public.profiles on profiles.id = auth.uid()
+    where tickets.id = ticket_replies.ticket_id
+    and tickets.assignee_id = auth.uid()
+    and profiles.role = 'agent'
+  )
+);
+
+create policy "Admins can view all replies"
+on public.ticket_replies
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Agents can view logs on assigned tickets"
+on public.ticket_logs
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.tickets
+    join public.profiles on profiles.id = auth.uid()
+    where tickets.id = ticket_logs.ticket_id
+    and tickets.assignee_id = auth.uid()
+    and profiles.role = 'agent'
+  )
+);
+
+create policy "Admins can view all ticket logs"
+on public.ticket_logs
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);

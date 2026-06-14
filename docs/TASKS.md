@@ -72,14 +72,14 @@
 
 ## Phase 7: Ticket detail
 
-- [ ] Create ticket detail API
-- [ ] Create useTicket hook
-- [ ] Show ticket metadata
-- [ ] Show replies
-- [ ] Show internal notes
-- [ ] Show activity logs
-- [ ] Add detail skeleton
-- [ ] Add not-found state
+- [x] Create ticket detail API
+- [x] Create useTicket hook
+- [x] Show ticket metadata
+- [x] Show replies
+- [x] Show internal notes
+- [x] Show activity logs
+- [x] Add detail skeleton
+- [x] Add not-found state
 
 ## Phase 8: Ticket actions
 
