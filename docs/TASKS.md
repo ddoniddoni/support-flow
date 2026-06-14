@@ -48,12 +48,12 @@
 
 ## Phase 5: Ticket creation
 
-- [ ] Create ticket schema with Zod
-- [ ] Create ticket form with React Hook Form
-- [ ] Add validation messages
-- [ ] Add submit loading state
-- [ ] Add success/error toast
-- [ ] Redirect after successful creation
+- [x] Create ticket schema with Zod
+- [x] Create ticket form with React Hook Form
+- [x] Add validation messages
+- [x] Add submit loading state
+- [x] Add success/error toast
+- [x] Redirect after successful creation
 
 ## Phase 6: Ticket list
 

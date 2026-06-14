@@ -122,3 +122,15 @@ for update
 to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+create policy "Customers can create their own tickets"
+on public.tickets
+for insert
+to authenticated
+with check (auth.uid() = customer_id);
+
+create policy "Customers can view their own tickets"
+on public.tickets
+for select
+to authenticated
+using (auth.uid() = customer_id);
