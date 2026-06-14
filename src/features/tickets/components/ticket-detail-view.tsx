@@ -170,7 +170,10 @@ function TicketDetailContent({
         title="티켓을 찾을 수 없습니다"
         description="존재하지 않는 티켓이거나 현재 계정으로 접근할 수 없는 티켓입니다."
         action={
-          <Link className={buttonVariants()} href="/tickets">
+          <Link
+            className={buttonVariants({ className: "w-full sm:w-auto" })}
+            href="/tickets"
+          >
             티켓 목록으로 이동
           </Link>
         }

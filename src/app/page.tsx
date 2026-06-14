@@ -1,20 +1,19 @@
 import Link from "next/link";
 import {
   Activity,
-  AlertTriangle,
   ArrowRight,
   CheckCircle2,
   Clock3,
   MessageSquareText,
   ShieldCheck,
   Ticket,
+  UsersRound,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -31,27 +30,27 @@ import {
 
 const metrics = [
   {
-    label: "접수된 문의",
+    label: "접수된 티켓",
     value: "42",
-    detail: "긴급 또는 높음 우선순위 12건",
+    detail: "긴급 또는 높은 우선순위 12건",
     icon: Ticket,
   },
   {
     label: "처리 중",
     value: "18",
-    detail: "상담원 6명이 대응 중",
+    detail: "상담원 6명이 담당 중",
     icon: Clock3,
   },
   {
     label: "오늘 해결",
     value: "27",
-    detail: "첫 응답 중앙값 22분",
+    detail: "평균 첫 응답 22분",
     icon: CheckCircle2,
   },
   {
     label: "내부 메모",
     value: "84",
-    detail: "운영 맥락을 팀 내부에 기록",
+    detail: "운영 맥락을 남긴 기록",
     icon: MessageSquareText,
   },
 ];
@@ -59,55 +58,35 @@ const metrics = [
 const tickets = [
   {
     id: "SUP-1048",
-    title: "2분기 청구서 내보내기가 실패합니다",
-    customer: "노스스타랩스",
-    status: "in_progress",
-    priority: "urgent",
-    assignee: "박미나",
+    title: "2분기 청구서 다운로드가 실패합니다",
+    customer: "Northstar Labs",
+    status: "진행 중",
+    priority: "긴급",
+    assignee: "박민수",
   },
   {
     id: "SUP-1047",
     title: "SSO 사용자가 간헐적으로 로그인 화면으로 돌아갑니다",
-    customer: "아틀라스클라우드",
-    status: "open",
-    priority: "high",
+    customer: "Apex Cloud",
+    status: "열림",
+    priority: "높음",
     assignee: "미배정",
   },
   {
     id: "SUP-1046",
     title: "워크스페이스 권한 변경 이력이 필요합니다",
-    customer: "브라이트옵스",
-    status: "resolved",
-    priority: "medium",
-    assignee: "김다니엘",
+    customer: "BrightOps",
+    status: "해결됨",
+    priority: "보통",
+    assignee: "김하늘",
   },
 ];
-
-const statusLabels: Record<string, string> = {
-  open: "접수",
-  in_progress: "처리 중",
-  resolved: "해결",
-  closed: "종료",
-};
-
-const priorityLabels: Record<string, string> = {
-  low: "낮음",
-  medium: "보통",
-  high: "높음",
-  urgent: "긴급",
-};
-
-function priorityTone(priority: string) {
-  if (priority === "urgent") return "border-red-200 bg-red-50 text-red-700";
-  if (priority === "high") return "border-amber-200 bg-amber-50 text-amber-800";
-  return "border-sky-200 bg-sky-50 text-sky-800";
-}
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-zinc-50">
       <section className="border-b bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-6 sm:px-6 lg:px-8">
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-md bg-zinc-950 text-white">
@@ -115,21 +94,39 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-sm font-medium text-zinc-500">SupportFlow</p>
-                <h1 className="text-2xl font-semibold tracking-normal text-zinc-950">
-                  고객지원 운영 대시보드
+                <h1 className="text-2xl font-semibold text-zinc-950">
+                  고객 지원 운영 대시보드
                 </h1>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link className={buttonVariants({ variant: "outline" })} href="/login">
+            <div className="grid gap-2 sm:flex">
+              <Link
+                className={buttonVariants({
+                  variant: "outline",
+                  className: "w-full sm:w-auto",
+                })}
+                href="/login"
+              >
                 로그인
               </Link>
-              <Link className={buttonVariants()} href="/dashboard">
+              <Link
+                className={buttonVariants({ className: "w-full sm:w-auto" })}
+                href="/dashboard"
+              >
                 대시보드 열기
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           </header>
+
+          <div className="max-w-3xl">
+            <Badge variant="secondary">Phase 7 완료</Badge>
+            <p className="mt-4 text-sm leading-6 text-zinc-600">
+              인증, 역할 기반 접근, 티켓 생성, 역할별 목록, 상세 화면까지
+              연결된 B2B 고객지원 SaaS 포트폴리오입니다. 고객은 문의를
+              등록하고, 관리자와 상담원은 운영 흐름을 관리합니다.
+            </p>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {metrics.map((metric) => (
@@ -143,7 +140,7 @@ export default function Home() {
                   </div>
                   <metric.icon className="size-5 text-zinc-500" aria-hidden="true" />
                 </CardHeader>
-                <CardContent className="text-sm text-zinc-500">
+                <CardContent className="text-sm leading-6 text-zinc-500">
                   {metric.detail}
                 </CardContent>
               </Card>
@@ -152,20 +149,21 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[1fr_360px] lg:px-8">
+      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-6 lg:grid-cols-[1fr_360px] sm:px-6 lg:px-8">
         <Card className="rounded-lg">
           <CardHeader>
-            <CardTitle>우선 처리 문의</CardTitle>
+            <CardTitle>우선 처리 티켓</CardTitle>
             <CardDescription>
-              문의 목록을 중심으로 담당자, 상태, 우선순위를 빠르게 확인하는 운영 화면입니다.
+              담당자, 상태, 우선순위를 한 화면에서 빠르게 확인하는 운영용
+              테이블입니다.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>문의</TableHead>
-                  <TableHead>고객사</TableHead>
+                  <TableHead>티켓</TableHead>
+                  <TableHead>고객</TableHead>
                   <TableHead>상태</TableHead>
                   <TableHead>우선순위</TableHead>
                   <TableHead>담당자</TableHead>
@@ -178,20 +176,22 @@ export default function Home() {
                       <div className="font-medium text-zinc-950">
                         {ticket.id}
                       </div>
-                      <div className="text-sm text-zinc-500">
-                        {ticket.title}
-                      </div>
+                      <div className="text-sm text-zinc-500">{ticket.title}</div>
                     </TableCell>
                     <TableCell>{ticket.customer}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{statusLabels[ticket.status]}</Badge>
+                      <Badge variant="outline">{ticket.status}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={priorityTone(ticket.priority)}
+                        className={
+                          ticket.priority === "긴급"
+                            ? "border-red-200 bg-red-50 text-red-700"
+                            : "border-sky-200 bg-sky-50 text-sky-700"
+                        }
                         variant="outline"
                       >
-                        {priorityLabels[ticket.priority]}
+                        {ticket.priority}
                       </Badge>
                     </TableCell>
                     <TableCell>{ticket.assignee}</TableCell>
@@ -202,7 +202,7 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6">
+        <div className="grid content-start gap-6">
           <Card className="rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -213,40 +213,40 @@ export default function Home() {
                 역할별 권한
               </CardTitle>
               <CardDescription>
-                고객, 상담원, 관리자의 접근 범위가 분리된 운영 구조를 준비합니다.
+                고객, 상담원, 관리자의 접근 범위를 분리해 실제 운영 흐름을
+                보여줍니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span>고객</span>
+              <div className="flex items-center justify-between gap-3">
+                <span>Customer</span>
                 <Badge variant="secondary">내 문의</Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span>상담원</span>
-                <Badge variant="secondary">배정 문의</Badge>
+              <div className="flex items-center justify-between gap-3">
+                <span>Agent</span>
+                <Badge variant="secondary">배정 티켓</Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span>관리자</span>
+              <div className="flex items-center justify-between gap-3">
+                <span>Admin</span>
                 <Badge variant="secondary">전체 운영</Badge>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-lg border-amber-200">
+          <Card className="rounded-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle
-                  className="size-5 text-amber-600"
-                  aria-hidden="true"
-                />
-                다음 구현 단계
+                <UsersRound className="size-5 text-zinc-600" aria-hidden="true" />
+                현재 구현 상태
               </CardTitle>
-              <CardAction>
-                <Badge variant="outline">Phase 2</Badge>
-              </CardAction>
+              <CardDescription>
+                다음 단계에서는 상태 변경, 담당자 배정, 우선순위 변경 액션을
+                연결합니다.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-sm text-zinc-600">
-              Supabase 인증과 실제 문의 데이터를 연결하고 TanStack Query 기반 화면으로 확장합니다.
+            <CardContent className="grid gap-2 text-sm text-zinc-600">
+              <p>완료: 인증, 권한 분기, 티켓 생성, 목록, 상세</p>
+              <p>다음: 티켓 액션과 활동 로그 자동 기록</p>
             </CardContent>
           </Card>
         </div>

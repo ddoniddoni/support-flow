@@ -12,8 +12,10 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed bg-white p-8 text-center">
       <h2 className="text-lg font-semibold text-zinc-950">{title}</h2>
-      <p className="mt-2 max-w-md text-sm text-zinc-500">{description}</p>
-      {action ? <div className="mt-5">{action}</div> : null}
+      <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
+        {description}
+      </p>
+      {action ? <div className="mt-5 w-full sm:w-auto">{action}</div> : null}
     </div>
   );
 }
@@ -26,7 +28,7 @@ export function EmptyStateAction({
   href: string;
 }) {
   return (
-    <a className={buttonVariants()} href={href}>
+    <a className={buttonVariants({ className: "w-full sm:w-auto" })} href={href}>
       {children}
     </a>
   );

@@ -147,7 +147,10 @@ export function TicketListView({
           </p>
         </div>
         {profile.role === "customer" ? (
-          <Link className={buttonVariants()} href="/tickets/new">
+          <Link
+            className={buttonVariants({ className: "w-full sm:w-auto" })}
+            href="/tickets/new"
+          >
             <Plus className="size-4" aria-hidden="true" />
             문의 등록
           </Link>
@@ -164,7 +167,7 @@ export function TicketListView({
       ) : null}
 
       <div className="grid gap-3 rounded-lg border bg-white p-4">
-        <form className="flex gap-2" onSubmit={handleSearchSubmit}>
+        <form className="grid gap-2 sm:flex" onSubmit={handleSearchSubmit}>
           <div className="relative flex-1">
             <Search
               className="pointer-events-none absolute top-2 left-2.5 size-4 text-zinc-400"
@@ -177,7 +180,9 @@ export function TicketListView({
               onChange={(event) => setSearchInput(event.target.value)}
             />
           </div>
-          <Button type="submit">검색</Button>
+          <Button className="w-full sm:w-auto" type="submit">
+            검색
+          </Button>
         </form>
 
         <div className="grid gap-2 md:grid-cols-4">
@@ -280,6 +285,7 @@ export function TicketListView({
                 type="button"
                 variant="outline"
                 disabled={page <= 1}
+                className="w-full sm:w-auto"
                 onClick={() => updateParams({ page: String(page - 1) })}
               >
                 이전
@@ -291,6 +297,7 @@ export function TicketListView({
                 type="button"
                 variant="outline"
                 disabled={page >= data.pageCount}
+                className="w-full sm:w-auto"
                 onClick={() => updateParams({ page: String(page + 1) })}
               >
                 다음

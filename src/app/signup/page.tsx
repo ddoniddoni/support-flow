@@ -1,6 +1,6 @@
+import { redirectAuthenticatedUser } from "@/features/auth/api/server-auth";
 import { AuthFormShell } from "@/features/auth/components/auth-form-shell";
 import { SignupForm } from "@/features/auth/components/signup-form";
-import { redirectAuthenticatedUser } from "@/features/auth/api/server-auth";
 
 export default async function SignupPage() {
   await redirectAuthenticatedUser();

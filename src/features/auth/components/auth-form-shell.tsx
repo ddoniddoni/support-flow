@@ -32,7 +32,7 @@ export function AuthFormShell({
         <CardHeader>
           <p className="text-sm font-medium text-zinc-500">SupportFlow</p>
           <CardTitle className="text-xl">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription className="leading-6">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           {children}

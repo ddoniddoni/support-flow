@@ -173,8 +173,9 @@ export function CreateTicketForm() {
         </p>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <div className="grid gap-2 sm:flex sm:justify-end">
         <Button
+          className="w-full sm:w-auto"
           type="button"
           variant="outline"
           disabled={isPending}
@@ -182,7 +183,7 @@ export function CreateTicketForm() {
         >
           취소
         </Button>
-        <Button type="submit" disabled={isPending}>
+        <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
           {isPending ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
           ) : (
