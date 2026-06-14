@@ -57,18 +57,18 @@
 
 ## Phase 6: Ticket list
 
-- [ ] Create ticket list API
-- [ ] Create useTickets hook with TanStack Query
-- [ ] Create ticket table
-- [ ] Add search
-- [ ] Add status filter
-- [ ] Add priority filter
-- [ ] Add category filter
-- [ ] Add pagination
-- [ ] Store filters in URL query parameters
-- [ ] Add loading skeleton
-- [ ] Add error state
-- [ ] Add empty state
+- [x] Create ticket list API
+- [x] Create useTickets hook with TanStack Query
+- [x] Create ticket table
+- [x] Add search
+- [x] Add status filter
+- [x] Add priority filter
+- [x] Add category filter
+- [x] Add pagination
+- [x] Store filters in URL query parameters
+- [x] Add loading skeleton
+- [x] Add error state
+- [x] Add empty state
 
 ## Phase 7: Ticket detail
 
