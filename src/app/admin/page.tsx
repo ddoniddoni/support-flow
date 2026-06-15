@@ -5,7 +5,7 @@ export default async function AdminPage() {
   await requireServerRole(["admin"]);
 
   return (
-    <main className="min-h-screen bg-zinc-50 p-6">
+    <main className="min-h-screen bg-zinc-100 p-6">
       <div className="mx-auto max-w-6xl">
         <EmptyState
           title="관리자 전용 기능은 운영 현황과 문의 상세에서 제공됩니다"

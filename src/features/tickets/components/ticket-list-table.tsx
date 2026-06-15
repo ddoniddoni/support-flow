@@ -84,7 +84,7 @@ function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
   return (
     <Link
       href={`/tickets/${ticket.id}`}
-      className="grid gap-3 rounded-lg border bg-white p-4"
+      className="grid gap-3 rounded-lg border border-zinc-300 bg-white p-4 shadow-sm"
     >
       <div>
         <p className="font-medium text-zinc-950">{ticket.title}</p>
@@ -114,7 +114,7 @@ export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-lg border border-zinc-300 bg-white shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow>

@@ -166,7 +166,7 @@ export function TicketListView({
         </div>
       ) : null}
 
-      <div className="grid gap-3 rounded-lg border bg-white p-4">
+      <div className="grid gap-3 rounded-lg border border-zinc-300 bg-white p-4 shadow-sm">
         <form className="grid gap-2 sm:flex" onSubmit={handleSearchSubmit}>
           <div className="relative flex-1">
             <Search
@@ -187,7 +187,7 @@ export function TicketListView({
 
         <div className="grid gap-2 md:grid-cols-4">
           <select
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
             value={filters.status ?? "all"}
             onChange={(event) =>
               updateParams({ status: event.target.value, page: "1" })
@@ -202,7 +202,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
             value={filters.priority ?? "all"}
             onChange={(event) =>
               updateParams({ priority: event.target.value, page: "1" })
@@ -217,7 +217,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
             value={filters.category ?? "all"}
             onChange={(event) =>
               updateParams({ category: event.target.value, page: "1" })
@@ -232,7 +232,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
             value={filters.sort ?? "created_desc"}
             onChange={(event) =>
               updateParams({ sort: event.target.value, page: "1" })
