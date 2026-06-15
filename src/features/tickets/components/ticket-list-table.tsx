@@ -80,47 +80,82 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
   );
 }
 
+function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
+  return (
+    <Link
+      href={`/tickets/${ticket.id}`}
+      className="grid gap-3 rounded-lg border bg-white p-4"
+    >
+      <div>
+        <p className="font-medium text-zinc-950">{ticket.title}</p>
+        <p className="mt-1 break-all text-xs text-zinc-500">{ticket.id}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <StatusBadge status={ticket.status} />
+        <PriorityBadge priority={ticket.priority} />
+        <Badge variant="outline">
+          {categoryLabels[ticket.category] ?? ticket.category}
+        </Badge>
+      </div>
+      <div className="grid gap-1 text-xs text-zinc-500">
+        <p>생성일 {formatDate(ticket.created_at)}</p>
+        <p>수정일 {formatDate(ticket.updated_at)}</p>
+      </div>
+    </Link>
+  );
+}
+
 export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
   return (
-    <div className="rounded-lg border bg-white">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-72">제목</TableHead>
-            <TableHead>상태</TableHead>
-            <TableHead>우선순위</TableHead>
-            <TableHead>카테고리</TableHead>
-            <TableHead>생성일</TableHead>
-            <TableHead>수정일</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tickets.map((ticket) => (
-            <TableRow key={ticket.id}>
-              <TableCell>
-                <Link
-                  href={`/tickets/${ticket.id}`}
-                  className="font-medium text-zinc-950 hover:underline"
-                >
-                  {ticket.title}
-                </Link>
-                <p className="mt-1 max-w-md truncate text-xs text-zinc-500">
-                  {ticket.id}
-                </p>
-              </TableCell>
-              <TableCell>
-                <StatusBadge status={ticket.status} />
-              </TableCell>
-              <TableCell>
-                <PriorityBadge priority={ticket.priority} />
-              </TableCell>
-              <TableCell>{categoryLabels[ticket.category] ?? ticket.category}</TableCell>
-              <TableCell>{formatDate(ticket.created_at)}</TableCell>
-              <TableCell>{formatDate(ticket.updated_at)}</TableCell>
+    <>
+      <div className="grid gap-3 md:hidden">
+        {tickets.map((ticket) => (
+          <MobileTicketCard key={ticket.id} ticket={ticket} />
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border bg-white md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-72">제목</TableHead>
+              <TableHead>상태</TableHead>
+              <TableHead>우선순위</TableHead>
+              <TableHead>카테고리</TableHead>
+              <TableHead>생성일</TableHead>
+              <TableHead>수정일</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {tickets.map((ticket) => (
+              <TableRow key={ticket.id}>
+                <TableCell>
+                  <Link
+                    href={`/tickets/${ticket.id}`}
+                    className="font-medium text-zinc-950 hover:underline"
+                  >
+                    {ticket.title}
+                  </Link>
+                  <p className="mt-1 max-w-md truncate text-xs text-zinc-500">
+                    {ticket.id}
+                  </p>
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={ticket.status} />
+                </TableCell>
+                <TableCell>
+                  <PriorityBadge priority={ticket.priority} />
+                </TableCell>
+                <TableCell>
+                  {categoryLabels[ticket.category] ?? ticket.category}
+                </TableCell>
+                <TableCell>{formatDate(ticket.created_at)}</TableCell>
+                <TableCell>{formatDate(ticket.updated_at)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }

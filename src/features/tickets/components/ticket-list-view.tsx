@@ -13,9 +13,9 @@ import type { Tables } from "@/types/database";
 import { ticketPriorities, ticketStatuses } from "@/types/domain";
 
 import type { TicketListFilters } from "../api/tickets-api";
+import { useTickets } from "../hooks/use-tickets";
 import { ticketCategories } from "../schemas/ticket-schema";
 import type { TicketSortOption } from "../types";
-import { useTickets } from "../hooks/use-tickets";
 import { TicketListTable } from "./ticket-list-table";
 import { TicketTableSkeleton } from "./ticket-table-skeleton";
 
@@ -74,7 +74,7 @@ function getIntParam(value: string | null, fallback: number) {
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
   if (role === "customer") {
-    return "내가 등록한 문의를 확인하고 지원팀 답변 상태를 추적합니다.";
+    return "내가 등록한 문의를 확인하고 지원팀 답변과 상태를 추적합니다.";
   }
 
   if (role === "agent") {
@@ -255,7 +255,8 @@ export function TicketListView({
           <div>
             <p className="font-medium">티켓 목록을 불러오지 못했습니다.</p>
             <p className="mt-1 text-red-600">
-              Supabase 권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해 주세요.
+              Supabase 권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해
+              주세요.
             </p>
           </div>
         </div>
@@ -278,7 +279,7 @@ export function TicketListView({
           <TicketListTable tickets={data.tickets} />
           <div className="mt-3 flex flex-col gap-2 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              총 {data.total}개 중 {data.tickets.length}개 표시
+              총 {data.total}건 중 {data.tickets.length}건 표시
             </p>
             <div className="flex items-center gap-2">
               <Button

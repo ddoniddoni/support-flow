@@ -21,10 +21,12 @@ export default async function NewTicketPage() {
             티켓 목록
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-950">새 티켓 등록</h1>
+            <h1 className="text-2xl font-semibold text-zinc-950">
+              새 티켓 등록
+            </h1>
             <p className="mt-2 text-sm text-zinc-600">
               지원팀이 빠르게 파악할 수 있도록 문제 상황과 필요한 조치를
-              구체적으로 남겨 주세요.
+              구체적으로 적어 주세요.
             </p>
           </div>
         </div>
