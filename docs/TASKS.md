@@ -101,14 +101,14 @@
 
 ## Phase 10: Dashboard
 
-- [ ] Create dashboard stats API
-- [ ] Show total tickets
-- [ ] Show open tickets
-- [ ] Show in-progress tickets
-- [ ] Show resolved tickets
-- [ ] Show urgent tickets
-- [ ] Show category distribution
-- [ ] Show status distribution
+- [x] Create dashboard stats API
+- [x] Show total tickets
+- [x] Show open tickets
+- [x] Show in-progress tickets
+- [x] Show resolved tickets
+- [x] Show urgent tickets
+- [x] Show category distribution
+- [x] Show status distribution
 
 ## Phase 11: Polish
 
