@@ -148,7 +148,10 @@ function ReplyList({
       <CardContent className="grid gap-3">
         {replies.length ? (
           replies.map((reply) => (
-            <div key={reply.id} className="rounded-lg border bg-zinc-50 p-3">
+            <div
+              key={reply.id}
+              className="rounded-lg border border-zinc-300 bg-zinc-50 p-3"
+            >
               <p className="whitespace-pre-wrap text-sm text-zinc-800">
                 {reply.content}
               </p>
@@ -308,7 +311,7 @@ function TicketOperationsPanel({
           <div className="relative">
             <select
               id="status"
-              className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+              className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
               value={ticket.status}
               disabled={isPending}
               onChange={(event) =>
@@ -344,7 +347,7 @@ function TicketOperationsPanel({
               <div className="relative">
                 <select
                   id="priority"
-                  className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+                  className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
                   value={ticket.priority}
                   disabled={isPending}
                   onChange={(event) =>
@@ -378,7 +381,7 @@ function TicketOperationsPanel({
               <div className="relative">
                 <select
                   id="assignee"
-                  className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+                  className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
                   value={ticket.assignee_id ?? "unassigned"}
                   disabled={isPending || agentsQuery.isLoading}
                   onChange={(event) =>
@@ -413,7 +416,7 @@ function TicketOperationsPanel({
           </>
         ) : null}
 
-        <div className="rounded-lg bg-zinc-50 p-3 text-xs text-zinc-600">
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600">
           현재 담당자: {getAgentLabel(ticket.assignee_id)}
         </div>
 

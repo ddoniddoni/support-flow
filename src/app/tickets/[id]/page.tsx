@@ -11,7 +11,7 @@ export default async function TicketDetailPage({
   const { id } = await params;
 
   return (
-    <main className="min-h-screen bg-zinc-50 p-6">
+    <main className="min-h-screen bg-zinc-100 p-6">
       <WorkspaceHeader profile={profile} />
       <TicketDetailView ticketId={id} profile={profile} />
     </main>
