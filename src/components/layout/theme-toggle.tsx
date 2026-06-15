@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 const themeLabels = {
   light: "라이트 모드",
   dark: "다크 모드",
-  system: "시스템 설정",
 } as const;
 
 type ThemeName = keyof typeof themeLabels;
@@ -27,7 +26,7 @@ function getServerSnapshot() {
 }
 
 function isThemeName(value: string | undefined): value is ThemeName {
-  return value === "light" || value === "dark" || value === "system";
+  return value === "light" || value === "dark";
 }
 
 export function ThemeToggle() {
@@ -38,17 +37,10 @@ export function ThemeToggle() {
     getServerSnapshot,
   );
 
-  const currentTheme: ThemeName =
-    mounted && isThemeName(theme) ? theme : "system";
-  const nextTheme =
-    currentTheme === "light"
-      ? "dark"
-      : currentTheme === "dark"
-        ? "system"
-        : "light";
+  const currentTheme: ThemeName = mounted && isThemeName(theme) ? theme : "light";
+  const nextTheme = currentTheme === "light" ? "dark" : "light";
 
-  const Icon =
-    currentTheme === "light" ? Sun : currentTheme === "dark" ? Moon : Monitor;
+  const Icon = currentTheme === "light" ? Sun : Moon;
 
   return (
     <Button
