@@ -130,5 +130,18 @@
 - [x] Add tech stack explanation
 - [x] Add folder structure explanation
 - [x] Add troubleshooting section
-- [x] Add deployment link
+- [x] Document deployment target
 - [x] Add screenshots
+
+## Final QA polish
+
+- [x] Route customers to inquiry list instead of dashboard
+- [x] Remove customer priority selection
+- [x] Use customer-facing inquiry terminology in the UI
+- [x] Add workspace navigation and logout
+- [x] Improve visual contrast
+- [x] Add light/dark theme toggle
+- [x] Fix reply creation through Supabase RPC
+- [x] Hide internal operation metadata from customer screens
+- [x] Limit public replies to one official customer answer
+- [x] Refresh public screenshots

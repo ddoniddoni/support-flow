@@ -53,6 +53,7 @@ SupportFlow demonstrates the front-end patterns expected in an internal SaaS das
 - Status changes for agents and admins
 - Priority changes and agent assignment for admins
 - Customer-visible replies and internal support notes
+- Single official public reply per customer inquiry
 - Activity logs for ticket operations
 - Dashboard statistics by role-scoped ticket access
 - Light/dark mode toggle
@@ -64,13 +65,15 @@ SupportFlow enforces roles in both UI flow and Supabase row-level security.
 
 | Role | Access |
 | --- | --- |
-| Customer | Create tickets, view only own tickets, view public replies |
+| Customer | Create inquiries, view only own inquiries, view public replies |
 | Agent | View assigned tickets, reply, change status, add internal notes, view assigned-ticket dashboard |
 | Admin | View all tickets, assign agents, change priority/status, view operational dashboard statistics |
 
 The client receives the current profile and passes role context to feature hooks. Supabase RLS policies also restrict access at the database layer.
 
 Customer accounts are intentionally routed to `/tickets` instead of `/dashboard`. In a real support product, customers usually need a focused "my inquiries" area, while dashboards are operational tools for agents and admins.
+
+Customer-facing screens hide internal operation metadata such as assignee IDs, customer IDs, and priority. Agents and admins keep the full operational view.
 
 ## URL-Based Filtering
 
@@ -104,6 +107,8 @@ Server state is handled through feature hooks:
 
 Mutations invalidate ticket, ticket list, and dashboard queries after changes. Ticket action updates use optimistic UI updates with rollback on failure.
 
+Public reply creation uses the `create_ticket_reply` Supabase RPC. The function validates the authenticated user's role, creates the reply and activity log together, prevents duplicate public replies, and moves answered inquiries to `resolved`.
+
 ## Forms and Validation
 
 Forms use React Hook Form with Zod schemas:
@@ -117,6 +122,8 @@ Forms use React Hook Form with Zod schemas:
 Submit buttons are disabled while pending, and validation messages are shown next to the relevant field.
 
 Customers do not set operational priority when creating a ticket. New tickets use the database default priority and admins can adjust priority after triage.
+
+Agents and admins can create one customer-visible official answer per inquiry. Follow-up operational context should be recorded as internal notes.
 
 ## Loading, Error, Empty, and Unauthorized States
 
@@ -148,8 +155,6 @@ Screenshots are stored in `docs/screenshots`.
 | --- | --- |
 | Home | `docs/screenshots/home.png` |
 | Login | `docs/screenshots/login.png` |
-
-Dashboard and authenticated ticket screenshots should be captured after seed users are available in the deployed environment.
 
 ## Folder Structure
 
@@ -241,6 +246,7 @@ The schema includes:
 - `ticket_logs`
 - enum types for roles, status, and priority
 - RLS policies for customers, agents, and admins
+- `create_ticket_reply` RPC for reply creation and activity logging
 - trigger helpers for profile creation and ticket timestamps
 
 ## Demo Accounts
@@ -261,6 +267,20 @@ update public.profiles set role = 'agent' where email = 'agent@supportflow.dev';
 update public.profiles set role = 'admin' where email = 'admin@supportflow.dev';
 ```
 
+If you add the reply RPC after test data already exists, you can normalize answered inquiries:
+
+```sql
+update public.tickets
+set status = 'resolved'
+where status in ('open', 'in_progress')
+and exists (
+  select 1
+  from public.ticket_replies
+  where ticket_replies.ticket_id = tickets.id
+  and ticket_replies.is_internal = false
+);
+```
+
 ## Useful Scripts
 
 ```bash
@@ -277,6 +297,8 @@ npm.cmd run build
 | Signup succeeds but role is wrong | Update `profiles.role` in Supabase |
 | Agent sees no tickets | Assign tickets to the agent through an admin account |
 | Admin cannot assign agents | Verify admin profile role and profile select policy |
+| Customer cannot see a public reply | Verify the customer owns the inquiry and the public reply select policy exists |
+| Reply creation hits RLS | Re-run `docs/SUPABASE_SCHEMA.sql` or at least the `create_ticket_reply` function and grant |
 | `npm` is blocked in PowerShell | Use `npm.cmd run dev`, `npm.cmd run lint`, or `npm.cmd run build` |
 
 ## Deployment
@@ -284,7 +306,7 @@ npm.cmd run build
 Target platform: Vercel
 
 ```txt
-Deployment URL: TBD
+Deployment URL: Not deployed yet
 ```
 
 Add these environment variables in Vercel:
@@ -310,3 +332,6 @@ Completed phases:
 - Dashboard statistics
 - Polish
 - Portfolio documentation
+- Customer-facing inquiry UX refinements
+- Light/dark theme toggle
+- Final QA documentation pass
