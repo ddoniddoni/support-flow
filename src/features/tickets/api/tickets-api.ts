@@ -343,6 +343,19 @@ export async function updateTicketAction(input: TicketActionInput) {
 export async function createTicketReply(input: CreateTicketReplyInput) {
   const supabase = createSupabaseBrowserClient();
 
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  if (!user) {
+    throw new Error("로그인이 필요합니다.");
+  }
+
   if (input.profile.role === "customer") {
     throw new Error("Customers cannot create support replies.");
   }
@@ -365,7 +378,7 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
     .from("ticket_replies")
     .insert({
       ticket_id: input.ticketId,
-      author_id: input.profile.id,
+      author_id: user.id,
       content: input.content,
       is_internal: input.isInternal,
     })
@@ -378,7 +391,7 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
 
   const { error: logError } = await supabase.from("ticket_logs").insert({
     ticket_id: input.ticketId,
-    actor_id: input.profile.id,
+    actor_id: user.id,
     action: input.isInternal ? "internal_note_added" : "reply_added",
     before_value: null,
     after_value: data.id,
