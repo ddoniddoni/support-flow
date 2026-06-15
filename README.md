@@ -63,10 +63,12 @@ SupportFlow enforces roles in both UI flow and Supabase row-level security.
 | Role | Access |
 | --- | --- |
 | Customer | Create tickets, view only own tickets, view public replies |
-| Agent | View assigned tickets, reply, change status, add internal notes |
-| Admin | View all tickets, assign agents, change priority/status, view dashboard statistics |
+| Agent | View assigned tickets, reply, change status, add internal notes, view assigned-ticket dashboard |
+| Admin | View all tickets, assign agents, change priority/status, view operational dashboard statistics |
 
 The client receives the current profile and passes role context to feature hooks. Supabase RLS policies also restrict access at the database layer.
+
+Customer accounts are intentionally routed to `/tickets` instead of `/dashboard`. In a real support product, customers usually need a focused "my inquiries" area, while dashboards are operational tools for agents and admins.
 
 ## URL-Based Filtering
 

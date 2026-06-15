@@ -16,6 +16,8 @@ const roleLabels: Record<Tables<"profiles">["role"], string> = {
 };
 
 export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
+  const canViewDashboard = profile.role !== "customer";
+
   return (
     <header className="mx-auto mb-5 flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
@@ -29,15 +31,17 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
       </div>
 
       <nav className="grid gap-2 sm:flex sm:items-center">
-        <Link
-          className={buttonVariants({
-            variant: "outline",
-            className: "w-full sm:w-auto",
-          })}
-          href="/dashboard"
-        >
-          대시보드
-        </Link>
+        {canViewDashboard ? (
+          <Link
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full sm:w-auto",
+            })}
+            href="/dashboard"
+          >
+            대시보드
+          </Link>
+        ) : null}
         <Link
           className={buttonVariants({
             variant: "outline",
