@@ -385,7 +385,7 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
   });
 
   if (logError) {
-    throw logError;
+    console.warn("Failed to create ticket reply log:", logError.message);
   }
 
   return data;

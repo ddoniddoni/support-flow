@@ -22,6 +22,23 @@ type TicketReplyFormProps = {
   isInternal: boolean;
 };
 
+function getReplyErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    return error.message;
+  }
+
+  return "내용을 저장하지 못했습니다. 다시 시도해 주세요.";
+}
+
 export function TicketReplyForm({
   ticketId,
   profile,
@@ -60,11 +77,7 @@ export function TicketReplyForm({
         isInternal ? "내부 메모를 추가했습니다." : "고객 답변을 등록했습니다.",
       );
     } catch (error) {
-      setFormError(
-        error instanceof Error
-          ? error.message
-          : "내용을 저장하지 못했습니다. 다시 시도해 주세요.",
-      );
+      setFormError(getReplyErrorMessage(error));
     }
   }
 
