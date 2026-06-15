@@ -124,11 +124,11 @@
 
 ## Phase 12: Portfolio documentation
 
-- [ ] Write project intro
-- [ ] Add demo accounts
-- [ ] Add feature list
-- [ ] Add tech stack explanation
-- [ ] Add folder structure explanation
-- [ ] Add troubleshooting section
-- [ ] Add deployment link
-- [ ] Add screenshots
+- [x] Write project intro
+- [x] Add demo accounts
+- [x] Add feature list
+- [x] Add tech stack explanation
+- [x] Add folder structure explanation
+- [x] Add troubleshooting section
+- [x] Add deployment link
+- [x] Add screenshots
