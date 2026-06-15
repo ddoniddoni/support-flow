@@ -31,3 +31,13 @@ export const createTicketSchema = z.object({
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
+
+export const ticketReplySchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(3, "내용을 3자 이상 입력해 주세요.")
+    .max(4000, "내용은 4000자 이하로 입력해 주세요."),
+});
+
+export type TicketReplyInput = z.infer<typeof ticketReplySchema>;
