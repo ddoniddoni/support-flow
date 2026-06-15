@@ -172,7 +172,23 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      create_ticket_reply: {
+        Args: {
+          p_ticket_id: string;
+          p_content: string;
+          p_is_internal?: boolean;
+        };
+        Returns: {
+          id: string;
+          ticket_id: string;
+          author_id: string;
+          content: string;
+          is_internal: boolean;
+          created_at: string;
+        };
+      };
+    };
     Enums: {
       user_role: Role;
       ticket_status: TicketStatus;

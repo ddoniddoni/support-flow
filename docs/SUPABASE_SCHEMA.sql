@@ -117,6 +117,87 @@ as $$
   where id = auth.uid()
 $$;
 
+create or replace function public.create_ticket_reply(
+  p_ticket_id uuid,
+  p_content text,
+  p_is_internal boolean default false
+)
+returns public.ticket_replies
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_role public.user_role;
+  created_reply public.ticket_replies;
+begin
+  select role
+  into current_role
+  from public.profiles
+  where id = auth.uid();
+
+  if auth.uid() is null or current_role is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if current_role = 'customer' then
+    raise exception 'Customers cannot create support replies.';
+  end if;
+
+  if current_role = 'agent' and not exists (
+    select 1
+    from public.tickets
+    where id = p_ticket_id
+    and assignee_id = auth.uid()
+  ) then
+    raise exception 'Ticket not found or access denied.';
+  end if;
+
+  if current_role = 'admin' and not exists (
+    select 1
+    from public.tickets
+    where id = p_ticket_id
+  ) then
+    raise exception 'Ticket not found or access denied.';
+  end if;
+
+  insert into public.ticket_replies (
+    ticket_id,
+    author_id,
+    content,
+    is_internal
+  )
+  values (
+    p_ticket_id,
+    auth.uid(),
+    p_content,
+    p_is_internal
+  )
+  returning *
+  into created_reply;
+
+  insert into public.ticket_logs (
+    ticket_id,
+    actor_id,
+    action,
+    before_value,
+    after_value
+  )
+  values (
+    p_ticket_id,
+    auth.uid(),
+    case when p_is_internal then 'internal_note_added' else 'reply_added' end,
+    null,
+    created_reply.id::text
+  );
+
+  return created_reply;
+end;
+$$;
+
+grant execute on function public.create_ticket_reply(uuid, text, boolean)
+to authenticated;
+
 alter table public.profiles enable row level security;
 alter table public.tickets enable row level security;
 alter table public.ticket_replies enable row level security;

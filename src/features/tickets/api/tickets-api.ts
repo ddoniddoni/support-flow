@@ -343,62 +343,18 @@ export async function updateTicketAction(input: TicketActionInput) {
 export async function createTicketReply(input: CreateTicketReplyInput) {
   const supabase = createSupabaseBrowserClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw userError;
-  }
-
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
   if (input.profile.role === "customer") {
     throw new Error("Customers cannot create support replies.");
   }
 
-  const { data: ticket, error: ticketError } = await supabase
-    .from("tickets")
-    .select("id,assignee_id")
-    .eq("id", input.ticketId)
-    .maybeSingle();
-
-  if (ticketError) {
-    throw ticketError;
-  }
-
-  if (!ticket) {
-    throw new Error("Ticket not found or access denied.");
-  }
-
-  const { data, error } = await supabase
-    .from("ticket_replies")
-    .insert({
-      ticket_id: input.ticketId,
-      author_id: user.id,
-      content: input.content,
-      is_internal: input.isInternal,
-    })
-    .select("*")
-    .single();
+  const { data, error } = await supabase.rpc("create_ticket_reply", {
+    p_ticket_id: input.ticketId,
+    p_content: input.content,
+    p_is_internal: input.isInternal,
+  });
 
   if (error) {
     throw error;
-  }
-
-  const { error: logError } = await supabase.from("ticket_logs").insert({
-    ticket_id: input.ticketId,
-    actor_id: user.id,
-    action: input.isInternal ? "internal_note_added" : "reply_added",
-    before_value: null,
-    after_value: data.id,
-  });
-
-  if (logError) {
-    console.warn("Failed to create ticket reply log:", logError.message);
   }
 
   return data;
