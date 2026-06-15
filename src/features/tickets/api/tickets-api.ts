@@ -2,7 +2,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 import type { TicketPriority, TicketStatus } from "@/types/domain";
 
-import type { CreateTicketInput } from "../schemas/ticket-schema";
+import type {
+  CreateTicketInput,
+  TicketReplyInput,
+} from "../schemas/ticket-schema";
 import type { TicketDetailData, TicketSortOption } from "../types";
 
 export async function createTicket(input: CreateTicketInput) {
@@ -64,6 +67,12 @@ export type TicketActionInput = {
 };
 
 export type AgentOption = Pick<Tables<"profiles">, "id" | "email" | "name">;
+
+export type CreateTicketReplyInput = TicketReplyInput & {
+  ticketId: string;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+  isInternal: boolean;
+};
 
 const defaultPageSize = 10;
 
@@ -330,4 +339,55 @@ export async function updateTicketAction(input: TicketActionInput) {
   }
 
   return updatedTicket;
+}
+
+export async function createTicketReply(input: CreateTicketReplyInput) {
+  const supabase = createSupabaseBrowserClient();
+
+  if (input.profile.role === "customer") {
+    throw new Error("Customers cannot create support replies.");
+  }
+
+  const { data: ticket, error: ticketError } = await supabase
+    .from("tickets")
+    .select("id,assignee_id")
+    .eq("id", input.ticketId)
+    .maybeSingle();
+
+  if (ticketError) {
+    throw ticketError;
+  }
+
+  if (!ticket) {
+    throw new Error("Ticket not found or access denied.");
+  }
+
+  const { data, error } = await supabase
+    .from("ticket_replies")
+    .insert({
+      ticket_id: input.ticketId,
+      author_id: input.profile.id,
+      content: input.content,
+      is_internal: input.isInternal,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  const { error: logError } = await supabase.from("ticket_logs").insert({
+    ticket_id: input.ticketId,
+    actor_id: input.profile.id,
+    action: input.isInternal ? "internal_note_added" : "reply_added",
+    before_value: null,
+    after_value: data.id,
+  });
+
+  if (logError) {
+    throw logError;
+  }
+
+  return data;
 }

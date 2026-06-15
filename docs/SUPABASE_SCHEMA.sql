@@ -266,6 +266,36 @@ using (
   )
 );
 
+create policy "Agents can create replies on assigned tickets"
+on public.ticket_replies
+for insert
+to authenticated
+with check (
+  author_id = auth.uid()
+  and exists (
+    select 1
+    from public.tickets
+    join public.profiles on profiles.id = auth.uid()
+    where tickets.id = ticket_replies.ticket_id
+    and tickets.assignee_id = auth.uid()
+    and profiles.role = 'agent'
+  )
+);
+
+create policy "Admins can create all ticket replies"
+on public.ticket_replies
+for insert
+to authenticated
+with check (
+  author_id = auth.uid()
+  and exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
 create policy "Agents can view logs on assigned tickets"
 on public.ticket_logs
 for select

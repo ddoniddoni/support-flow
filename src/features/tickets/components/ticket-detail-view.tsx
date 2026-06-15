@@ -23,16 +23,13 @@ import {
   type TicketStatus,
 } from "@/types/domain";
 
+import type { AgentOption } from "../api/tickets-api";
 import { useAgents } from "../hooks/use-agents";
 import { useTicket } from "../hooks/use-ticket";
 import { useUpdateTicketAction } from "../hooks/use-update-ticket-action";
-import type { AgentOption } from "../api/tickets-api";
-import type {
-  TicketDetailData,
-  TicketLogItem,
-  TicketReplyItem,
-} from "../types";
+import type { TicketDetailData, TicketLogItem, TicketReplyItem } from "../types";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
+import { TicketReplyForm } from "./ticket-reply-form";
 
 type TicketDetailViewProps = {
   ticketId: string;
@@ -67,6 +64,8 @@ const actionLabels: Record<string, string> = {
   status_changed: "상태 변경",
   priority_changed: "우선순위 변경",
   assignee_changed: "담당자 변경",
+  reply_added: "고객 답변 등록",
+  internal_note_added: "내부 메모 추가",
 };
 
 function formatDateTime(value: string) {
@@ -166,13 +165,45 @@ function ReplyList({
   );
 }
 
+function ReplyComposerCard({
+  ticketId,
+  profile,
+  isInternal,
+}: {
+  ticketId: string;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+  isInternal: boolean;
+}) {
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle>
+          {isInternal ? "내부 메모 추가" : "고객 답변 등록"}
+        </CardTitle>
+        <CardDescription>
+          {isInternal
+            ? "고객에게 보이지 않는 처리 맥락과 인수인계 내용을 남깁니다."
+            : "고객에게 표시되는 공식 답변을 남깁니다."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <TicketReplyForm
+          ticketId={ticketId}
+          profile={profile}
+          isInternal={isInternal}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
   return (
     <Card className="rounded-lg">
       <CardHeader>
         <CardTitle>활동 로그</CardTitle>
         <CardDescription>
-          상태, 우선순위, 담당자 변경 이력을 추적합니다.
+          상태, 우선순위, 담당자, 답변 변경 이력을 추적합니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
@@ -470,12 +501,27 @@ function TicketDetailContent({
           />
 
           {canViewOperations ? (
-            <ReplyList
-              title="내부 메모"
-              description="지원팀 내부에서만 공유하는 메모입니다."
-              replies={data.internalNotes}
-              emptyText="아직 등록된 내부 메모가 없습니다."
+            <ReplyComposerCard
+              ticketId={ticket.id}
+              profile={profile}
+              isInternal={false}
             />
+          ) : null}
+
+          {canViewOperations ? (
+            <>
+              <ReplyList
+                title="내부 메모"
+                description="지원팀 내부에서만 공유하는 메모입니다."
+                replies={data.internalNotes}
+                emptyText="아직 등록된 내부 메모가 없습니다."
+              />
+              <ReplyComposerCard
+                ticketId={ticket.id}
+                profile={profile}
+                isInternal
+              />
+            </>
           ) : null}
         </div>
 

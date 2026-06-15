@@ -92,12 +92,12 @@
 
 ## Phase 9: Replies and internal notes
 
-- [ ] Create reply form
-- [ ] Create internal note form
-- [ ] Separate customer-visible replies and internal notes
-- [ ] Add validation
-- [ ] Add loading state
-- [ ] Update ticket detail after submission
+- [x] Create reply form
+- [x] Create internal note form
+- [x] Separate customer-visible replies and internal notes
+- [x] Add validation
+- [x] Add loading state
+- [x] Update ticket detail after submission
 
 ## Phase 10: Dashboard
 
