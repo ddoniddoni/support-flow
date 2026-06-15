@@ -21,15 +21,15 @@ export default async function NewTicketPage() {
       <div className="mx-auto grid max-w-3xl gap-6">
         <div className="flex flex-col gap-2">
           <Link className="text-sm font-medium text-zinc-500" href="/tickets">
-            티켓 목록
+            문의 목록
           </Link>
           <div>
             <h1 className="text-2xl font-semibold text-zinc-950">
-              새 티켓 등록
+              새 문의 등록
             </h1>
             <p className="mt-2 text-sm text-zinc-600">
-              지원팀이 빠르게 파악할 수 있도록 문제 상황과 필요한 조치를
-              구체적으로 적어 주세요.
+              지원팀이 빠르게 파악할 수 있도록 문의 내용을 구체적으로 적어
+              주세요.
             </p>
           </div>
         </div>
@@ -38,8 +38,7 @@ export default async function NewTicketPage() {
           <CardHeader>
             <CardTitle>문의 정보</CardTitle>
             <CardDescription>
-              우선순위는 지원팀이 접수 내용을 검토한 뒤 운영 기준에 따라
-              조정합니다.
+              접수 후 지원팀이 내용을 검토하고 처리 상태를 안내합니다.
             </CardDescription>
           </CardHeader>
           <CardContent>

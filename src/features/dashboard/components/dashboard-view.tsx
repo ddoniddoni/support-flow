@@ -62,7 +62,7 @@ function getRoleLabel(role: Tables<"profiles">["role"]) {
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
   if (role === "agent") {
-    return "나에게 배정된 티켓의 처리 상태와 우선순위를 추적합니다.";
+    return "나에게 배정된 문의의 처리 상태와 우선순위를 추적합니다.";
   }
 
   return "전체 지원 운영 현황과 병목 구간을 한눈에 확인합니다.";
@@ -180,9 +180,9 @@ function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
     <Card className="rounded-lg">
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <CardTitle>최근 업데이트 티켓</CardTitle>
+          <CardTitle>최근 업데이트 문의</CardTitle>
           <CardDescription>
-            권한 범위 안에서 최근 수정된 티켓을 보여줍니다.
+            권한 범위 안에서 최근 수정된 문의를 보여줍니다.
           </CardDescription>
         </div>
         <Link
@@ -197,7 +197,7 @@ function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-64">티켓</TableHead>
+                <TableHead className="min-w-64">문의</TableHead>
                 <TableHead>상태</TableHead>
                 <TableHead>우선순위</TableHead>
                 <TableHead>카테고리</TableHead>
@@ -237,9 +237,9 @@ function DashboardContent({ stats }: { stats: DashboardStats }) {
   if (!stats.totalTickets) {
     return (
       <EmptyState
-        title="아직 집계할 티켓이 없습니다"
-        description="배정되거나 생성된 티켓이 생기면 이곳에서 상태, 우선순위, 카테고리 분포를 확인할 수 있습니다."
-        action={<EmptyStateAction href="/tickets">티켓 목록 보기</EmptyStateAction>}
+        title="아직 집계할 문의가 없습니다"
+        description="배정되거나 생성된 문의가 생기면 이곳에서 상태, 우선순위, 카테고리 분포를 확인할 수 있습니다."
+        action={<EmptyStateAction href="/tickets">문의 목록 보기</EmptyStateAction>}
       />
     );
   }
@@ -248,13 +248,13 @@ function DashboardContent({ stats }: { stats: DashboardStats }) {
     <div className="grid gap-5">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="전체 티켓"
+          label="전체 문의"
           value={stats.totalTickets}
-          detail={`오늘 새로 접수된 티켓 ${stats.createdToday}건`}
+          detail={`오늘 새로 접수된 문의 ${stats.createdToday}건`}
           icon={Ticket}
         />
         <MetricCard
-          label="열린 티켓"
+          label="열린 문의"
           value={stats.openTickets}
           detail="아직 처리가 시작되지 않은 요청입니다."
           icon={Inbox}
@@ -262,13 +262,13 @@ function DashboardContent({ stats }: { stats: DashboardStats }) {
         <MetricCard
           label="진행 중"
           value={stats.inProgressTickets}
-          detail="상담원이 현재 처리 중인 티켓입니다."
+          detail="상담원이 현재 처리 중인 문의입니다."
           icon={Clock3}
         />
         <MetricCard
-          label="긴급 티켓"
+          label="긴급 문의"
           value={stats.urgentTickets}
-          detail={`해결 완료 티켓 ${stats.resolvedTickets}건`}
+          detail={`해결 완료 문의 ${stats.resolvedTickets}건`}
           icon={Flame}
         />
       </div>
@@ -278,7 +278,7 @@ function DashboardContent({ stats }: { stats: DashboardStats }) {
         <div className="grid content-start gap-5">
           <DistributionList
             title="상태 분포"
-            description="현재 티켓의 처리 단계별 비율입니다."
+            description="현재 문의의 처리 단계별 비율입니다."
             items={stats.statusDistribution}
           />
           <DistributionList
@@ -318,7 +318,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
             })}
             href="/tickets"
           >
-            티켓
+            문의 목록
           </Link>
           <LogoutButton />
         </div>

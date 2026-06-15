@@ -31,14 +31,14 @@ function getCreateTicketErrorMessage(message: string) {
   const normalizedMessage = message.toLowerCase();
 
   if (normalizedMessage.includes("row-level security")) {
-    return "티켓을 등록할 권한이 없습니다. Supabase RLS 정책을 확인해 주세요.";
+    return "문의를 등록할 권한이 없습니다. Supabase RLS 정책을 확인해 주세요.";
   }
 
   if (normalizedMessage.includes("login") || normalizedMessage.includes("auth")) {
     return "로그인 후 다시 시도해 주세요.";
   }
 
-  return "티켓을 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  return "문의를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
 export function CreateTicketForm() {
@@ -120,7 +120,7 @@ export function CreateTicketForm() {
         <Textarea
           id="content"
           className="min-h-40 resize-y"
-          placeholder="문제가 발생한 상황, 기대한 결과, 실제 결과를 함께 적어 주세요. 지원팀이 접수 후 우선순위를 판단합니다."
+          placeholder="문의가 필요한 상황, 기대한 결과, 실제 결과를 함께 적어 주세요. 지원팀이 접수 후 확인합니다."
           aria-invalid={Boolean(errors.content)}
           disabled={isPending}
           {...register("content")}
@@ -152,7 +152,7 @@ export function CreateTicketForm() {
           ) : (
             <Send className="size-4" aria-hidden="true" />
           )}
-          티켓 등록
+          문의 등록
         </Button>
       </div>
     </form>
