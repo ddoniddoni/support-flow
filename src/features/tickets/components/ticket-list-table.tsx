@@ -56,7 +56,8 @@ function StatusBadge({ status }: { status: TicketStatus }) {
           "border-amber-200 bg-amber-50 text-amber-700",
         status === "resolved" &&
           "border-emerald-200 bg-emerald-50 text-emerald-700",
-        status === "closed" && "border-zinc-200 bg-zinc-100 text-zinc-600",
+        status === "closed" &&
+          "border-border bg-muted text-muted-foreground",
       )}
     >
       {statusLabels[status]}
@@ -72,7 +73,8 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
         priority === "urgent" && "border-red-200 bg-red-50 text-red-700",
         priority === "high" && "border-orange-200 bg-orange-50 text-orange-700",
         priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
-        priority === "low" && "border-zinc-200 bg-zinc-50 text-zinc-600",
+        priority === "low" &&
+          "border-border bg-muted/60 text-muted-foreground",
       )}
     >
       {priorityLabels[priority]}
@@ -84,11 +86,13 @@ function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
   return (
     <Link
       href={`/tickets/${ticket.id}`}
-      className="grid gap-3 rounded-lg border border-zinc-300 bg-white p-4 shadow-sm"
+      className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-sm"
     >
       <div>
-        <p className="font-medium text-zinc-950">{ticket.title}</p>
-        <p className="mt-1 break-all text-xs text-zinc-500">{ticket.id}</p>
+        <p className="font-medium text-foreground">{ticket.title}</p>
+        <p className="mt-1 break-all text-xs text-muted-foreground">
+          {ticket.id}
+        </p>
       </div>
       <div className="flex flex-wrap gap-2">
         <StatusBadge status={ticket.status} />
@@ -97,7 +101,7 @@ function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
           {categoryLabels[ticket.category] ?? ticket.category}
         </Badge>
       </div>
-      <div className="grid gap-1 text-xs text-zinc-500">
+      <div className="grid gap-1 text-xs text-muted-foreground">
         <p>생성일 {formatDate(ticket.created_at)}</p>
         <p>수정일 {formatDate(ticket.updated_at)}</p>
       </div>
@@ -114,7 +118,7 @@ export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-zinc-300 bg-white shadow-sm md:block">
+      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -132,11 +136,11 @@ export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
                 <TableCell>
                   <Link
                     href={`/tickets/${ticket.id}`}
-                    className="font-medium text-zinc-950 hover:underline"
+                    className="font-medium text-foreground hover:underline"
                   >
                     {ticket.title}
                   </Link>
-                  <p className="mt-1 max-w-md truncate text-xs text-zinc-500">
+                  <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
                     {ticket.id}
                   </p>
                 </TableCell>

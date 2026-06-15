@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { LogoutButton } from "@/features/auth/components/logout-button";
 import type { Tables } from "@/types/database";
+import { ThemeToggle } from "./theme-toggle";
 
 type WorkspaceHeaderProps = {
   profile: Pick<Tables<"profiles">, "email" | "name" | "role">;
@@ -23,14 +24,17 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{roleLabels[profile.role]}</Badge>
-          <span className="truncate text-sm text-zinc-500">{profile.email}</span>
+          <span className="truncate text-sm text-muted-foreground">
+            {profile.email}
+          </span>
         </div>
-        <p className="mt-1 text-lg font-semibold text-zinc-950">
+        <p className="mt-1 text-lg font-semibold text-foreground">
           {profile.name}
         </p>
       </div>
 
       <nav className="grid gap-2 sm:flex sm:items-center">
+        <ThemeToggle />
         {canViewDashboard ? (
           <Link
             className={buttonVariants({

@@ -11,7 +11,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-muted/60 p-6">
       <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-red-700">
         <div className="flex gap-3">
           <AlertCircle className="mt-0.5 size-5" aria-hidden="true" />

@@ -25,6 +25,7 @@ SupportFlow demonstrates the front-end patterns expected in an internal SaaS das
 - Activity logs for traceability
 - Feature-based architecture for maintainability
 - Mobile-friendly ticket list layout
+- Light, dark, and system theme support
 
 ## Tech Stack
 
@@ -54,6 +55,7 @@ SupportFlow demonstrates the front-end patterns expected in an internal SaaS das
 - Customer-visible replies and internal support notes
 - Activity logs for ticket operations
 - Dashboard statistics by role-scoped ticket access
+- Light/dark mode toggle with system preference support
 - Table skeletons, detail skeletons, empty states, error states, unauthorized page, 404 page
 
 ## Role-Based Access Control

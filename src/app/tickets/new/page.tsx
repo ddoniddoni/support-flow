@@ -15,19 +15,19 @@ export default async function NewTicketPage() {
   const profile = await requireServerRole(["customer"]);
 
   return (
-    <main className="min-h-screen bg-zinc-100 p-6">
+    <main className="min-h-screen bg-muted/60 p-6">
       <WorkspaceHeader profile={profile} />
 
       <div className="mx-auto grid max-w-3xl gap-6">
         <div className="flex flex-col gap-2">
-          <Link className="text-sm font-medium text-zinc-500" href="/tickets">
+          <Link className="text-sm font-medium text-muted-foreground" href="/tickets">
             문의 목록
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-950">
+            <h1 className="text-2xl font-semibold text-foreground">
               새 문의 등록
             </h1>
-            <p className="mt-2 text-sm text-zinc-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               지원팀이 빠르게 파악할 수 있도록 문의 내용을 구체적으로 적어
               주세요.
             </p>
