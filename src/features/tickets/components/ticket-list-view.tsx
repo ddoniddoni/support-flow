@@ -185,36 +185,45 @@ export function TicketListView({
           </Button>
         </form>
 
-        <div className="grid gap-2 md:grid-cols-4">
-          <select
-            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-            value={filters.status ?? "all"}
-            onChange={(event) =>
-              updateParams({ status: event.target.value, page: "1" })
-            }
-          >
-            <option value="all">{statusLabels.all}</option>
-            {ticketStatuses.map((status) => (
-              <option key={status} value={status}>
-                {statusLabels[status]}
-              </option>
-            ))}
-          </select>
+        <div
+          className={cn(
+            "grid gap-2",
+            profile.role === "customer" ? "md:grid-cols-2" : "md:grid-cols-4",
+          )}
+        >
+          {profile.role === "customer" ? null : (
+            <>
+              <select
+                className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                value={filters.status ?? "all"}
+                onChange={(event) =>
+                  updateParams({ status: event.target.value, page: "1" })
+                }
+              >
+                <option value="all">{statusLabels.all}</option>
+                {ticketStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabels[status]}
+                  </option>
+                ))}
+              </select>
 
-          <select
-            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-            value={filters.priority ?? "all"}
-            onChange={(event) =>
-              updateParams({ priority: event.target.value, page: "1" })
-            }
-          >
-            <option value="all">{priorityLabels.all}</option>
-            {ticketPriorities.map((priority) => (
-              <option key={priority} value={priority}>
-                {priorityLabels[priority]}
-              </option>
-            ))}
-          </select>
+              <select
+                className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                value={filters.priority ?? "all"}
+                onChange={(event) =>
+                  updateParams({ priority: event.target.value, page: "1" })
+                }
+              >
+                <option value="all">{priorityLabels.all}</option>
+                {ticketPriorities.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priorityLabels[priority]}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
 
           <select
             className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
@@ -276,7 +285,7 @@ export function TicketListView({
 
       {!ticketsQuery.isLoading && !ticketsQuery.isError && data ? (
         <div className={cn(!hasTickets && "hidden")}>
-          <TicketListTable tickets={data.tickets} />
+          <TicketListTable tickets={data.tickets} role={profile.role} />
           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               총 {data.total}건 중 {data.tickets.length}건 표시

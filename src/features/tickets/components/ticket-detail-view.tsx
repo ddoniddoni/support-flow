@@ -68,6 +68,13 @@ const actionLabels: Record<string, string> = {
   internal_note_added: "내부 메모 추가",
 };
 
+const customerStatusLabels: Record<TicketStatus, string> = {
+  open: "접수 완료",
+  in_progress: "처리 중",
+  resolved: "답변 완료",
+  closed: "종료",
+};
+
 const authorRoleLabels: Record<Tables<"profiles">["role"], string> = {
   customer: "고객",
   agent: "상담원",
@@ -140,6 +147,14 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
       )}
     >
       {priorityLabels[priority]}
+    </Badge>
+  );
+}
+
+function CustomerStatusBadge({ status }: { status: TicketStatus }) {
+  return (
+    <Badge variant="outline" className="border-border bg-muted/60 text-foreground">
+      {customerStatusLabels[status]}
     </Badge>
   );
 }
@@ -469,6 +484,7 @@ function TicketDetailContent({
 
   const ticket = data.ticket;
   const canViewOperations = profile.role !== "customer";
+  const isCustomer = profile.role === "customer";
 
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
@@ -482,8 +498,14 @@ function TicketDetailContent({
         </Link>
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={ticket.status} />
-            <PriorityBadge priority={ticket.priority} />
+            {isCustomer ? (
+              <CustomerStatusBadge status={ticket.status} />
+            ) : (
+              <>
+                <StatusBadge status={ticket.status} />
+                <PriorityBadge priority={ticket.priority} />
+              </>
+            )}
             <Badge variant="outline">
               {categoryLabels[ticket.category] ?? ticket.category}
             </Badge>
@@ -560,30 +582,40 @@ function TicketDetailContent({
                   {ticket.id}
                 </p>
               </div>
+              {canViewOperations ? (
+                <>
+                  <div>
+                    <p className="text-muted-foreground">고객 ID</p>
+                    <p className="break-all font-medium text-foreground">
+                      {ticket.customer_id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">담당자</p>
+                    <p className="break-all font-medium text-foreground">
+                      {ticket.assignee_id ?? "미배정"}
+                    </p>
+                  </div>
+                </>
+              ) : null}
               <div>
-                <p className="text-muted-foreground">고객 ID</p>
-                <p className="break-all font-medium text-foreground">
-                  {ticket.customer_id}
+                <p className="text-muted-foreground">
+                  {isCustomer ? "처리 상태" : "상태"}
                 </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">담당자</p>
-                <p className="break-all font-medium text-foreground">
-                  {ticket.assignee_id ?? "미배정"}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">상태</p>
                 <p className="font-medium text-foreground">
-                  {statusLabels[ticket.status]}
+                  {isCustomer
+                    ? customerStatusLabels[ticket.status]
+                    : statusLabels[ticket.status]}
                 </p>
               </div>
-              <div>
-                <p className="text-muted-foreground">우선순위</p>
-                <p className="font-medium text-foreground">
-                  {priorityLabels[ticket.priority]}
-                </p>
-              </div>
+              {canViewOperations ? (
+                <div>
+                  <p className="text-muted-foreground">우선순위</p>
+                  <p className="font-medium text-foreground">
+                    {priorityLabels[ticket.priority]}
+                  </p>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
