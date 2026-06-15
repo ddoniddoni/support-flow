@@ -1,74 +1,151 @@
 # SupportFlow
 
-SupportFlow는 B2B 고객 지원팀을 위한 **역할 기반 티켓 관리 SaaS 대시보드**입니다.
+SupportFlow is a portfolio-grade B2B customer support ticket management SaaS built with Next.js, Supabase, TanStack Query, React Hook Form, and Zod.
 
-단순 문의 게시판이나 CRUD 예제가 아니라, 실제 운영 도구에 가까운 프론트엔드 구조를 보여주기 위해 만든 포트폴리오 프로젝트입니다. 인증, 권한 분기, 티켓 테이블, URL 기반 필터링, 서버 상태 관리, 폼 검증, 로딩/에러/빈 상태까지 실제 업무형 대시보드에서 자주 마주치는 문제를 다루는 것을 목표로 합니다.
+It is designed to look and behave like a practical support operations dashboard rather than a simple CRUD board. The app covers authenticated workflows, role-based access control, ticket filtering, detail operations, customer-visible replies, internal notes, activity logs, and dashboard statistics.
 
-## 프로젝트가 보여주려는 것
+## Problem
 
-SupportFlow의 핵심 목표는 “실무에서 다룰 법한 관리자 화면을 안정적으로 설계하고 구현할 수 있는가”를 보여주는 것입니다.
+Support teams need a reliable place to receive customer issues, route them to agents, track priority, and keep an audit trail of operational changes. A basic inquiry board usually stops at creating and listing messages. SupportFlow models the workflow more realistically:
 
-- 고객, 상담원, 관리자 역할에 따라 다른 화면과 액션을 제공하는 구조
-- 검색, 필터, 정렬, 페이지네이션을 갖춘 티켓 운영 테이블
-- 티켓 생성, 상세 조회, 상태 변경, 담당자 배정 흐름
-- 고객에게 보이는 답변과 내부 운영 메모의 분리
-- 활동 로그를 통한 변경 이력 추적
-- 로딩, 에러, 빈 결과, 권한 없음 상태를 고려한 UX
-- 기능 단위로 분리된 유지보수 가능한 폴더 구조
+- Customers create tickets and see only their own requests.
+- Agents work from assigned tickets, reply to customers, update status, and add internal notes.
+- Admins see all tickets, assign agents, change priority, and monitor operational statistics.
 
-## 주요 사용자 흐름
+## Why This Project Is Realistic
 
-### Customer
+SupportFlow demonstrates the front-end patterns expected in an internal SaaS dashboard:
 
-고객은 계정을 만들고 로그인한 뒤, 문의 티켓을 생성하고 본인이 만든 티켓의 진행 상태와 답변을 확인할 수 있습니다.
+- Authenticated App Router pages
+- Role-aware routing and data access
+- URL-based search, filter, sort, and pagination
+- Server state handled with TanStack Query
+- Form validation with React Hook Form and Zod
+- Loading, error, empty, unauthorized, and not-found states
+- Activity logs for traceability
+- Feature-based architecture for maintainability
+- Mobile-friendly ticket list layout
 
-### Agent
+## Tech Stack
 
-상담원은 자신에게 배정된 티켓을 확인하고, 고객에게 답변하거나 내부 메모를 남기며, 티켓 상태를 `open`에서 `in_progress`, `resolved` 등으로 변경할 수 있습니다.
-
-### Admin
-
-관리자는 전체 티켓을 조회하고, 우선순위와 상태를 변경하며, 상담원을 배정하고, 대시보드 통계를 통해 지원팀의 운영 상태를 확인할 수 있습니다.
-
-## 기술 스택
-
-| 기술 | 사용 이유 |
+| Technology | Why it is used |
 | --- | --- |
-| Next.js App Router | 인증 기반 라우팅과 대시보드 화면 구성을 위한 React 프레임워크 |
-| TypeScript | 도메인 타입과 API 응답을 안전하게 다루기 위해 사용 |
-| Tailwind CSS | 빠르고 일관된 대시보드 UI 스타일링 |
-| shadcn/ui | 테이블, 버튼, 카드, 입력 요소 등 재사용 가능한 UI 기반 |
-| Supabase | 인증, 프로필, 티켓 데이터 저장소 |
-| TanStack Query | 서버 상태 캐싱, 로딩/에러 상태, 데이터 갱신 관리 |
-| React Hook Form | 폼 상태를 가볍고 명확하게 관리 |
-| Zod | 사용자 입력값 검증과 타입 추론 |
-| Zustand | 모달, 사이드바 같은 작은 UI 상태만 관리 |
-| Vercel | 배포 대상 플랫폼 |
+| Next.js | App Router, protected pages, server components, and production deployment flow |
+| TypeScript | Type-safe domain models, API responses, forms, and component props |
+| Tailwind CSS | Fast, consistent dashboard styling |
+| shadcn/ui / Base UI | Accessible buttons, cards, tables, inputs, badges, and skeletons |
+| Supabase | Auth, Postgres database, row-level security, and application data |
+| TanStack Query | Server state caching, loading/error states, invalidation, and optimistic updates |
+| React Hook Form | Performant form state management |
+| Zod | Runtime validation and inferred TypeScript types |
+| Vercel | Intended deployment target |
 
-## 핵심 기능
+## Main Features
 
-- 이메일 기반 로그인 및 회원가입
-- Supabase Auth 기반 로그아웃
-- 고객, 상담원, 관리자 역할 모델
-- 보호 라우트와 권한 없음 페이지
-- 티켓 생성 폼
-- 티켓 목록 테이블
-- 검색, 상태 필터, 우선순위 필터, 정렬, 페이지네이션
-- URL query parameter 기반 목록 상태 관리
-- 티켓 상세 페이지
-- 상태 변경 및 담당자 배정
-- 고객 공개 답변과 내부 메모
-- 티켓 활동 로그
-- 대시보드 통계 카드
-- 테이블 스켈레톤, 상세 스켈레톤, 에러 상태, 빈 상태
+- Email/password signup and login with Supabase Auth
+- Protected routes and authenticated redirects
+- Role model: `customer`, `agent`, `admin`
+- Customer-only ticket creation
+- Role-scoped ticket list
+- URL query based search, filters, sort, and pagination
+- Ticket detail page with metadata, replies, internal notes, and logs
+- Status changes for agents and admins
+- Priority changes and agent assignment for admins
+- Customer-visible replies and internal support notes
+- Activity logs for ticket operations
+- Dashboard statistics by role-scoped ticket access
+- Table skeletons, detail skeletons, empty states, error states, unauthorized page, 404 page
 
-## 현재 구현 상태
+## Role-Based Access Control
 
-현재는 Next.js 프로젝트 기반과 주요 라우트, UI 컴포넌트, 도메인 타입, Supabase 클라이언트, TanStack Query Provider, 티켓 폼 스키마, 기본 페이지 구조가 준비되어 있습니다.
+SupportFlow enforces roles in both UI flow and Supabase row-level security.
 
-Supabase 테이블 초안과 TypeScript Database 타입도 함께 준비되어 있고, 로그인/회원가입/로그아웃 흐름은 Supabase Auth와 연결되어 있습니다. 보호가 필요한 주요 업무 화면은 로그인 전 접근 시 로그인 화면으로 이동합니다.
+| Role | Access |
+| --- | --- |
+| Customer | Create tickets, view only own tickets, view public replies |
+| Agent | View assigned tickets, reply, change status, add internal notes |
+| Admin | View all tickets, assign agents, change priority/status, view dashboard statistics |
 
-## 폴더 구조
+The client receives the current profile and passes role context to feature hooks. Supabase RLS policies also restrict access at the database layer.
+
+## URL-Based Filtering
+
+Ticket list state is stored in query parameters where possible. This makes filtered views shareable and refresh-safe.
+
+Example:
+
+```txt
+/tickets?status=open&priority=high&category=technical&sort=updated_desc&page=2
+```
+
+Implemented controls:
+
+- Search by title
+- Status filter
+- Priority filter
+- Category filter
+- Sort order
+- Pagination
+
+## TanStack Query Usage
+
+Server state is handled through feature hooks:
+
+- `useTickets`
+- `useTicket`
+- `useCreateTicket`
+- `useUpdateTicketAction`
+- `useCreateTicketReply`
+- `useDashboardStats`
+
+Mutations invalidate ticket, ticket list, and dashboard queries after changes. Ticket action updates use optimistic UI updates with rollback on failure.
+
+## Forms and Validation
+
+Forms use React Hook Form with Zod schemas:
+
+- Login form
+- Signup form
+- Ticket creation form
+- Reply form
+- Internal note form
+
+Submit buttons are disabled while pending, and validation messages are shown next to the relevant field.
+
+## Loading, Error, Empty, and Unauthorized States
+
+SupportFlow includes:
+
+- Ticket table skeleton
+- Ticket detail skeleton
+- Dashboard skeleton
+- Form pending states
+- Error messages for query failures
+- Empty states for no tickets and no dashboard data
+- Unauthorized page
+- Not found page
+- Global loading and error pages
+
+## Screenshots
+
+Screenshots are stored in `docs/screenshots`.
+
+### Home
+
+![SupportFlow home screen](docs/screenshots/home.png)
+
+### Login
+
+![SupportFlow login screen](docs/screenshots/login.png)
+
+| Screen | File |
+| --- | --- |
+| Home | `docs/screenshots/home.png` |
+| Login | `docs/screenshots/login.png` |
+
+Dashboard and authenticated ticket screenshots should be captured after seed users are available in the deployed environment.
+
+## Folder Structure
 
 ```txt
 src/
@@ -84,120 +161,146 @@ src/
     unauthorized/
 
   components/
-    ui/
     common/
-    layout/
+    ui/
 
   features/
     auth/
-    tickets/
+      api/
+      components/
       schemas/
+      types/
     dashboard/
-    users/
+      api/
+      components/
+      hooks/
+    tickets/
+      api/
+      components/
+      hooks/
+      schemas/
+      types/
 
   lib/
     supabase/
-    query-client.ts
     env.ts
+    query-client.ts
     utils.ts
 
   types/
+    database.ts
     domain.ts
 ```
 
-## 환경 변수
+## Getting Started
 
-`.env.example`을 복사해 `.env.local`을 만든 뒤 Supabase 값을 입력합니다.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env.local`:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-환경 변수를 수정한 뒤에는 개발 서버를 다시 시작해야 합니다.
-
-초기 테이블은 Supabase SQL editor에서 `docs/SUPABASE_SCHEMA.sql`을 실행해 준비할 수 있습니다.
-
-## 실행 방법
-
-```bash
-npm install
-npm run dev
-```
-
-PowerShell 실행 정책 때문에 `npm`이 막히는 경우에는 아래처럼 실행할 수 있습니다.
+Run the development server:
 
 ```bash
 npm.cmd run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열면 됩니다.
-
-## 개발 규칙
-
-- 서버에서 가져오는 데이터는 TanStack Query hook으로 관리합니다.
-- 검색, 필터, 정렬, 페이지네이션 상태는 가능한 URL query parameter에 둡니다.
-- 사용자 입력 폼은 React Hook Form과 Zod를 함께 사용합니다.
-- Zustand는 모달, 사이드바처럼 작은 UI 상태에만 사용합니다.
-- `any`는 피하고, 도메인 타입을 명확히 정의합니다.
-- 주요 화면마다 로딩, 에러, 빈 상태, 권한 없음 상태를 함께 고려합니다.
-
-## Git 작업 방식
-
-이 프로젝트는 `master`를 사용하지 않고, `develop`을 기본 통합 브랜치처럼 사용합니다.
-
-Phase 단위 작업은 항상 별도 브랜치에서 진행합니다.
-
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b phase/03-auth
-```
-
-작업이 끝나면 검증 후 Phase 브랜치를 원격에 push하고, `develop`에 merge한 뒤 `develop`도 다시 push합니다.
-
-```bash
-npm.cmd run lint
-npm.cmd run build
-git push -u origin phase/03-auth
-git checkout develop
-git merge phase/03-auth
-git push origin develop
-```
-
-## 데모 계정
-
-Supabase 인증과 seed data가 준비되면 아래 형식으로 데모 계정을 추가할 예정입니다.
-
-| 역할 | 이메일 | 비밀번호 |
-| --- | --- | --- |
-| Customer | 준비 예정 | 준비 예정 |
-| Agent | 준비 예정 | 준비 예정 |
-| Admin | 준비 예정 | 준비 예정 |
-
-## 문제 해결
-
-| 상황 | 해결 방법 |
-| --- | --- |
-| PowerShell에서 `npm` 실행이 막힘 | `npm.cmd run dev`처럼 `npm.cmd`를 사용합니다. |
-| Supabase 요청이 실패함 | `.env.local` 값이 있는지 확인하고 dev server를 재시작합니다. |
-| `/_next/webpack-hmr` cross-origin 경고가 보임 | `next.config.ts`의 `allowedDevOrigins` 설정을 확인합니다. |
-| 스타일이 깨져 보임 | `src/app/globals.css`와 Tailwind 설정이 유지되어 있는지 확인합니다. |
-
-## 배포
-
-배포 대상은 Vercel입니다.
-
-첫 preview 또는 production 배포 후 이곳에 배포 링크를 추가할 예정입니다.
+Open:
 
 ```txt
-Deployment URL: 준비 예정
+http://localhost:3000
 ```
 
-## 참고 문서
+## Supabase Setup
 
-프로젝트 기획과 작업 목록은 아래 문서에서 관리합니다.
+Run the schema in Supabase SQL Editor:
 
-- `docs/PROJECT_SPEC.md`
-- `docs/SUPABASE_SCHEMA.sql`
-- `docs/TASKS.md`
+```txt
+docs/SUPABASE_SCHEMA.sql
+```
+
+The schema includes:
+
+- `profiles`
+- `tickets`
+- `ticket_replies`
+- `ticket_logs`
+- enum types for roles, status, and priority
+- RLS policies for customers, agents, and admins
+- trigger helpers for profile creation and ticket timestamps
+
+## Demo Accounts
+
+Create these users in Supabase Auth, then set their `profiles.role` values in the `profiles` table.
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Customer | `customer@supportflow.dev` | `Password123!` |
+| Agent | `agent@supportflow.dev` | `Password123!` |
+| Admin | `admin@supportflow.dev` | `Password123!` |
+
+Recommended role updates:
+
+```sql
+update public.profiles set role = 'customer' where email = 'customer@supportflow.dev';
+update public.profiles set role = 'agent' where email = 'agent@supportflow.dev';
+update public.profiles set role = 'admin' where email = 'admin@supportflow.dev';
+```
+
+## Useful Scripts
+
+```bash
+npm.cmd run dev
+npm.cmd run lint
+npm.cmd run build
+```
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| Supabase request fails | Check `.env.local`, restart the dev server, and verify RLS policies |
+| Signup succeeds but role is wrong | Update `profiles.role` in Supabase |
+| Agent sees no tickets | Assign tickets to the agent through an admin account |
+| Admin cannot assign agents | Verify admin profile role and profile select policy |
+| `npm` is blocked in PowerShell | Use `npm.cmd run dev`, `npm.cmd run lint`, or `npm.cmd run build` |
+
+## Deployment
+
+Target platform: Vercel
+
+```txt
+Deployment URL: TBD
+```
+
+Add these environment variables in Vercel:
+
+```txt
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+## Status
+
+Completed phases:
+
+- Project setup
+- Supabase setup
+- Authentication
+- Role-based access
+- Ticket creation
+- Ticket list
+- Ticket detail
+- Ticket actions
+- Replies and internal notes
+- Dashboard statistics
+- Polish
+- Portfolio documentation
