@@ -1,7 +1,8 @@
 "use client";
 
-import { AlertCircle, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
@@ -15,16 +16,30 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
-import type { TicketPriority, TicketStatus } from "@/types/domain";
+import {
+  ticketPriorities,
+  ticketStatuses,
+  type TicketPriority,
+  type TicketStatus,
+} from "@/types/domain";
 
+import { useAgents } from "../hooks/use-agents";
 import { useTicket } from "../hooks/use-ticket";
-import type { TicketDetailData, TicketLogItem, TicketReplyItem } from "../types";
+import { useUpdateTicketAction } from "../hooks/use-update-ticket-action";
+import type { AgentOption } from "../api/tickets-api";
+import type {
+  TicketDetailData,
+  TicketLogItem,
+  TicketReplyItem,
+} from "../types";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
 
 type TicketDetailViewProps = {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
 };
+
+type OperationField = "status" | "priority" | "assignee";
 
 const statusLabels: Record<TicketStatus, string> = {
   open: "열림",
@@ -48,6 +63,12 @@ const categoryLabels: Record<string, string> = {
   other: "기타",
 };
 
+const actionLabels: Record<string, string> = {
+  status_changed: "상태 변경",
+  priority_changed: "우선순위 변경",
+  assignee_changed: "담당자 변경",
+};
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
@@ -56,6 +77,22 @@ function formatDateTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatLogValue(value: string | null) {
+  if (!value) {
+    return "없음";
+  }
+
+  if (value in statusLabels) {
+    return statusLabels[value as TicketStatus];
+  }
+
+  if (value in priorityLabels) {
+    return priorityLabels[value as TicketPriority];
+  }
+
+  return value;
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -134,15 +171,20 @@ function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
     <Card className="rounded-lg">
       <CardHeader>
         <CardTitle>활동 로그</CardTitle>
-        <CardDescription>상태, 우선순위, 배정 변경 이력을 추적합니다.</CardDescription>
+        <CardDescription>
+          상태, 우선순위, 담당자 변경 이력을 추적합니다.
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {logs.length ? (
           logs.map((log) => (
             <div key={log.id} className="border-l-2 border-zinc-200 pl-3">
-              <p className="text-sm font-medium text-zinc-900">{log.action}</p>
+              <p className="text-sm font-medium text-zinc-900">
+                {actionLabels[log.action] ?? log.action}
+              </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {log.before_value ?? "없음"} → {log.after_value ?? "없음"}
+                {formatLogValue(log.before_value)} →{" "}
+                {formatLogValue(log.after_value)}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
                 {formatDateTime(log.created_at)}
@@ -150,8 +192,202 @@ function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
             </div>
           ))
         ) : (
-          <p className="text-sm text-zinc-500">아직 기록된 활동이 없습니다.</p>
+          <p className="text-sm text-zinc-500">
+            아직 기록된 활동이 없습니다.
+          </p>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TicketOperationsPanel({
+  ticket,
+  profile,
+}: {
+  ticket: NonNullable<TicketDetailData["ticket"]>;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+}) {
+  const [pendingField, setPendingField] = useState<OperationField | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const agentsQuery = useAgents(profile.role === "admin");
+  const updateAction = useUpdateTicketAction();
+  const isAdmin = profile.role === "admin";
+  const isPending = updateAction.isPending;
+
+  function runAction(
+    field: OperationField,
+    input: {
+      status?: TicketStatus;
+      priority?: TicketPriority;
+      assigneeId?: string | null;
+    },
+  ) {
+    setPendingField(field);
+    setMessage(null);
+    setError(null);
+
+    updateAction.mutate(
+      {
+        ticketId: ticket.id,
+        profile,
+        ...input,
+      },
+      {
+        onSuccess: () => {
+          setMessage("변경 사항을 저장했습니다.");
+        },
+        onError: (mutationError) => {
+          setError(
+            mutationError instanceof Error
+              ? mutationError.message
+              : "변경 사항을 저장하지 못했습니다.",
+          );
+        },
+        onSettled: () => {
+          setPendingField(null);
+        },
+      },
+    );
+  }
+
+  function getAgentLabel(agentId: string | null) {
+    if (!agentId) {
+      return "미배정";
+    }
+
+    const agent = agentsQuery.data?.find((item) => item.id === agentId);
+    return agent ? `${agent.name} (${agent.email})` : agentId;
+  }
+
+  return (
+    <Card className="rounded-lg">
+      <CardHeader>
+        <CardTitle>운영 액션</CardTitle>
+        <CardDescription>
+          권한에 따라 상태, 우선순위, 담당자를 관리합니다.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-zinc-700" htmlFor="status">
+            상태
+          </label>
+          <div className="relative">
+            <select
+              id="status"
+              className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+              value={ticket.status}
+              disabled={isPending}
+              onChange={(event) =>
+                runAction("status", {
+                  status: event.target.value as TicketStatus,
+                })
+              }
+            >
+              {ticketStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {statusLabels[status]}
+                </option>
+              ))}
+            </select>
+            {pendingField === "status" ? (
+              <Loader2
+                className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                aria-hidden="true"
+              />
+            ) : null}
+          </div>
+        </div>
+
+        {isAdmin ? (
+          <>
+            <div className="grid gap-1.5">
+              <label
+                className="text-sm font-medium text-zinc-700"
+                htmlFor="priority"
+              >
+                우선순위
+              </label>
+              <div className="relative">
+                <select
+                  id="priority"
+                  className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+                  value={ticket.priority}
+                  disabled={isPending}
+                  onChange={(event) =>
+                    runAction("priority", {
+                      priority: event.target.value as TicketPriority,
+                    })
+                  }
+                >
+                  {ticketPriorities.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {priorityLabels[priority]}
+                    </option>
+                  ))}
+                </select>
+                {pendingField === "priority" ? (
+                  <Loader2
+                    className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            <div className="grid gap-1.5">
+              <label
+                className="text-sm font-medium text-zinc-700"
+                htmlFor="assignee"
+              >
+                담당자
+              </label>
+              <div className="relative">
+                <select
+                  id="assignee"
+                  className="h-8 w-full rounded-lg border border-input bg-white px-2.5 text-sm"
+                  value={ticket.assignee_id ?? "unassigned"}
+                  disabled={isPending || agentsQuery.isLoading}
+                  onChange={(event) =>
+                    runAction("assignee", {
+                      assigneeId:
+                        event.target.value === "unassigned"
+                          ? null
+                          : event.target.value,
+                    })
+                  }
+                >
+                  <option value="unassigned">미배정</option>
+                  {(agentsQuery.data ?? []).map((agent: AgentOption) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name} ({agent.email})
+                    </option>
+                  ))}
+                </select>
+                {pendingField === "assignee" || agentsQuery.isLoading ? (
+                  <Loader2
+                    className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </div>
+              {agentsQuery.isError ? (
+                <p className="text-xs text-red-600">
+                  담당자 목록을 불러오지 못했습니다.
+                </p>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+
+        <div className="rounded-lg bg-zinc-50 p-3 text-xs text-zinc-600">
+          현재 담당자: {getAgentLabel(ticket.assignee_id)}
+        </div>
+
+        {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
       </CardContent>
     </Card>
   );
@@ -162,7 +398,7 @@ function TicketDetailContent({
   profile,
 }: {
   data: TicketDetailData;
-  profile: Pick<Tables<"profiles">, "role">;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
 }) {
   if (!data.ticket) {
     return (
@@ -236,7 +472,7 @@ function TicketDetailContent({
           {canViewOperations ? (
             <ReplyList
               title="내부 메모"
-              description="지원팀 내부에서만 공유되는 메모입니다."
+              description="지원팀 내부에서만 공유하는 메모입니다."
               replies={data.internalNotes}
               emptyText="아직 등록된 내부 메모가 없습니다."
             />
@@ -244,6 +480,10 @@ function TicketDetailContent({
         </div>
 
         <div className="grid content-start gap-5">
+          {canViewOperations ? (
+            <TicketOperationsPanel ticket={ticket} profile={profile} />
+          ) : null}
+
           <Card className="rounded-lg">
             <CardHeader>
               <CardTitle>티켓 메타데이터</CardTitle>
@@ -251,7 +491,9 @@ function TicketDetailContent({
             <CardContent className="grid gap-3 text-sm">
               <div>
                 <p className="text-zinc-500">티켓 ID</p>
-                <p className="break-all font-medium text-zinc-950">{ticket.id}</p>
+                <p className="break-all font-medium text-zinc-950">
+                  {ticket.id}
+                </p>
               </div>
               <div>
                 <p className="text-zinc-500">고객 ID</p>
@@ -300,7 +542,9 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
         <div className="flex gap-3">
           <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
           <div>
-            <p className="font-medium">티켓 상세를 불러오지 못했습니다.</p>
+            <p className="font-medium">
+              티켓 상세 정보를 불러오지 못했습니다.
+            </p>
             <p className="mt-1 text-red-600">
               권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해 주세요.
             </p>

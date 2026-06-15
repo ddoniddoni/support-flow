@@ -105,6 +105,18 @@ after insert on auth.users
 for each row
 execute function public.handle_new_user();
 
+create or replace function public.current_user_role()
+returns public.user_role
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role
+  from public.profiles
+  where id = auth.uid()
+$$;
+
 alter table public.profiles enable row level security;
 alter table public.tickets enable row level security;
 alter table public.ticket_replies enable row level security;
@@ -115,6 +127,12 @@ on public.profiles
 for select
 to authenticated
 using (auth.uid() = id);
+
+create policy "Admins can view support profiles"
+on public.profiles
+for select
+to authenticated
+using (public.current_user_role() = 'admin');
 
 create policy "Profiles can be updated by the owner"
 on public.profiles
@@ -154,6 +172,50 @@ on public.tickets
 for select
 to authenticated
 using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Agents can update assigned tickets"
+on public.tickets
+for update
+to authenticated
+using (
+  auth.uid() = assignee_id
+  and exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'agent'
+  )
+)
+with check (
+  auth.uid() = assignee_id
+  and exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'agent'
+  )
+);
+
+create policy "Admins can update all tickets"
+on public.tickets
+for update
+to authenticated
+using (
+  exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+)
+with check (
   exists (
     select 1
     from public.profiles
@@ -225,6 +287,36 @@ for select
 to authenticated
 using (
   exists (
+    select 1
+    from public.profiles
+    where profiles.id = auth.uid()
+    and profiles.role = 'admin'
+  )
+);
+
+create policy "Agents can create logs on assigned tickets"
+on public.ticket_logs
+for insert
+to authenticated
+with check (
+  actor_id = auth.uid()
+  and exists (
+    select 1
+    from public.tickets
+    join public.profiles on profiles.id = auth.uid()
+    where tickets.id = ticket_logs.ticket_id
+    and tickets.assignee_id = auth.uid()
+    and profiles.role = 'agent'
+  )
+);
+
+create policy "Admins can create ticket logs"
+on public.ticket_logs
+for insert
+to authenticated
+with check (
+  actor_id = auth.uid()
+  and exists (
     select 1
     from public.profiles
     where profiles.id = auth.uid()

@@ -83,12 +83,12 @@
 
 ## Phase 8: Ticket actions
 
-- [ ] Change ticket status
-- [ ] Assign agent
-- [ ] Change priority
-- [ ] Add optimistic update where appropriate
-- [ ] Add activity log after important changes
-- [ ] Handle failed mutation rollback
+- [x] Change ticket status
+- [x] Assign agent
+- [x] Change priority
+- [x] Add optimistic update where appropriate
+- [x] Add activity log after important changes
+- [x] Handle failed mutation rollback
 
 ## Phase 9: Replies and internal notes
 

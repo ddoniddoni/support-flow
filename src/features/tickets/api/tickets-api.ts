@@ -55,6 +55,16 @@ type ListTicketsParams = {
   filters: TicketListFilters;
 };
 
+export type TicketActionInput = {
+  ticketId: string;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  assigneeId?: string | null;
+};
+
+export type AgentOption = Pick<Tables<"profiles">, "id" | "email" | "name">;
+
 const defaultPageSize = 10;
 
 function getSortConfig(sort: TicketSortOption = "created_desc") {
@@ -196,4 +206,128 @@ export async function getTicketDetail({
         : (replies ?? []).filter((reply) => reply.is_internal),
     logs: logs ?? [],
   };
+}
+
+export async function listAssignableAgents(): Promise<AgentOption[]> {
+  const supabase = createSupabaseBrowserClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,email,name")
+    .eq("role", "agent")
+    .order("name", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+function getActionEntries(input: TicketActionInput) {
+  return [
+    {
+      key: "status",
+      value: input.status,
+      label: "status",
+    },
+    {
+      key: "priority",
+      value: input.priority,
+      label: "priority",
+    },
+    {
+      key: "assignee_id",
+      value: input.assigneeId,
+      label: "assignee",
+    },
+  ] as const;
+}
+
+export async function updateTicketAction(input: TicketActionInput) {
+  const supabase = createSupabaseBrowserClient();
+
+  if (input.profile.role === "customer") {
+    throw new Error("Customers cannot update ticket operations.");
+  }
+
+  if (
+    input.profile.role === "agent" &&
+    (input.priority || input.assigneeId !== undefined)
+  ) {
+    throw new Error("Agents can only update ticket status.");
+  }
+
+  const { data: currentTicket, error: currentTicketError } = await supabase
+    .from("tickets")
+    .select("*")
+    .eq("id", input.ticketId)
+    .maybeSingle();
+
+  if (currentTicketError) {
+    throw currentTicketError;
+  }
+
+  if (!currentTicket) {
+    throw new Error("Ticket not found or access denied.");
+  }
+
+  const updates: {
+    status?: TicketStatus;
+    priority?: TicketPriority;
+    assignee_id?: string | null;
+  } = {};
+
+  if (input.status && input.status !== currentTicket.status) {
+    updates.status = input.status;
+  }
+
+  if (input.priority && input.priority !== currentTicket.priority) {
+    updates.priority = input.priority;
+  }
+
+  if (
+    input.assigneeId !== undefined &&
+    input.assigneeId !== currentTicket.assignee_id
+  ) {
+    updates.assignee_id = input.assigneeId;
+  }
+
+  if (!Object.keys(updates).length) {
+    return currentTicket;
+  }
+
+  const { data: updatedTicket, error: updateError } = await supabase
+    .from("tickets")
+    .update(updates)
+    .eq("id", input.ticketId)
+    .select("*")
+    .single();
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  const changedLogs = getActionEntries(input)
+    .filter(({ key, value }) => key in updates && value !== undefined)
+    .map(({ key, value, label }) => ({
+      ticket_id: input.ticketId,
+      actor_id: input.profile.id,
+      action: `${label}_changed`,
+      before_value:
+        currentTicket[key] === null ? null : String(currentTicket[key]),
+      after_value: value === null ? null : String(value),
+    }));
+
+  if (changedLogs.length) {
+    const { error: logError } = await supabase
+      .from("ticket_logs")
+      .insert(changedLogs);
+
+    if (logError) {
+      throw logError;
+    }
+  }
+
+  return updatedTicket;
 }
