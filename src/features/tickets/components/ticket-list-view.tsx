@@ -78,7 +78,7 @@ function getRoleDescription(role: Tables<"profiles">["role"]) {
   }
 
   if (role === "agent") {
-    return "나에게 배정된 티켓을 확인하고 처리 흐름을 관리합니다.";
+    return "나에게 배정된 문의를 확인하고 처리 흐름을 관리합니다.";
   }
 
   return "전체 고객 문의를 검색하고 운영 상태를 확인합니다.";
@@ -141,7 +141,7 @@ export function TicketListView({
     <div className="mx-auto grid max-w-6xl gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-950">티켓</h1>
+          <h1 className="text-2xl font-semibold text-zinc-950">문의 목록</h1>
           <p className="mt-2 text-sm text-zinc-600">
             {getRoleDescription(profile.role)}
           </p>
@@ -162,7 +162,7 @@ export function TicketListView({
           className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
           role="status"
         >
-          티켓이 등록되었습니다. 접수 번호: {createdTicketId}
+          문의가 등록되었습니다. 접수 번호: {createdTicketId}
         </div>
       ) : null}
 
@@ -253,7 +253,7 @@ export function TicketListView({
         <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
           <div>
-            <p className="font-medium">티켓 목록을 불러오지 못했습니다.</p>
+            <p className="font-medium">문의 목록을 불러오지 못했습니다.</p>
             <p className="mt-1 text-red-600">
               Supabase 권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해
               주세요.
@@ -264,8 +264,8 @@ export function TicketListView({
 
       {!ticketsQuery.isLoading && !ticketsQuery.isError && !hasTickets ? (
         <EmptyState
-          title="조건에 맞는 티켓이 없습니다"
-          description="검색어나 필터를 조정하면 다른 티켓을 확인할 수 있습니다."
+          title="조건에 맞는 문의가 없습니다"
+          description="검색어나 필터를 조정하면 다른 문의를 확인할 수 있습니다."
           action={
             profile.role === "customer" ? (
               <EmptyStateAction href="/tickets/new">문의 등록</EmptyStateAction>

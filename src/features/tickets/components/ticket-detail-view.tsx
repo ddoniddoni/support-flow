@@ -434,14 +434,14 @@ function TicketDetailContent({
   if (!data.ticket) {
     return (
       <EmptyState
-        title="티켓을 찾을 수 없습니다"
-        description="존재하지 않는 티켓이거나 현재 계정으로 접근할 수 없는 티켓입니다."
+        title="문의를 찾을 수 없습니다"
+        description="존재하지 않는 문의이거나 현재 계정으로 접근할 수 없는 문의입니다."
         action={
           <Link
             className={buttonVariants({ className: "w-full sm:w-auto" })}
             href="/tickets"
           >
-            티켓 목록으로 이동
+            문의 목록으로 이동
           </Link>
         }
       />
@@ -459,7 +459,7 @@ function TicketDetailContent({
           href="/tickets"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          티켓 목록
+          문의 목록
         </Link>
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -532,11 +532,11 @@ function TicketDetailContent({
 
           <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle>티켓 메타데이터</CardTitle>
+              <CardTitle>문의 정보</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               <div>
-                <p className="text-zinc-500">티켓 ID</p>
+                <p className="text-zinc-500">접수 번호</p>
                 <p className="break-all font-medium text-zinc-950">
                   {ticket.id}
                 </p>
@@ -589,7 +589,7 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
           <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
           <div>
             <p className="font-medium">
-              티켓 상세 정보를 불러오지 못했습니다.
+              문의 상세 정보를 불러오지 못했습니다.
             </p>
             <p className="mt-1 text-red-600">
               권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해 주세요.

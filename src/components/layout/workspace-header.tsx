@@ -10,9 +10,9 @@ type WorkspaceHeaderProps = {
 };
 
 const roleLabels: Record<Tables<"profiles">["role"], string> = {
-  customer: "Customer",
-  agent: "Agent",
-  admin: "Admin",
+  customer: "고객",
+  agent: "상담원",
+  admin: "관리자",
 };
 
 export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
@@ -39,7 +39,7 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
             })}
             href="/dashboard"
           >
-            대시보드
+            운영 현황
           </Link>
         ) : null}
         <Link
@@ -49,7 +49,7 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
           })}
           href="/tickets"
         >
-          티켓
+          문의 목록
         </Link>
         <LogoutButton />
       </nav>

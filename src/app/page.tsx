@@ -22,11 +22,11 @@ import {
 const capabilities = [
   {
     title: "역할 기반 접근 제어",
-    description: "고객, 상담원, 관리자가 각자 필요한 티켓 범위만 확인합니다.",
+    description: "고객, 상담원, 관리자가 각자 필요한 문의 범위만 확인합니다.",
     icon: ShieldCheck,
   },
   {
-    title: "운영형 티켓 관리",
+    title: "운영형 문의 관리",
     description: "상태, 우선순위, 담당자, 활동 로그로 처리 흐름을 추적합니다.",
     icon: Ticket,
   },
@@ -37,7 +37,7 @@ const capabilities = [
   },
   {
     title: "실시간 대시보드",
-    description: "역할별 티켓 통계와 상태, 카테고리 분포를 보여줍니다.",
+    description: "역할별 문의 통계와 상태, 카테고리 분포를 보여줍니다.",
     icon: BarChart3,
   },
 ];
@@ -82,7 +82,7 @@ export default function Home() {
           <div className="max-w-3xl">
             <Badge variant="secondary">Portfolio SaaS Dashboard</Badge>
             <p className="mt-4 text-sm leading-6 text-zinc-600">
-              SupportFlow는 B2B 고객 지원팀을 위한 역할 기반 티켓 관리
+              SupportFlow는 B2B 고객 지원팀을 위한 역할 기반 고객 문의 관리
               SaaS입니다. 인증, 권한 분기, URL 기반 필터링, 서버 상태 관리,
               폼 검증, 로딩/에러/빈 상태까지 실제 운영 도구에 가까운 흐름을
               구현했습니다.
@@ -119,9 +119,9 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 text-sm text-zinc-600">
-            <p>고객: 티켓 생성, 내 티켓 조회, 공개 답변 확인</p>
-            <p>상담원: 배정 티켓 처리, 상태 변경, 답변, 내부 메모</p>
-            <p>관리자: 전체 티켓 조회, 담당자 배정, 우선순위 변경, 통계 확인</p>
+            <p>고객: 문의 등록, 내 문의 조회, 공개 답변 확인</p>
+            <p>상담원: 배정 문의 처리, 상태 변경, 답변, 내부 메모</p>
+            <p>관리자: 전체 문의 조회, 담당자 배정, 우선순위 변경, 통계 확인</p>
           </CardContent>
         </Card>
       </section>
