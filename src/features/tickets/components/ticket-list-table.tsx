@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import type { Tables } from "@/types/database";
 import type { TicketPriority, TicketStatus } from "@/types/domain";
 
 import type { TicketListItem } from "../types";
@@ -36,6 +37,13 @@ const categoryLabels: Record<string, string> = {
   technical: "기술 지원",
   product: "제품 문의",
   other: "기타",
+};
+
+const customerStatusLabels: Record<TicketStatus, string> = {
+  open: "접수 완료",
+  in_progress: "처리 중",
+  resolved: "답변 완료",
+  closed: "종료",
 };
 
 function formatDate(value: string) {
@@ -82,7 +90,23 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
   );
 }
 
-function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
+function CustomerStatusBadge({ status }: { status: TicketStatus }) {
+  return (
+    <Badge variant="outline" className="border-border bg-muted/60 text-foreground">
+      {customerStatusLabels[status]}
+    </Badge>
+  );
+}
+
+function MobileTicketCard({
+  ticket,
+  role,
+}: {
+  ticket: TicketListItem;
+  role: Tables<"profiles">["role"];
+}) {
+  const isCustomer = role === "customer";
+
   return (
     <Link
       href={`/tickets/${ticket.id}`}
@@ -95,8 +119,14 @@ function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <StatusBadge status={ticket.status} />
-        <PriorityBadge priority={ticket.priority} />
+        {isCustomer ? (
+          <CustomerStatusBadge status={ticket.status} />
+        ) : (
+          <>
+            <StatusBadge status={ticket.status} />
+            <PriorityBadge priority={ticket.priority} />
+          </>
+        )}
         <Badge variant="outline">
           {categoryLabels[ticket.category] ?? ticket.category}
         </Badge>
@@ -109,12 +139,20 @@ function MobileTicketCard({ ticket }: { ticket: TicketListItem }) {
   );
 }
 
-export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
+export function TicketListTable({
+  tickets,
+  role,
+}: {
+  tickets: TicketListItem[];
+  role: Tables<"profiles">["role"];
+}) {
+  const isCustomer = role === "customer";
+
   return (
     <>
       <div className="grid gap-3 md:hidden">
         {tickets.map((ticket) => (
-          <MobileTicketCard key={ticket.id} ticket={ticket} />
+          <MobileTicketCard key={ticket.id} ticket={ticket} role={role} />
         ))}
       </div>
 
@@ -123,8 +161,8 @@ export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-72">제목</TableHead>
-              <TableHead>상태</TableHead>
-              <TableHead>우선순위</TableHead>
+              <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
+              {isCustomer ? null : <TableHead>우선순위</TableHead>}
               <TableHead>카테고리</TableHead>
               <TableHead>생성일</TableHead>
               <TableHead>수정일</TableHead>
@@ -145,11 +183,17 @@ export function TicketListTable({ tickets }: { tickets: TicketListItem[] }) {
                   </p>
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={ticket.status} />
+                  {isCustomer ? (
+                    <CustomerStatusBadge status={ticket.status} />
+                  ) : (
+                    <StatusBadge status={ticket.status} />
+                  )}
                 </TableCell>
-                <TableCell>
-                  <PriorityBadge priority={ticket.priority} />
-                </TableCell>
+                {isCustomer ? null : (
+                  <TableCell>
+                    <PriorityBadge priority={ticket.priority} />
+                  </TableCell>
+                )}
                 <TableCell>
                   {categoryLabels[ticket.category] ?? ticket.category}
                 </TableCell>
