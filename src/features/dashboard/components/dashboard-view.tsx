@@ -14,6 +14,7 @@ import Link from "next/link";
 import { EmptyState, EmptyStateAction } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import {
   Card,
   CardContent,
@@ -87,7 +88,8 @@ function StatusBadge({ status }: { status: TicketStatus }) {
           "border-amber-200 bg-amber-50 text-amber-700",
         status === "resolved" &&
           "border-emerald-200 bg-emerald-50 text-emerald-700",
-        status === "closed" && "border-zinc-200 bg-zinc-100 text-zinc-600",
+        status === "closed" &&
+          "border-border bg-muted text-muted-foreground",
       )}
     >
       {statusLabels[status]}
@@ -103,7 +105,8 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
         priority === "urgent" && "border-red-200 bg-red-50 text-red-700",
         priority === "high" && "border-orange-200 bg-orange-50 text-orange-700",
         priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
-        priority === "low" && "border-zinc-200 bg-zinc-50 text-zinc-600",
+        priority === "low" &&
+          "border-border bg-muted/60 text-muted-foreground",
       )}
     >
       {priorityLabels[priority]}
@@ -129,9 +132,9 @@ function MetricCard({
           <CardDescription>{label}</CardDescription>
           <CardTitle className="mt-2 text-3xl">{value}</CardTitle>
         </div>
-        <Icon className="size-5 text-zinc-500" aria-hidden="true" />
+        <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
       </CardHeader>
-      <CardContent className="text-sm leading-6 text-zinc-500">
+      <CardContent className="text-sm leading-6 text-muted-foreground">
         {detail}
       </CardContent>
     </Card>
@@ -157,14 +160,14 @@ function DistributionList({
         {items.map((item) => (
           <div key={item.key} className="grid gap-1.5">
             <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-medium text-zinc-800">{item.label}</span>
-              <span className="text-zinc-500">
+              <span className="font-medium text-foreground">{item.label}</span>
+              <span className="text-muted-foreground">
                 {item.count}건 · {item.percentage}%
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-zinc-900"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${item.percentage}%` }}
               />
             </div>
@@ -210,7 +213,7 @@ function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
                   <TableCell>
                     <Link
                       href={`/tickets/${ticket.id}`}
-                      className="font-medium text-zinc-950 hover:underline"
+                      className="font-medium text-foreground hover:underline"
                     >
                       {ticket.id}
                     </Link>
@@ -301,16 +304,19 @@ export function DashboardView({ profile }: DashboardViewProps) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{getRoleLabel(profile.role)}</Badge>
-            <span className="text-sm text-zinc-500">{profile.email}</span>
+            <span className="text-sm text-muted-foreground">
+              {profile.email}
+            </span>
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-zinc-950">
+          <h1 className="mt-3 text-2xl font-semibold text-foreground">
             {profile.name}님의 운영 대시보드
           </h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
           </p>
         </div>
         <div className="grid gap-2 sm:flex sm:items-center">
+          <ThemeToggle />
           <Link
             className={buttonVariants({
               variant: "outline",
@@ -345,7 +351,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
         <DashboardContent stats={statsQuery.data} />
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-500">
+      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
         <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
         <span>통계는 현재 계정의 역할 기반 접근 범위로 집계됩니다.</span>
       </div>

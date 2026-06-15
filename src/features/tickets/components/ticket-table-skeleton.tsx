@@ -13,7 +13,7 @@ export function TicketTableSkeleton() {
     <>
       <div className="grid gap-3 md:hidden">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-lg border border-zinc-300 bg-white p-4 shadow-sm">
+          <div key={index} className="rounded-lg border border-border bg-card p-4 shadow-sm">
             <Skeleton className="h-4 w-10/12" />
             <Skeleton className="mt-2 h-3 w-7/12" />
             <div className="mt-4 flex gap-2">
@@ -25,7 +25,7 @@ export function TicketTableSkeleton() {
         ))}
       </div>
 
-      <div className="hidden rounded-lg border border-zinc-300 bg-white shadow-sm md:block">
+      <div className="hidden rounded-lg border border-border bg-card shadow-sm md:block">
         <Table>
           <TableHeader>
             <TableRow>

@@ -141,8 +141,8 @@ export function TicketListView({
     <div className="mx-auto grid max-w-6xl gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-950">문의 목록</h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <h1 className="text-2xl font-semibold text-foreground">문의 목록</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
           </p>
         </div>
@@ -166,11 +166,11 @@ export function TicketListView({
         </div>
       ) : null}
 
-      <div className="grid gap-3 rounded-lg border border-zinc-300 bg-white p-4 shadow-sm">
+      <div className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
         <form className="grid gap-2 sm:flex" onSubmit={handleSearchSubmit}>
           <div className="relative flex-1">
             <Search
-              className="pointer-events-none absolute top-2 left-2.5 size-4 text-zinc-400"
+              className="pointer-events-none absolute top-2 left-2.5 size-4 text-muted-foreground"
               aria-hidden="true"
             />
             <Input
@@ -187,7 +187,7 @@ export function TicketListView({
 
         <div className="grid gap-2 md:grid-cols-4">
           <select
-            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.status ?? "all"}
             onChange={(event) =>
               updateParams({ status: event.target.value, page: "1" })
@@ -202,7 +202,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.priority ?? "all"}
             onChange={(event) =>
               updateParams({ priority: event.target.value, page: "1" })
@@ -217,7 +217,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.category ?? "all"}
             onChange={(event) =>
               updateParams({ category: event.target.value, page: "1" })
@@ -232,7 +232,7 @@ export function TicketListView({
           </select>
 
           <select
-            className="h-8 rounded-lg border border-zinc-300 bg-white px-2.5 text-sm text-zinc-900 shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+            className="h-8 rounded-lg border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.sort ?? "created_desc"}
             onChange={(event) =>
               updateParams({ sort: event.target.value, page: "1" })
@@ -277,7 +277,7 @@ export function TicketListView({
       {!ticketsQuery.isLoading && !ticketsQuery.isError && data ? (
         <div className={cn(!hasTickets && "hidden")}>
           <TicketListTable tickets={data.tickets} />
-          <div className="mt-3 flex flex-col gap-2 text-sm text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               총 {data.total}건 중 {data.tickets.length}건 표시
             </p>

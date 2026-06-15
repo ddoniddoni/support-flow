@@ -104,7 +104,8 @@ function StatusBadge({ status }: { status: TicketStatus }) {
           "border-amber-200 bg-amber-50 text-amber-700",
         status === "resolved" &&
           "border-emerald-200 bg-emerald-50 text-emerald-700",
-        status === "closed" && "border-zinc-200 bg-zinc-100 text-zinc-600",
+        status === "closed" &&
+          "border-border bg-muted text-muted-foreground",
       )}
     >
       {statusLabels[status]}
@@ -120,7 +121,8 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
         priority === "urgent" && "border-red-200 bg-red-50 text-red-700",
         priority === "high" && "border-orange-200 bg-orange-50 text-orange-700",
         priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
-        priority === "low" && "border-zinc-200 bg-zinc-50 text-zinc-600",
+        priority === "low" &&
+          "border-border bg-muted/60 text-muted-foreground",
       )}
     >
       {priorityLabels[priority]}
@@ -150,18 +152,18 @@ function ReplyList({
           replies.map((reply) => (
             <div
               key={reply.id}
-              className="rounded-lg border border-zinc-300 bg-zinc-50 p-3"
+              className="rounded-lg border border-border bg-muted/40 p-3"
             >
-              <p className="whitespace-pre-wrap text-sm text-zinc-800">
+              <p className="whitespace-pre-wrap text-sm text-foreground">
                 {reply.content}
               </p>
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-muted-foreground">
                 작성자 {reply.author_id} · {formatDateTime(reply.created_at)}
               </p>
             </div>
           ))
         ) : (
-          <p className="text-sm text-zinc-500">{emptyText}</p>
+          <p className="text-sm text-muted-foreground">{emptyText}</p>
         )}
       </CardContent>
     </Card>
@@ -212,21 +214,21 @@ function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
       <CardContent className="grid gap-3">
         {logs.length ? (
           logs.map((log) => (
-            <div key={log.id} className="border-l-2 border-zinc-200 pl-3">
-              <p className="text-sm font-medium text-zinc-900">
+            <div key={log.id} className="border-l-2 border-border pl-3">
+              <p className="text-sm font-medium text-foreground">
                 {actionLabels[log.action] ?? log.action}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {formatLogValue(log.before_value)} →{" "}
                 {formatLogValue(log.after_value)}
               </p>
-              <p className="mt-1 text-xs text-zinc-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {formatDateTime(log.created_at)}
               </p>
             </div>
           ))
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             아직 기록된 활동이 없습니다.
           </p>
         )}
@@ -305,13 +307,13 @@ function TicketOperationsPanel({
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid gap-1.5">
-          <label className="text-sm font-medium text-zinc-700" htmlFor="status">
+          <label className="text-sm font-medium text-foreground" htmlFor="status">
             상태
           </label>
           <div className="relative">
             <select
               id="status"
-              className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               value={ticket.status}
               disabled={isPending}
               onChange={(event) =>
@@ -328,7 +330,7 @@ function TicketOperationsPanel({
             </select>
             {pendingField === "status" ? (
               <Loader2
-                className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
                 aria-hidden="true"
               />
             ) : null}
@@ -339,7 +341,7 @@ function TicketOperationsPanel({
           <>
             <div className="grid gap-1.5">
               <label
-                className="text-sm font-medium text-zinc-700"
+                className="text-sm font-medium text-foreground"
                 htmlFor="priority"
               >
                 우선순위
@@ -347,7 +349,7 @@ function TicketOperationsPanel({
               <div className="relative">
                 <select
                   id="priority"
-                  className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   value={ticket.priority}
                   disabled={isPending}
                   onChange={(event) =>
@@ -364,7 +366,7 @@ function TicketOperationsPanel({
                 </select>
                 {pendingField === "priority" ? (
                   <Loader2
-                    className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                    className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
                     aria-hidden="true"
                   />
                 ) : null}
@@ -373,7 +375,7 @@ function TicketOperationsPanel({
 
             <div className="grid gap-1.5">
               <label
-                className="text-sm font-medium text-zinc-700"
+                className="text-sm font-medium text-foreground"
                 htmlFor="assignee"
               >
                 담당자
@@ -381,7 +383,7 @@ function TicketOperationsPanel({
               <div className="relative">
                 <select
                   id="assignee"
-                  className="h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs outline-none focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25"
+                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   value={ticket.assignee_id ?? "unassigned"}
                   disabled={isPending || agentsQuery.isLoading}
                   onChange={(event) =>
@@ -402,7 +404,7 @@ function TicketOperationsPanel({
                 </select>
                 {pendingField === "assignee" || agentsQuery.isLoading ? (
                   <Loader2
-                    className="absolute top-2 right-2 size-4 animate-spin text-zinc-400"
+                    className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
                     aria-hidden="true"
                   />
                 ) : null}
@@ -416,7 +418,7 @@ function TicketOperationsPanel({
           </>
         ) : null}
 
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600">
+        <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
           현재 담당자: {getAgentLabel(ticket.assignee_id)}
         </div>
 
@@ -458,7 +460,7 @@ function TicketDetailContent({
     <div className="mx-auto grid max-w-6xl gap-5">
       <div className="flex flex-col gap-3">
         <Link
-          className="inline-flex w-fit items-center gap-1 text-sm font-medium text-zinc-500 hover:text-zinc-900"
+          className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
           href="/tickets"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
@@ -472,10 +474,10 @@ function TicketDetailContent({
               {categoryLabels[ticket.category] ?? ticket.category}
             </Badge>
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-zinc-950">
+          <h1 className="mt-3 text-2xl font-semibold text-foreground">
             {ticket.title}
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             접수 {formatDateTime(ticket.created_at)} · 최근 수정{" "}
             {formatDateTime(ticket.updated_at)}
           </p>
@@ -490,7 +492,7 @@ function TicketDetailContent({
               <CardDescription>고객이 처음 접수한 요청입니다.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-800">
+              <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
                 {ticket.content}
               </p>
             </CardContent>
@@ -539,32 +541,32 @@ function TicketDetailContent({
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               <div>
-                <p className="text-zinc-500">접수 번호</p>
-                <p className="break-all font-medium text-zinc-950">
+                <p className="text-muted-foreground">접수 번호</p>
+                <p className="break-all font-medium text-foreground">
                   {ticket.id}
                 </p>
               </div>
               <div>
-                <p className="text-zinc-500">고객 ID</p>
-                <p className="break-all font-medium text-zinc-950">
+                <p className="text-muted-foreground">고객 ID</p>
+                <p className="break-all font-medium text-foreground">
                   {ticket.customer_id}
                 </p>
               </div>
               <div>
-                <p className="text-zinc-500">담당자</p>
-                <p className="break-all font-medium text-zinc-950">
+                <p className="text-muted-foreground">담당자</p>
+                <p className="break-all font-medium text-foreground">
                   {ticket.assignee_id ?? "미배정"}
                 </p>
               </div>
               <div>
-                <p className="text-zinc-500">상태</p>
-                <p className="font-medium text-zinc-950">
+                <p className="text-muted-foreground">상태</p>
+                <p className="font-medium text-foreground">
                   {statusLabels[ticket.status]}
                 </p>
               </div>
               <div>
-                <p className="text-zinc-500">우선순위</p>
-                <p className="font-medium text-zinc-950">
+                <p className="text-muted-foreground">우선순위</p>
+                <p className="font-medium text-foreground">
                   {priorityLabels[ticket.priority]}
                 </p>
               </div>

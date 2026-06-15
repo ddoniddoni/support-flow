@@ -74,9 +74,9 @@ export function CreateTicketForm() {
 
   const isPending = createTicketMutation.isPending;
   const selectClassName = cn(
-    "h-8 w-full rounded-lg border border-zinc-300 bg-white px-2.5 text-sm shadow-xs",
-    "outline-none transition-colors focus-visible:border-zinc-500 focus-visible:ring-3 focus-visible:ring-zinc-400/25",
-    "disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:opacity-50",
+    "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs",
+    "outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30",
+    "disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50",
   );
 
   return (

@@ -27,18 +27,18 @@ export function AuthFormShell({
   footerLinkText,
 }: AuthFormShellProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-muted/60 p-6">
       <Card className="w-full max-w-sm rounded-lg">
         <CardHeader>
-          <p className="text-sm font-medium text-zinc-500">SupportFlow</p>
+          <p className="text-sm font-medium text-muted-foreground">SupportFlow</p>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription className="leading-6">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           {children}
-          <p className="mt-6 text-center text-sm text-zinc-500">
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             {footerText}{" "}
-            <Link className="font-medium text-zinc-950 underline" href={footerHref}>
+            <Link className="font-medium text-foreground underline" href={footerHref}>
               {footerLinkText}
             </Link>
           </p>
