@@ -38,7 +38,8 @@ export default async function NewTicketPage() {
           <CardHeader>
             <CardTitle>문의 정보</CardTitle>
             <CardDescription>
-              등록된 티켓은 담당자 배정과 상태 변경 이력을 기준으로 관리됩니다.
+              우선순위는 지원팀이 접수 내용을 검토한 뒤 운영 기준에 따라
+              조정합니다.
             </CardDescription>
           </CardHeader>
           <CardContent>

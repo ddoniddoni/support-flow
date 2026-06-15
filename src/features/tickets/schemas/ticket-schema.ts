@@ -27,7 +27,6 @@ export const createTicketSchema = z.object({
     .min(20, "문의 내용은 20자 이상 입력해 주세요.")
     .max(4000, "문의 내용은 4000자 이하로 입력해 주세요."),
   category: ticketCategorySchema,
-  priority: ticketPrioritySchema,
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;

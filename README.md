@@ -114,6 +114,8 @@ Forms use React Hook Form with Zod schemas:
 
 Submit buttons are disabled while pending, and validation messages are shown next to the relevant field.
 
+Customers do not set operational priority when creating a ticket. New tickets use the database default priority and admins can adjust priority after triage.
+
 ## Loading, Error, Empty, and Unauthorized States
 
 SupportFlow includes:

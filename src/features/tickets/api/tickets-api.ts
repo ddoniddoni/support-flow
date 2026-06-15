@@ -30,7 +30,6 @@ export async function createTicket(input: CreateTicketInput) {
       title: input.title,
       content: input.content,
       category: input.category,
-      priority: input.priority,
       customer_id: user.id,
     })
     .select("id")

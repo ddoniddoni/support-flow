@@ -27,20 +27,6 @@ const categoryLabels: Record<CreateTicketInput["category"], string> = {
   other: "기타",
 };
 
-const priorityLabels: Record<CreateTicketInput["priority"], string> = {
-  low: "낮음",
-  medium: "보통",
-  high: "높음",
-  urgent: "긴급",
-};
-
-const priorityOptions: CreateTicketInput["priority"][] = [
-  "low",
-  "medium",
-  "high",
-  "urgent",
-];
-
 function getCreateTicketErrorMessage(message: string) {
   const normalizedMessage = message.toLowerCase();
 
@@ -70,7 +56,6 @@ export function CreateTicketForm() {
       title: "",
       content: "",
       category: "technical",
-      priority: "medium",
     },
   });
 
@@ -110,46 +95,24 @@ export function CreateTicketForm() {
         ) : null}
       </div>
 
-      <div className="grid gap-2 md:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="category">카테고리</Label>
-          <select
-            id="category"
-            className={selectClassName}
-            aria-invalid={Boolean(errors.category)}
-            disabled={isPending}
-            {...register("category")}
-          >
-            {ticketCategories.map((category) => (
-              <option key={category} value={category}>
-                {categoryLabels[category]}
-              </option>
-            ))}
-          </select>
-          {errors.category ? (
-            <p className="text-sm text-red-600">{errors.category.message}</p>
-          ) : null}
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="priority">우선순위</Label>
-          <select
-            id="priority"
-            className={selectClassName}
-            aria-invalid={Boolean(errors.priority)}
-            disabled={isPending}
-            {...register("priority")}
-          >
-            {priorityOptions.map((priority) => (
-              <option key={priority} value={priority}>
-                {priorityLabels[priority]}
-              </option>
-            ))}
-          </select>
-          {errors.priority ? (
-            <p className="text-sm text-red-600">{errors.priority.message}</p>
-          ) : null}
-        </div>
+      <div className="grid gap-2">
+        <Label htmlFor="category">카테고리</Label>
+        <select
+          id="category"
+          className={selectClassName}
+          aria-invalid={Boolean(errors.category)}
+          disabled={isPending}
+          {...register("category")}
+        >
+          {ticketCategories.map((category) => (
+            <option key={category} value={category}>
+              {categoryLabels[category]}
+            </option>
+          ))}
+        </select>
+        {errors.category ? (
+          <p className="text-sm text-red-600">{errors.category.message}</p>
+        ) : null}
       </div>
 
       <div className="grid gap-2">
@@ -157,7 +120,7 @@ export function CreateTicketForm() {
         <Textarea
           id="content"
           className="min-h-40 resize-y"
-          placeholder="문제가 발생한 상황, 기대한 결과, 실제 결과를 함께 적어 주세요."
+          placeholder="문제가 발생한 상황, 기대한 결과, 실제 결과를 함께 적어 주세요. 지원팀이 접수 후 우선순위를 판단합니다."
           aria-invalid={Boolean(errors.content)}
           disabled={isPending}
           {...register("content")}
