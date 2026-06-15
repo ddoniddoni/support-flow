@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SupportFlow",
   description:
-    "B2B 고객 지원팀을 위한 역할 기반 티켓 관리 대시보드입니다.",
+    "B2B 고객 지원 운영을 위한 역할 기반 티켓 관리 대시보드입니다.",
 };
 
 export default function RootLayout({

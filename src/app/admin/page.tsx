@@ -1,4 +1,4 @@
-import { EmptyState } from "@/components/common/empty-state";
+import { EmptyState, EmptyStateAction } from "@/components/common/empty-state";
 import { requireServerRole } from "@/features/auth/api/server-auth";
 
 export default async function AdminPage() {
@@ -8,8 +8,9 @@ export default async function AdminPage() {
     <main className="min-h-screen bg-zinc-50 p-6">
       <div className="mx-auto max-w-6xl">
         <EmptyState
-          title="관리자 화면 준비 중"
-          description="전체 티켓 조회, 상담원 배정, 우선순위 변경, 사용자 관리, 운영 로그 확인 기능을 연결할 예정입니다."
+          title="관리자 전용 기능은 대시보드와 티켓 상세에서 제공됩니다"
+          description="전체 티켓 조회, 담당자 배정, 우선순위 변경, 상태 변경, 활동 로그 확인은 현재 티켓 목록과 상세 화면에서 사용할 수 있습니다."
+          action={<EmptyStateAction href="/tickets">티켓 목록 보기</EmptyStateAction>}
         />
       </div>
     </main>

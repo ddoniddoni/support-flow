@@ -112,15 +112,15 @@
 
 ## Phase 11: Polish
 
-- [ ] Improve responsive layout
-- [ ] Add mobile table alternative if needed
-- [ ] Add 404 page
-- [ ] Add unauthorized page
-- [ ] Add loading.tsx and error.tsx where useful
-- [ ] Remove unused code
-- [ ] Remove any unnecessary `any`
-- [ ] Run lint
-- [ ] Run build
+- [x] Improve responsive layout
+- [x] Add mobile table alternative if needed
+- [x] Add 404 page
+- [x] Add unauthorized page
+- [x] Add loading.tsx and error.tsx where useful
+- [x] Remove unused code
+- [x] Remove any unnecessary `any`
+- [x] Run lint
+- [x] Run build
 
 ## Phase 12: Portfolio documentation
 
