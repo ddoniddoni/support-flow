@@ -161,6 +161,15 @@ begin
     raise exception 'Ticket not found or access denied.';
   end if;
 
+  if p_is_internal = false and exists (
+    select 1
+    from public.ticket_replies
+    where ticket_id = p_ticket_id
+    and is_internal = false
+  ) then
+    raise exception '이미 고객 답변이 등록된 문의입니다.';
+  end if;
+
   insert into public.ticket_replies (
     ticket_id,
     author_id,
@@ -175,6 +184,13 @@ begin
   )
   returning *
   into created_reply;
+
+  if p_is_internal = false then
+    update public.tickets
+    set status = 'resolved'
+    where id = p_ticket_id
+    and status in ('open', 'in_progress');
+  end if;
 
   insert into public.ticket_logs (
     ticket_id,
