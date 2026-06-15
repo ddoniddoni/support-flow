@@ -1,3 +1,4 @@
+import { WorkspaceHeader } from "@/components/layout/workspace-header";
 import { requireServerProfile } from "@/features/auth/api/server-auth";
 import { TicketDetailView } from "@/features/tickets/components/ticket-detail-view";
 
@@ -11,6 +12,7 @@ export default async function TicketDetailPage({
 
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
+      <WorkspaceHeader profile={profile} />
       <TicketDetailView ticketId={id} profile={profile} />
     </main>
   );
