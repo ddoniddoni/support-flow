@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { WorkspaceHeader } from "@/components/layout/workspace-header";
 import {
   Card,
   CardContent,
@@ -11,10 +12,12 @@ import { requireServerRole } from "@/features/auth/api/server-auth";
 import { CreateTicketForm } from "@/features/tickets/components/create-ticket-form";
 
 export default async function NewTicketPage() {
-  await requireServerRole(["customer"]);
+  const profile = await requireServerRole(["customer"]);
 
   return (
     <main className="min-h-screen bg-zinc-50 p-6">
+      <WorkspaceHeader profile={profile} />
+
       <div className="mx-auto grid max-w-3xl gap-6">
         <div className="flex flex-col gap-2">
           <Link className="text-sm font-medium text-zinc-500" href="/tickets">
