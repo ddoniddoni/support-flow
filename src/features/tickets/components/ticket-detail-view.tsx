@@ -68,6 +68,12 @@ const actionLabels: Record<string, string> = {
   internal_note_added: "내부 메모 추가",
 };
 
+const authorRoleLabels: Record<Tables<"profiles">["role"], string> = {
+  customer: "고객",
+  agent: "상담원",
+  admin: "관리자",
+};
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
@@ -92,6 +98,14 @@ function formatLogValue(value: string | null) {
   }
 
   return value;
+}
+
+function formatReplyAuthor(reply: TicketReplyItem) {
+  if (!reply.author) {
+    return "알 수 없는 작성자";
+  }
+
+  return `${authorRoleLabels[reply.author.role]} ${reply.author.name} (${reply.author.email})`;
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -158,7 +172,7 @@ function ReplyList({
                 {reply.content}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                작성자 {reply.author_id} · {formatDateTime(reply.created_at)}
+                {formatReplyAuthor(reply)} · {formatDateTime(reply.created_at)}
               </p>
             </div>
           ))
