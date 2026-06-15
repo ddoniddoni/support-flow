@@ -178,7 +178,7 @@ export async function getTicketDetail({
 
   let repliesQuery = supabase
     .from("ticket_replies")
-    .select("*")
+    .select("*, author:profiles!ticket_replies_author_id_fkey(email,name,role)")
     .eq("ticket_id", ticketId)
     .order("created_at", { ascending: true });
 

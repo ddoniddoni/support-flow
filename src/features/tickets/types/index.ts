@@ -2,7 +2,13 @@ import type { Tables } from "@/types/database";
 
 export type TicketListItem = Tables<"tickets">;
 export type TicketDetail = Tables<"tickets">;
-export type TicketReplyItem = Tables<"ticket_replies">;
+export type TicketReplyAuthor = Pick<
+  Tables<"profiles">,
+  "email" | "name" | "role"
+>;
+export type TicketReplyItem = Tables<"ticket_replies"> & {
+  author: TicketReplyAuthor | null;
+};
 export type TicketLogItem = Tables<"ticket_logs">;
 
 export type TicketSortOption =
