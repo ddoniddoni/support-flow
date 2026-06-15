@@ -13,6 +13,10 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 import { loginSchema, type LoginInput } from "../schemas/auth-schema";
 
+function getDefaultPath(role?: string) {
+  return role === "customer" ? "/tickets" : "/dashboard";
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +45,19 @@ export function LoginForm() {
       return;
     }
 
-    router.replace(searchParams.get("next") ?? "/dashboard");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { data: profile } = user
+      ? await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle()
+      : { data: null };
+
+    router.replace(searchParams.get("next") ?? getDefaultPath(profile?.role));
     router.refresh();
   }
 

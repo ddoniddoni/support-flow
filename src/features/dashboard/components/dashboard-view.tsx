@@ -57,22 +57,10 @@ const priorityLabels: Record<TicketPriority, string> = {
 };
 
 function getRoleLabel(role: Tables<"profiles">["role"]) {
-  if (role === "customer") {
-    return "Customer";
-  }
-
-  if (role === "agent") {
-    return "Agent";
-  }
-
-  return "Admin";
+  return role === "agent" ? "Agent" : "Admin";
 }
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
-  if (role === "customer") {
-    return "내가 등록한 문의의 진행 상황과 답변 현황을 확인합니다.";
-  }
-
   if (role === "agent") {
     return "나에게 배정된 티켓의 처리 상태와 우선순위를 추적합니다.";
   }
@@ -250,7 +238,7 @@ function DashboardContent({ stats }: { stats: DashboardStats }) {
     return (
       <EmptyState
         title="아직 집계할 티켓이 없습니다"
-        description="티켓이 생성되면 이곳에서 상태, 우선순위, 카테고리 분포를 확인할 수 있습니다."
+        description="배정되거나 생성된 티켓이 생기면 이곳에서 상태, 우선순위, 카테고리 분포를 확인할 수 있습니다."
         action={<EmptyStateAction href="/tickets">티켓 목록 보기</EmptyStateAction>}
       />
     );
@@ -316,13 +304,24 @@ export function DashboardView({ profile }: DashboardViewProps) {
             <span className="text-sm text-zinc-500">{profile.email}</span>
           </div>
           <h1 className="mt-3 text-2xl font-semibold text-zinc-950">
-            {profile.name}님의 대시보드
+            {profile.name}님의 운영 대시보드
           </h1>
           <p className="mt-2 text-sm text-zinc-600">
             {getRoleDescription(profile.role)}
           </p>
         </div>
-        <LogoutButton />
+        <div className="grid gap-2 sm:flex sm:items-center">
+          <Link
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full sm:w-auto",
+            })}
+            href="/tickets"
+          >
+            티켓
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       {statsQuery.isLoading ? <DashboardSkeleton /> : null}

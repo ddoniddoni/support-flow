@@ -87,7 +87,7 @@ export function SignupForm() {
       return;
     }
 
-    router.replace("/dashboard");
+    router.replace("/tickets");
     router.refresh();
   }
 

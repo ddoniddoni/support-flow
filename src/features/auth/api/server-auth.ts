@@ -5,6 +5,10 @@ import type { Role } from "@/types/domain";
 
 import { getCurrentProfile } from "./auth-api";
 
+export function getDefaultAuthenticatedPath(role: Role) {
+  return role === "customer" ? "/tickets" : "/dashboard";
+}
+
 export async function getServerProfile() {
   const supabase = await createSupabaseServerClient();
 
@@ -25,7 +29,7 @@ export async function redirectAuthenticatedUser() {
   const profile = await getServerProfile();
 
   if (profile) {
-    redirect("/dashboard");
+    redirect(getDefaultAuthenticatedPath(profile.role));
   }
 }
 
