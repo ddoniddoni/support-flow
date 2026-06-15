@@ -231,6 +231,19 @@ function ReplyComposerCard({
   );
 }
 
+function PublicReplyCompletedCard() {
+  return (
+    <Card className="rounded-lg border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-100">
+      <CardHeader>
+        <CardTitle>고객 답변 등록 완료</CardTitle>
+        <CardDescription className="text-emerald-800 dark:text-emerald-200">
+          이미 고객에게 표시되는 공식 답변이 등록되었습니다.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
 function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
   return (
     <Card className="rounded-lg">
@@ -485,6 +498,7 @@ function TicketDetailContent({
   const ticket = data.ticket;
   const canViewOperations = profile.role !== "customer";
   const isCustomer = profile.role === "customer";
+  const hasPublicReply = data.replies.length > 0;
 
   return (
     <div className="mx-auto grid max-w-6xl gap-5">
@@ -541,12 +555,16 @@ function TicketDetailContent({
             emptyText="아직 등록된 공개 답변이 없습니다."
           />
 
-          {canViewOperations ? (
+          {canViewOperations && !hasPublicReply ? (
             <ReplyComposerCard
               ticketId={ticket.id}
               profile={profile}
               isInternal={false}
             />
+          ) : null}
+
+          {canViewOperations && hasPublicReply ? (
+            <PublicReplyCompletedCard />
           ) : null}
 
           {canViewOperations ? (
