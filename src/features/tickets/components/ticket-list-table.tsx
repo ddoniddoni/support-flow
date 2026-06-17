@@ -114,9 +114,11 @@ function MobileTicketCard({
     >
       <div>
         <p className="font-medium text-foreground">{ticket.title}</p>
-        <p className="mt-1 break-all text-xs text-muted-foreground">
-          {ticket.id}
-        </p>
+        {isCustomer ? null : (
+          <p className="mt-1 break-all text-xs text-muted-foreground">
+            {ticket.id}
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap gap-2">
         {isCustomer ? (
@@ -178,9 +180,11 @@ export function TicketListTable({
                   >
                     {ticket.title}
                   </Link>
-                  <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
-                    {ticket.id}
-                  </p>
+                  {isCustomer ? null : (
+                    <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
+                      {ticket.id}
+                    </p>
+                  )}
                 </TableCell>
                 <TableCell>
                   {isCustomer ? (
