@@ -8,7 +8,14 @@ import {
 type DashboardProfile = Pick<Tables<"profiles">, "id" | "role">;
 type DashboardTicket = Pick<
   Tables<"tickets">,
-  "id" | "status" | "priority" | "category" | "created_at" | "updated_at"
+  | "id"
+  | "title"
+  | "ticket_number"
+  | "status"
+  | "priority"
+  | "category"
+  | "created_at"
+  | "updated_at"
 >;
 
 export type DistributionItem = {
@@ -87,7 +94,7 @@ export async function getDashboardStats(
 
   let query = supabase
     .from("tickets")
-    .select("id,status,priority,category,created_at,updated_at");
+    .select("id,title,ticket_number,status,priority,category,created_at,updated_at");
 
   if (profile.role === "customer") {
     query = query.eq("customer_id", profile.id);

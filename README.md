@@ -252,6 +252,12 @@ Supabase SQL Editor에서 아래 파일을 실행합니다.
 docs/SUPABASE_SCHEMA.sql
 ```
 
+기존 Supabase 프로젝트에 접수번호를 추가할 때는 아래 SQL을 한 번 실행합니다.
+
+```txt
+docs/TICKET_NUMBER_MIGRATION.sql
+```
+
 스키마에는 다음 내용이 포함되어 있습니다.
 
 - `profiles`
@@ -266,21 +272,13 @@ docs/SUPABASE_SCHEMA.sql
 
 ## 데모 계정
 
-Supabase Auth에 아래 계정을 만들고, `profiles.role` 값을 맞춰 설정합니다.
+Supabase SQL Editor에서 `docs/DEMO_ACCOUNTS.sql`을 실행하면 아래 계정이 생성됩니다.
 
 | 역할 | 이메일 | 비밀번호 |
 | --- | --- | --- |
-| 고객 | `customer@supportflow.dev` | `Password123!` |
-| 상담원 | `agent@supportflow.dev` | `Password123!` |
-| 관리자 | `admin@supportflow.dev` | `Password123!` |
-
-역할 업데이트 예시:
-
-```sql
-update public.profiles set role = 'customer' where email = 'customer@supportflow.dev';
-update public.profiles set role = 'agent' where email = 'agent@supportflow.dev';
-update public.profiles set role = 'admin' where email = 'admin@supportflow.dev';
-```
+| 고객 | `customer@test.com` | `11111111` |
+| 상담원 | `agent@test.com` | `11111111` |
+| 관리자 | `admin@test.com` | `11111111` |
 
 ## 유용한 명령어
 

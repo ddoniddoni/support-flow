@@ -57,6 +57,14 @@ const priorityLabels: Record<TicketPriority, string> = {
   urgent: "긴급",
 };
 
+const categoryLabels: Record<string, string> = {
+  account: "계정",
+  billing: "결제",
+  technical: "기술 지원",
+  product: "제품 문의",
+  other: "기타",
+};
+
 function getRoleLabel(role: Tables<"profiles">["role"]) {
   return role === "agent" ? "Agent" : "Admin";
 }
@@ -76,6 +84,14 @@ function formatDate(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatTicketNumber(ticketNumber: number | null | undefined) {
+  if (!ticketNumber) {
+    return "접수번호 미지정";
+  }
+
+  return `SF-${String(ticketNumber).padStart(4, "0")}`;
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -215,8 +231,11 @@ function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
                       href={`/tickets/${ticket.id}`}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {ticket.id}
+                      {ticket.title}
                     </Link>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatTicketNumber(ticket.ticket_number)}
+                    </p>
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={ticket.status} />
@@ -224,7 +243,9 @@ function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
                   <TableCell>
                     <PriorityBadge priority={ticket.priority} />
                   </TableCell>
-                  <TableCell>{ticket.category}</TableCell>
+                  <TableCell>
+                    {categoryLabels[ticket.category] ?? ticket.category}
+                  </TableCell>
                   <TableCell>{formatDate(ticket.updated_at)}</TableCell>
                 </TableRow>
               ))}

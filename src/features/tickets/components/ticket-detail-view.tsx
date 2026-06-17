@@ -91,6 +91,14 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatTicketNumber(ticketNumber: number | null | undefined) {
+  if (!ticketNumber) {
+    return "접수번호 미지정";
+  }
+
+  return `SF-${String(ticketNumber).padStart(4, "0")}`;
+}
+
 function formatLogValue(value: string | null) {
   if (!value) {
     return "없음";
@@ -343,7 +351,7 @@ function TicketOperationsPanel({
     }
 
     const agent = agentsQuery.data?.find((item) => item.id === agentId);
-    return agent ? `${agent.name} (${agent.email})` : agentId;
+    return agent ? `${agent.name} (${agent.email})` : "담당자 정보 없음";
   }
 
   return (
@@ -535,7 +543,8 @@ function TicketDetailContent({
             {ticket.title}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            접수 {formatDateTime(ticket.created_at)} · 최근 수정{" "}
+            {formatTicketNumber(ticket.ticket_number)} · 접수{" "}
+            {formatDateTime(ticket.created_at)} · 최근 수정{" "}
             {formatDateTime(ticket.updated_at)}
           </p>
         </div>
@@ -606,21 +615,31 @@ function TicketDetailContent({
                 <>
                   <div>
                     <p className="text-muted-foreground">접수 번호</p>
-                    <p className="break-all font-medium text-foreground">
-                      {ticket.id}
+                    <p className="font-medium text-foreground">
+                      {formatTicketNumber(ticket.ticket_number)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">고객 ID</p>
-                    <p className="break-all font-medium text-foreground">
-                      {ticket.customer_id}
+                    <p className="text-muted-foreground">고객</p>
+                    <p className="font-medium text-foreground">
+                      {ticket.customer?.name ?? "고객 정보 없음"}
                     </p>
+                    {ticket.customer?.email ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {ticket.customer.email}
+                      </p>
+                    ) : null}
                   </div>
                   <div>
                     <p className="text-muted-foreground">담당자</p>
-                    <p className="break-all font-medium text-foreground">
-                      {ticket.assignee_id ?? "미배정"}
+                    <p className="font-medium text-foreground">
+                      {ticket.assignee?.name ?? "미배정"}
                     </p>
+                    {ticket.assignee?.email ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {ticket.assignee.email}
+                      </p>
+                    ) : null}
                   </div>
                 </>
               ) : null}

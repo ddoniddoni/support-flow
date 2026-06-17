@@ -1,7 +1,11 @@
 import type { Tables } from "@/types/database";
 
-export type TicketListItem = Tables<"tickets">;
-export type TicketDetail = Tables<"tickets">;
+export type TicketPerson = Pick<Tables<"profiles">, "email" | "name">;
+export type TicketListItem = Tables<"tickets"> & {
+  customer: TicketPerson | null;
+  assignee: TicketPerson | null;
+};
+export type TicketDetail = TicketListItem;
 export type TicketReplyAuthor = Pick<
   Tables<"profiles">,
   "email" | "name" | "role"
