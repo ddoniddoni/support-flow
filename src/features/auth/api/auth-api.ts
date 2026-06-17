@@ -5,6 +5,18 @@ import type { Database, Tables } from "@/types/database";
 export type CurrentUser = User;
 export type CurrentProfile = Tables<"profiles">;
 
+export function isRecoverableAuthError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.name === "AuthSessionMissingError" ||
+    error.message.includes("Invalid Refresh Token") ||
+    error.message.includes("Refresh Token Not Found")
+  );
+}
+
 export async function getCurrentUser(
   supabase: SupabaseClient<Database>,
 ): Promise<CurrentUser | null> {
@@ -14,7 +26,7 @@ export async function getCurrentUser(
   } = await supabase.auth.getUser();
 
   if (error) {
-    if (error.name === "AuthSessionMissingError") {
+    if (isRecoverableAuthError(error)) {
       return null;
     }
 
