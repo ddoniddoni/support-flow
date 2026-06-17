@@ -11,7 +11,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-muted/60 p-6">
+    <main className="min-h-screen bg-muted/40 p-6">
       <DashboardView profile={profile} />
     </main>
   );
