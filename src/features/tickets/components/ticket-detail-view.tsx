@@ -107,9 +107,13 @@ function formatLogValue(value: string | null) {
   return value;
 }
 
-function formatReplyAuthor(reply: TicketReplyItem) {
+function formatReplyAuthor(reply: TicketReplyItem, isCustomerView: boolean) {
+  if (isCustomerView) {
+    return "SupportFlow 지원팀";
+  }
+
   if (!reply.author) {
-    return "알 수 없는 작성자";
+    return "지원팀";
   }
 
   return `${authorRoleLabels[reply.author.role]} ${reply.author.name} (${reply.author.email})`;
@@ -164,11 +168,13 @@ function ReplyList({
   description,
   replies,
   emptyText,
+  isCustomerView = false,
 }: {
   title: string;
   description: string;
   replies: TicketReplyItem[];
   emptyText: string;
+  isCustomerView?: boolean;
 }) {
   return (
     <Card className="rounded-lg">
@@ -187,7 +193,8 @@ function ReplyList({
                 {reply.content}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                {formatReplyAuthor(reply)} · {formatDateTime(reply.created_at)}
+                {formatReplyAuthor(reply, isCustomerView)} ·{" "}
+                {formatDateTime(reply.created_at)}
               </p>
             </div>
           ))
@@ -553,6 +560,7 @@ function TicketDetailContent({
             description="고객에게 표시되는 상담 답변입니다."
             replies={data.replies}
             emptyText="아직 등록된 공개 답변이 없습니다."
+            isCustomerView={isCustomer}
           />
 
           {canViewOperations && !hasPublicReply ? (
