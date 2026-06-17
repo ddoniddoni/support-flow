@@ -54,6 +54,14 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function formatTicketNumber(ticketNumber: number | null | undefined) {
+  if (!ticketNumber) {
+    return "접수번호 미지정";
+  }
+
+  return `SF-${String(ticketNumber).padStart(4, "0")}`;
+}
+
 function StatusBadge({ status }: { status: TicketStatus }) {
   return (
     <Badge
@@ -115,8 +123,8 @@ function MobileTicketCard({
       <div>
         <p className="font-medium text-foreground">{ticket.title}</p>
         {isCustomer ? null : (
-          <p className="mt-1 break-all text-xs text-muted-foreground">
-            {ticket.id}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatTicketNumber(ticket.ticket_number)}
           </p>
         )}
       </div>
@@ -163,8 +171,10 @@ export function TicketListTable({
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-72">제목</TableHead>
+              {isCustomer ? null : <TableHead>고객</TableHead>}
               <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
+              {isCustomer ? null : <TableHead>담당자</TableHead>}
               <TableHead>카테고리</TableHead>
               <TableHead>생성일</TableHead>
               <TableHead>수정일</TableHead>
@@ -182,10 +192,13 @@ export function TicketListTable({
                   </Link>
                   {isCustomer ? null : (
                     <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
-                      {ticket.id}
+                      {formatTicketNumber(ticket.ticket_number)}
                     </p>
                   )}
                 </TableCell>
+                {isCustomer ? null : (
+                  <TableCell>{ticket.customer?.name ?? "고객 정보 없음"}</TableCell>
+                )}
                 <TableCell>
                   {isCustomer ? (
                     <CustomerStatusBadge status={ticket.status} />
@@ -197,6 +210,9 @@ export function TicketListTable({
                   <TableCell>
                     <PriorityBadge priority={ticket.priority} />
                   </TableCell>
+                )}
+                {isCustomer ? null : (
+                  <TableCell>{ticket.assignee?.name ?? "미배정"}</TableCell>
                 )}
                 <TableCell>
                   {categoryLabels[ticket.category] ?? ticket.category}

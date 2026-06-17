@@ -8,6 +8,12 @@ import type {
 } from "../schemas/ticket-schema";
 import type { TicketDetailData, TicketSortOption } from "../types";
 
+const ticketSelectQuery = `
+  *,
+  customer:profiles!tickets_customer_id_fkey(email,name),
+  assignee:profiles!tickets_assignee_id_fkey(email,name)
+`;
+
 export async function createTicket(input: CreateTicketInput) {
   const supabase = createSupabaseBrowserClient();
 
@@ -99,7 +105,9 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
   const to = from + pageSize - 1;
   const sort = getSortConfig(filters.sort);
 
-  let query = supabase.from("tickets").select("*", { count: "exact" });
+  let query = supabase.from("tickets").select(ticketSelectQuery, {
+    count: "exact",
+  });
 
   if (profile.role === "customer") {
     query = query.eq("customer_id", profile.id);
@@ -151,7 +159,10 @@ export async function getTicketDetail({
 }): Promise<TicketDetailData> {
   const supabase = createSupabaseBrowserClient();
 
-  let ticketQuery = supabase.from("tickets").select("*").eq("id", ticketId);
+  let ticketQuery = supabase
+    .from("tickets")
+    .select(ticketSelectQuery)
+    .eq("id", ticketId);
 
   if (profile.role === "customer") {
     ticketQuery = ticketQuery.eq("customer_id", profile.id);

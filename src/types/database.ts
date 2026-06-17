@@ -43,6 +43,7 @@ export type Database = {
           status: TicketStatus;
           priority: TicketPriority;
           category: string;
+          ticket_number: number;
           customer_id: string;
           assignee_id: string | null;
           created_at: string;
@@ -55,6 +56,7 @@ export type Database = {
           status?: TicketStatus;
           priority?: TicketPriority;
           category: string;
+          ticket_number?: number;
           customer_id: string;
           assignee_id?: string | null;
           created_at?: string;
@@ -67,6 +69,7 @@ export type Database = {
           status?: TicketStatus;
           priority?: TicketPriority;
           category?: string;
+          ticket_number?: number;
           customer_id?: string;
           assignee_id?: string | null;
           created_at?: string;
