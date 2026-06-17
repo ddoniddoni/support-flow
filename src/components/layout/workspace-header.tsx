@@ -24,7 +24,11 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
   return (
     <header className="mx-auto mb-5 max-w-6xl rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
+        <Link
+          className="flex min-w-0 items-center gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+          href="/"
+          aria-label="SupportFlow 홈으로 이동"
+        >
           <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Activity className="size-5" aria-hidden="true" />
           </div>
@@ -37,7 +41,7 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
               {profile.name} · {profile.email}
             </p>
           </div>
-        </div>
+        </Link>
 
         <nav className="grid gap-2 sm:flex sm:items-center">
           <ThemeToggle />
