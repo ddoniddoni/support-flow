@@ -162,7 +162,9 @@ export function TicketListView({
           className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
           role="status"
         >
-          문의가 등록되었습니다. 접수 번호: {createdTicketId}
+          {profile.role === "customer"
+            ? "문의가 등록되었습니다. 답변이 준비되면 이 목록에서 확인할 수 있습니다."
+            : `문의가 등록되었습니다. 접수 번호: ${createdTicketId}`}
         </div>
       ) : null}
 

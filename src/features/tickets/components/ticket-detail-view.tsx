@@ -594,14 +594,14 @@ function TicketDetailContent({
               <CardTitle>문의 정보</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
-              <div>
-                <p className="text-muted-foreground">접수 번호</p>
-                <p className="break-all font-medium text-foreground">
-                  {ticket.id}
-                </p>
-              </div>
               {canViewOperations ? (
                 <>
+                  <div>
+                    <p className="text-muted-foreground">접수 번호</p>
+                    <p className="break-all font-medium text-foreground">
+                      {ticket.id}
+                    </p>
+                  </div>
                   <div>
                     <p className="text-muted-foreground">고객 ID</p>
                     <p className="break-all font-medium text-foreground">
