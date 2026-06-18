@@ -30,7 +30,13 @@ export function AuthFormShell({
     <main className="flex min-h-screen items-center justify-center bg-muted/60 p-6">
       <Card className="w-full max-w-sm rounded-lg">
         <CardHeader>
-          <p className="text-sm font-medium text-muted-foreground">SupportFlow</p>
+          <Link
+            aria-label="SupportFlow 홈으로 이동"
+            className="w-fit text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+            href="/"
+          >
+            SupportFlow
+          </Link>
           <CardTitle className="text-xl">{title}</CardTitle>
           <CardDescription className="leading-6">{description}</CardDescription>
         </CardHeader>
