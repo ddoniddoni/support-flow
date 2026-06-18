@@ -14,7 +14,7 @@
 | 프론트엔드 | Next.js, TypeScript, Tailwind CSS, shadcn/ui |
 | 백엔드/데이터 | Supabase Auth, Postgres, Row Level Security |
 | 상태/폼 | TanStack Query, React Hook Form, Zod |
-| 배포 | Vercel 예정 |
+| 배포 | [Vercel](https://supportflow-gules.vercel.app/) |
 
 ## 만든 이유
 
@@ -272,6 +272,8 @@ docs/TICKET_NUMBER_MIGRATION.sql
 
 ## 데모 계정
 
+아래 계정은 포트폴리오 시연용입니다. 샘플 데이터만 포함되어 있으며 실제 고객 정보는 사용하지 않습니다.
+
 Supabase SQL Editor에서 `docs/DEMO_ACCOUNTS.sql`을 실행하면 아래 계정이 생성됩니다.
 
 | 역할 | 이메일 | 비밀번호 |
@@ -306,7 +308,7 @@ npm.cmd run build
 배포 대상은 Vercel입니다.
 
 ```txt
-Deployment URL: Not deployed yet
+Deployment URL: https://supportflow-gules.vercel.app/
 ```
 
 Vercel 환경 변수:
