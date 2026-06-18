@@ -22,8 +22,8 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
   const canViewDashboard = profile.role !== "customer";
 
   return (
-    <header className="mx-auto mb-5 max-w-6xl rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <header className="border-b border-border bg-background">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <Link
           className="flex min-w-0 items-center gap-3 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
           href="/"

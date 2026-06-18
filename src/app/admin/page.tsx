@@ -35,10 +35,10 @@ export default async function AdminPage() {
   const profile = await requireServerRole(["admin"]);
 
   return (
-    <main className="min-h-screen bg-muted/40 p-6">
+    <main className="min-h-screen bg-muted/40">
       <WorkspaceHeader profile={profile} />
 
-      <div className="mx-auto grid max-w-6xl gap-5">
+      <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
         <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>

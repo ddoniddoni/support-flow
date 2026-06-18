@@ -14,7 +14,6 @@ import Link from "next/link";
 import { EmptyState, EmptyStateAction } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import {
   Card,
   CardContent,
@@ -30,7 +29,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LogoutButton } from "@/features/auth/components/logout-button";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import type { TicketPriority, TicketStatus } from "@/types/domain";
@@ -320,7 +318,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
   const statsQuery = useDashboardStats({ profile });
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-5">
+    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -335,19 +333,6 @@ export function DashboardView({ profile }: DashboardViewProps) {
           <p className="mt-2 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
           </p>
-        </div>
-        <div className="grid gap-2 sm:flex sm:items-center">
-          <ThemeToggle />
-          <Link
-            className={buttonVariants({
-              variant: "outline",
-              className: "w-full sm:w-auto",
-            })}
-            href="/tickets"
-          >
-            문의 목록
-          </Link>
-          <LogoutButton />
         </div>
       </div>
 

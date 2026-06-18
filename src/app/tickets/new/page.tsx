@@ -15,10 +15,10 @@ export default async function NewTicketPage() {
   const profile = await requireServerRole(["customer"]);
 
   return (
-    <main className="min-h-screen bg-muted/40 p-6">
+    <main className="min-h-screen bg-muted/40">
       <WorkspaceHeader profile={profile} />
 
-      <div className="mx-auto grid max-w-3xl gap-6">
+      <div className="mx-auto grid max-w-3xl gap-6 px-5 py-7 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-2">
           <Link className="text-sm font-medium text-muted-foreground" href="/tickets">
             문의 목록
