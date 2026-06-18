@@ -46,6 +46,25 @@ const customerStatusLabels: Record<TicketStatus, string> = {
   closed: "종료",
 };
 
+const adminColumnWidths = [
+  "w-[36%]",
+  "w-[8%]",
+  "w-[9%]",
+  "w-[9%]",
+  "w-[9%]",
+  "w-[9%]",
+  "w-[10%]",
+  "w-[10%]",
+];
+
+const customerColumnWidths = [
+  "w-[44%]",
+  "w-[14%]",
+  "w-[14%]",
+  "w-[14%]",
+  "w-[14%]",
+];
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
@@ -157,6 +176,7 @@ export function TicketListTable({
   role: Tables<"profiles">["role"];
 }) {
   const isCustomer = role === "customer";
+  const columnWidths = isCustomer ? customerColumnWidths : adminColumnWidths;
 
   return (
     <>
@@ -167,10 +187,15 @@ export function TicketListTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
-        <Table>
+        <Table className="min-w-[900px] table-fixed">
+          <colgroup>
+            {columnWidths.map((width, index) => (
+              <col key={index} className={width} />
+            ))}
+          </colgroup>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-72">제목</TableHead>
+              <TableHead>제목</TableHead>
               {isCustomer ? null : <TableHead>고객</TableHead>}
               <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
@@ -183,10 +208,10 @@ export function TicketListTable({
           <TableBody>
             {tickets.map((ticket) => (
               <TableRow key={ticket.id}>
-                <TableCell>
+                <TableCell className="min-w-0">
                   <Link
                     href={`/tickets/${ticket.id}`}
-                    className="font-medium text-foreground hover:underline"
+                    className="block truncate font-medium text-foreground hover:underline"
                   >
                     {ticket.title}
                   </Link>
@@ -197,7 +222,9 @@ export function TicketListTable({
                   )}
                 </TableCell>
                 {isCustomer ? null : (
-                  <TableCell>{ticket.customer?.name ?? "고객 정보 없음"}</TableCell>
+                  <TableCell className="truncate">
+                    {ticket.customer?.name ?? "고객 정보 없음"}
+                  </TableCell>
                 )}
                 <TableCell>
                   {isCustomer ? (
@@ -212,13 +239,19 @@ export function TicketListTable({
                   </TableCell>
                 )}
                 {isCustomer ? null : (
-                  <TableCell>{ticket.assignee?.name ?? "미배정"}</TableCell>
+                  <TableCell className="truncate">
+                    {ticket.assignee?.name ?? "미배정"}
+                  </TableCell>
                 )}
-                <TableCell>
+                <TableCell className="truncate">
                   {categoryLabels[ticket.category] ?? ticket.category}
                 </TableCell>
-                <TableCell>{formatDate(ticket.created_at)}</TableCell>
-                <TableCell>{formatDate(ticket.updated_at)}</TableCell>
+                <TableCell className="tabular-nums">
+                  {formatDate(ticket.created_at)}
+                </TableCell>
+                <TableCell className="tabular-nums">
+                  {formatDate(ticket.updated_at)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
