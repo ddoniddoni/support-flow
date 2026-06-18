@@ -1,12 +1,15 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import type { Database } from "@/types/database";
 import type { Tables } from "@/types/database";
 import {
   ticketStatuses,
   type TicketStatus,
 } from "@/types/domain";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type DashboardProfile = Pick<Tables<"profiles">, "id" | "role">;
-type DashboardTicket = Pick<
+export type DashboardTicketPerson = Pick<Tables<"profiles">, "email" | "name">;
+export type DashboardTicket = Pick<
   Tables<"tickets">,
   | "id"
   | "title"
@@ -16,7 +19,11 @@ type DashboardTicket = Pick<
   | "category"
   | "created_at"
   | "updated_at"
->;
+> & {
+  customer: DashboardTicketPerson | null;
+  assignee: DashboardTicketPerson | null;
+};
+type DashboardSupabaseClient = SupabaseClient<Database>;
 
 export type DistributionItem = {
   key: string;
@@ -89,12 +96,24 @@ function getCategoryKeys(tickets: DashboardTicket[]) {
 
 export async function getDashboardStats(
   profile: DashboardProfile,
+  supabase: DashboardSupabaseClient = createSupabaseBrowserClient(),
 ): Promise<DashboardStats> {
-  const supabase = createSupabaseBrowserClient();
-
   let query = supabase
     .from("tickets")
-    .select("id,title,ticket_number,status,priority,category,created_at,updated_at");
+    .select(
+      `
+        id,
+        title,
+        ticket_number,
+        status,
+        priority,
+        category,
+        created_at,
+        updated_at,
+        customer:profiles!tickets_customer_id_fkey(email,name),
+        assignee:profiles!tickets_assignee_id_fkey(email,name)
+      `,
+    );
 
   if (profile.role === "customer") {
     query = query.eq("customer_id", profile.id);
@@ -112,7 +131,7 @@ export async function getDashboardStats(
     throw error;
   }
 
-  const tickets = data ?? [];
+  const tickets = (data ?? []) as DashboardTicket[];
   const todayStart = getTodayStart();
 
   return {

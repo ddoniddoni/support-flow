@@ -1,66 +1,16 @@
 "use client";
 
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock3,
-  Flame,
-  Inbox,
-  type LucideIcon,
-  Ticket,
-} from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
-import { EmptyState, EmptyStateAction } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
-import type { TicketPriority, TicketStatus } from "@/types/domain";
 
-import type { DashboardStats, DistributionItem } from "../api/dashboard-api";
 import { useDashboardStats } from "../hooks/use-dashboard-stats";
 import { DashboardSkeleton } from "./dashboard-skeleton";
+import { OperationsPreview } from "./operations-preview";
 
 type DashboardViewProps = {
   profile: Pick<Tables<"profiles">, "id" | "email" | "name" | "role">;
-};
-
-const statusLabels: Record<TicketStatus, string> = {
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
-  closed: "종료",
-};
-
-const priorityLabels: Record<TicketPriority, string> = {
-  low: "낮음",
-  medium: "보통",
-  high: "높음",
-  urgent: "긴급",
-};
-
-const categoryLabels: Record<string, string> = {
-  account: "계정",
-  billing: "결제",
-  technical: "기술 지원",
-  product: "제품 문의",
-  other: "기타",
 };
 
 function getRoleLabel(role: Tables<"profiles">["role"]) {
@@ -73,245 +23,6 @@ function getRoleDescription(role: Tables<"profiles">["role"]) {
   }
 
   return "전체 지원 운영 현황과 병목 구간을 한눈에 확인합니다.";
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
-function formatTicketNumber(ticketNumber: number | null | undefined) {
-  if (!ticketNumber) {
-    return "접수번호 미지정";
-  }
-
-  return `SF-${String(ticketNumber).padStart(4, "0")}`;
-}
-
-function StatusBadge({ status }: { status: TicketStatus }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        status === "open" && "border-blue-200 bg-blue-50 text-blue-700",
-        status === "in_progress" &&
-          "border-amber-200 bg-amber-50 text-amber-700",
-        status === "resolved" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-700",
-        status === "closed" &&
-          "border-border bg-muted text-muted-foreground",
-      )}
-    >
-      {statusLabels[status]}
-    </Badge>
-  );
-}
-
-function PriorityBadge({ priority }: { priority: TicketPriority }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        priority === "urgent" && "border-red-200 bg-red-50 text-red-700",
-        priority === "high" && "border-orange-200 bg-orange-50 text-orange-700",
-        priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
-        priority === "low" &&
-          "border-border bg-muted/60 text-muted-foreground",
-      )}
-    >
-      {priorityLabels[priority]}
-    </Badge>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  detail,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  detail: string;
-  icon: LucideIcon;
-}) {
-  return (
-    <Card className="rounded-lg">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0">
-        <div>
-          <CardDescription>{label}</CardDescription>
-          <CardTitle className="mt-2 text-3xl">{value}</CardTitle>
-        </div>
-        <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
-      </CardHeader>
-      <CardContent className="text-sm leading-6 text-muted-foreground">
-        {detail}
-      </CardContent>
-    </Card>
-  );
-}
-
-function DistributionList({
-  title,
-  description,
-  items,
-}: {
-  title: string;
-  description: string;
-  items: DistributionItem[];
-}) {
-  return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        {items.map((item) => (
-          <div key={item.key} className="grid gap-1.5">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-medium text-foreground">{item.label}</span>
-              <span className="text-muted-foreground">
-                {item.count}건 · {item.percentage}%
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${item.percentage}%` }}
-              />
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecentTicketsTable({ stats }: { stats: DashboardStats }) {
-  return (
-    <Card className="rounded-lg">
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <CardTitle>최근 업데이트 문의</CardTitle>
-          <CardDescription>
-            권한 범위 안에서 최근 수정된 문의를 보여줍니다.
-          </CardDescription>
-        </div>
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          href="/tickets"
-        >
-          전체 보기
-        </Link>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-64">문의</TableHead>
-                <TableHead>상태</TableHead>
-                <TableHead>우선순위</TableHead>
-                <TableHead>카테고리</TableHead>
-                <TableHead>수정일</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {stats.recentTickets.map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell>
-                    <Link
-                      href={`/tickets/${ticket.id}`}
-                      className="font-medium text-foreground hover:underline"
-                    >
-                      {ticket.title}
-                    </Link>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {formatTicketNumber(ticket.ticket_number)}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={ticket.status} />
-                  </TableCell>
-                  <TableCell>
-                    <PriorityBadge priority={ticket.priority} />
-                  </TableCell>
-                  <TableCell>
-                    {categoryLabels[ticket.category] ?? ticket.category}
-                  </TableCell>
-                  <TableCell>{formatDate(ticket.updated_at)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function DashboardContent({ stats }: { stats: DashboardStats }) {
-  if (!stats.totalTickets) {
-    return (
-      <EmptyState
-        title="아직 집계할 문의가 없습니다"
-        description="배정되거나 생성된 문의가 생기면 이곳에서 상태, 우선순위, 카테고리 분포를 확인할 수 있습니다."
-        action={<EmptyStateAction href="/tickets">문의 목록 보기</EmptyStateAction>}
-      />
-    );
-  }
-
-  return (
-    <div className="grid gap-5">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="전체 문의"
-          value={stats.totalTickets}
-          detail={`오늘 새로 접수된 문의 ${stats.createdToday}건`}
-          icon={Ticket}
-        />
-        <MetricCard
-          label="열린 문의"
-          value={stats.openTickets}
-          detail="아직 처리가 시작되지 않은 요청입니다."
-          icon={Inbox}
-        />
-        <MetricCard
-          label="진행 중"
-          value={stats.inProgressTickets}
-          detail="상담원이 현재 처리 중인 문의입니다."
-          icon={Clock3}
-        />
-        <MetricCard
-          label="긴급 문의"
-          value={stats.urgentTickets}
-          detail={`해결 완료 문의 ${stats.resolvedTickets}건`}
-          icon={Flame}
-        />
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <RecentTicketsTable stats={stats} />
-        <div className="grid content-start gap-5">
-          <DistributionList
-            title="상태 분포"
-            description="현재 문의의 처리 단계별 비율입니다."
-            items={stats.statusDistribution}
-          />
-          <DistributionList
-            title="카테고리 분포"
-            description="문의 유형별 접수 비중입니다."
-            items={stats.categoryDistribution}
-          />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function DashboardView({ profile }: DashboardViewProps) {
@@ -354,7 +65,13 @@ export function DashboardView({ profile }: DashboardViewProps) {
       ) : null}
 
       {!statsQuery.isLoading && !statsQuery.isError && statsQuery.data ? (
-        <DashboardContent stats={statsQuery.data} />
+        <OperationsPreview
+          ctaHref="/tickets"
+          ctaLabel="문의 목록"
+          emptyHref={profile.role === "customer" ? "/tickets/new" : "/tickets"}
+          emptyLabel={profile.role === "customer" ? "문의 등록" : "문의 목록"}
+          stats={statsQuery.data}
+        />
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
