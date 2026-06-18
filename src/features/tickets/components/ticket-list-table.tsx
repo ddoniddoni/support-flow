@@ -64,8 +64,8 @@ const customerColumnWidths = [
   "w-[112px]",
 ];
 
-const metaHeaderClassName = "text-right";
-const metaCellClassName = "text-right";
+const dateHeaderClassName = "text-right";
+const dateCellClassName = "text-right tabular-nums";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -198,18 +198,14 @@ export function TicketListTable({
           <TableHeader>
             <TableRow>
               <TableHead>제목</TableHead>
-              <TableHead className={metaHeaderClassName}>
-                {isCustomer ? "처리 상태" : "상태"}
-              </TableHead>
+              <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
               {isCustomer ? null : (
-                <TableHead className={metaHeaderClassName}>우선순위</TableHead>
+                <TableHead>우선순위</TableHead>
               )}
-              {isCustomer ? null : (
-                <TableHead className={metaHeaderClassName}>담당자</TableHead>
-              )}
-              <TableHead className={metaHeaderClassName}>카테고리</TableHead>
-              <TableHead className={metaHeaderClassName}>생성일</TableHead>
-              <TableHead className={metaHeaderClassName}>수정일</TableHead>
+              {isCustomer ? null : <TableHead>담당자</TableHead>}
+              <TableHead>카테고리</TableHead>
+              <TableHead className={dateHeaderClassName}>생성일</TableHead>
+              <TableHead className={dateHeaderClassName}>수정일</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -229,7 +225,7 @@ export function TicketListTable({
                     </p>
                   )}
                 </TableCell>
-                <TableCell className={metaCellClassName}>
+                <TableCell>
                   {isCustomer ? (
                     <CustomerStatusBadge status={ticket.status} />
                   ) : (
@@ -237,22 +233,22 @@ export function TicketListTable({
                   )}
                 </TableCell>
                 {isCustomer ? null : (
-                  <TableCell className={metaCellClassName}>
+                  <TableCell>
                     <PriorityBadge priority={ticket.priority} />
                   </TableCell>
                 )}
                 {isCustomer ? null : (
-                  <TableCell className={cn("truncate", metaCellClassName)}>
+                  <TableCell className="truncate">
                     {ticket.assignee?.name ?? "미배정"}
                   </TableCell>
                 )}
-                <TableCell className={cn("truncate", metaCellClassName)}>
+                <TableCell className="truncate">
                   {categoryLabels[ticket.category] ?? ticket.category}
                 </TableCell>
-                <TableCell className={cn("tabular-nums", metaCellClassName)}>
+                <TableCell className={dateCellClassName}>
                   {formatDate(ticket.created_at)}
                 </TableCell>
-                <TableCell className={cn("tabular-nums", metaCellClassName)}>
+                <TableCell className={dateCellClassName}>
                   {formatDate(ticket.updated_at)}
                 </TableCell>
               </TableRow>
