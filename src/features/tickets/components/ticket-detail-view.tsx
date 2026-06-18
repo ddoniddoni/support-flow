@@ -516,7 +516,7 @@ function TicketDetailContent({
   const hasPublicReply = data.replies.length > 0;
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-5">
+    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-3">
         <Link
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
