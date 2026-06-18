@@ -47,23 +47,25 @@ const customerStatusLabels: Record<TicketStatus, string> = {
 };
 
 const adminColumnWidths = [
-  "w-[36%]",
-  "w-[8%]",
-  "w-[9%]",
-  "w-[9%]",
-  "w-[9%]",
-  "w-[9%]",
-  "w-[10%]",
-  "w-[10%]",
+  "w-auto",
+  "w-[92px]",
+  "w-[100px]",
+  "w-[112px]",
+  "w-[104px]",
+  "w-[112px]",
+  "w-[112px]",
 ];
 
 const customerColumnWidths = [
-  "w-[44%]",
-  "w-[14%]",
-  "w-[14%]",
-  "w-[14%]",
-  "w-[14%]",
+  "w-auto",
+  "w-[112px]",
+  "w-[112px]",
+  "w-[112px]",
+  "w-[112px]",
 ];
+
+const metaHeaderClassName = "text-right";
+const metaCellClassName = "text-right";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -187,7 +189,7 @@ export function TicketListTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
-        <Table className="min-w-[900px] table-fixed">
+        <Table className="min-w-[880px] table-fixed">
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={index} className={width} />
@@ -196,13 +198,18 @@ export function TicketListTable({
           <TableHeader>
             <TableRow>
               <TableHead>제목</TableHead>
-              {isCustomer ? null : <TableHead>고객</TableHead>}
-              <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
-              {isCustomer ? null : <TableHead>우선순위</TableHead>}
-              {isCustomer ? null : <TableHead>담당자</TableHead>}
-              <TableHead>카테고리</TableHead>
-              <TableHead>생성일</TableHead>
-              <TableHead>수정일</TableHead>
+              <TableHead className={metaHeaderClassName}>
+                {isCustomer ? "처리 상태" : "상태"}
+              </TableHead>
+              {isCustomer ? null : (
+                <TableHead className={metaHeaderClassName}>우선순위</TableHead>
+              )}
+              {isCustomer ? null : (
+                <TableHead className={metaHeaderClassName}>담당자</TableHead>
+              )}
+              <TableHead className={metaHeaderClassName}>카테고리</TableHead>
+              <TableHead className={metaHeaderClassName}>생성일</TableHead>
+              <TableHead className={metaHeaderClassName}>수정일</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -217,16 +224,12 @@ export function TicketListTable({
                   </Link>
                   {isCustomer ? null : (
                     <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
-                      {formatTicketNumber(ticket.ticket_number)}
+                      {formatTicketNumber(ticket.ticket_number)} ·{" "}
+                      {ticket.customer?.name ?? "고객 정보 없음"}
                     </p>
                   )}
                 </TableCell>
-                {isCustomer ? null : (
-                  <TableCell className="truncate">
-                    {ticket.customer?.name ?? "고객 정보 없음"}
-                  </TableCell>
-                )}
-                <TableCell>
+                <TableCell className={metaCellClassName}>
                   {isCustomer ? (
                     <CustomerStatusBadge status={ticket.status} />
                   ) : (
@@ -234,22 +237,22 @@ export function TicketListTable({
                   )}
                 </TableCell>
                 {isCustomer ? null : (
-                  <TableCell>
+                  <TableCell className={metaCellClassName}>
                     <PriorityBadge priority={ticket.priority} />
                   </TableCell>
                 )}
                 {isCustomer ? null : (
-                  <TableCell className="truncate">
+                  <TableCell className={cn("truncate", metaCellClassName)}>
                     {ticket.assignee?.name ?? "미배정"}
                   </TableCell>
                 )}
-                <TableCell className="truncate">
+                <TableCell className={cn("truncate", metaCellClassName)}>
                   {categoryLabels[ticket.category] ?? ticket.category}
                 </TableCell>
-                <TableCell className="tabular-nums">
+                <TableCell className={cn("tabular-nums", metaCellClassName)}>
                   {formatDate(ticket.created_at)}
                 </TableCell>
-                <TableCell className="tabular-nums">
+                <TableCell className={cn("tabular-nums", metaCellClassName)}>
                   {formatDate(ticket.updated_at)}
                 </TableCell>
               </TableRow>
