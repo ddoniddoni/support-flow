@@ -435,17 +435,6 @@ export default async function Home() {
               {profile ? "내 작업공간 보기" : "운영 화면 보기"}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
-            {profile ? null : (
-              <Link
-                className={buttonVariants({
-                  variant: "outline",
-                  className: "w-full sm:w-auto",
-                })}
-                href="/login"
-              >
-                로그인 페이지
-              </Link>
-            )}
           </div>
         </div>
 
