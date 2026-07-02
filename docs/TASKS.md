@@ -1,147 +1,180 @@
-# SupportFlow Tasks
+# SupportFlow v2 AI Upgrade — Codex Prompt Pack
 
-## Phase workflow
+Use these prompts one phase at a time. Do not ask Codex to implement everything at once unless the codebase is already small and clean.
 
-- Start every Phase from the latest `develop`.
-- Create a dedicated Phase branch before implementation.
-- Push the Phase branch after the work is committed.
-- Merge the Phase branch back into `develop` after verification.
-- Push `develop` after the merge.
+## Initial prompt
 
-## Phase 1: Project setup
+```txt
+Read AGENTS.md and PRD.md first.
 
-- [ ] Create Next.js project with TypeScript
-- [ ] Configure Tailwind CSS
-- [ ] Install and configure shadcn/ui
-- [ ] Set up base layout
-- [ ] Set up route groups if useful
-- [ ] Create common layout components
-- [ ] Create basic README
+We are updating the existing SupportFlow project, not creating a new product.
+SupportFlow is already a role-based B2B customer support ticket management SaaS.
+The goal is to add AI-assisted support operations on top of the existing ticket workflow.
 
-## Phase 2: Supabase setup
+Important:
+- Preserve existing Customer / Agent / Admin flows.
+- Do not rewrite the app from scratch.
+- Use npm only. Do not introduce yarn or pnpm.
+- Follow the Git workflow in AGENTS.md: start from develop, create a phase branch, verify with npm.cmd run lint and npm.cmd run build when available, then merge back to develop.
+- Do not turn this into a separate VOC analytics product.
+- The app must work with AI_PROVIDER=mock and no real AI API key.
+- Follow the existing folder structure and coding conventions where possible.
+- Keep changes small, type-safe, and reviewable.
 
-- [x] Configure Supabase client
-- [x] Create auth helper functions
-- [x] Define database types
-- [x] Prepare profiles table
-- [x] Prepare tickets table
-- [x] Prepare ticket_replies table
-- [x] Prepare ticket_logs table
+Start with Phase AI-0: inspect the current codebase and produce a short implementation plan.
+Do not modify files yet.
+```
 
-## Phase 3: Authentication
+## Phase AI-1 prompt — Schema and migrations
 
-- [x] Implement signup page
-- [x] Implement login page
-- [x] Implement logout
-- [x] Fetch current user profile
-- [x] Protect authenticated routes
-- [x] Redirect unauthorized users
+```txt
+Implement Phase AI-1 only.
 
-## Phase 4: Role-based access
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-01-schema-migrations.
 
-- [ ] Define role type: customer, agent, admin
-- [ ] Create role guard utility
-- [ ] Restrict customer to own tickets
-- [ ] Restrict agent to assigned tickets
-- [ ] Allow admin to access all tickets
-- [ ] Create unauthorized page
+Scope:
+- Add the AI output Zod schema.
+- Add TypeScript types inferred from the schema.
+- Add Supabase migrations for:
+  - ai_prompt_versions
+  - ticket_ai_analyses
+  - ticket_ai_review_events
+- Add indexes for ticket_id, needs_review, sentiment, urgency, confidence, created_at.
+- Add RLS policies consistent with existing Customer / Agent / Admin rules.
+- Seed an initial prompt version if this project has a seed mechanism.
+- Update .env.example with AI_PROVIDER=mock and optional AI env vars.
 
-## Phase 5: Ticket creation
+Do not implement UI yet.
+Do not add a real AI provider yet.
+After implementing, run npm.cmd run lint and npm.cmd run build when available, then summarize changed files.
+```
 
-- [x] Create ticket schema with Zod
-- [x] Create ticket form with React Hook Form
-- [x] Add validation messages
-- [x] Add submit loading state
-- [x] Add success/error toast
-- [x] Redirect after successful creation
+## Phase AI-2 prompt — Provider abstraction
 
-## Phase 6: Ticket list
+```txt
+Implement Phase AI-2 only.
 
-- [x] Create ticket list API
-- [x] Create useTickets hook with TanStack Query
-- [x] Create ticket table
-- [x] Add search
-- [x] Add status filter
-- [x] Add priority filter
-- [x] Add category filter
-- [x] Add pagination
-- [x] Store filters in URL query parameters
-- [x] Add loading skeleton
-- [x] Add error state
-- [x] Add empty state
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-02-provider-abstraction.
 
-## Phase 7: Ticket detail
+Scope:
+- Add features/ai provider abstraction.
+- Implement AI_PROVIDER=mock.
+- Add deterministic mock analysis based on ticket text keywords.
+- Add analyzeTicket API/action using the existing server pattern.
+- Validate AI output with Zod before saving.
+- Store raw_response and validated_response.
+- Mark needsReview based on confidence threshold and risk rules.
+- Invalidate relevant TanStack Query keys after mutation.
 
-- [x] Create ticket detail API
-- [x] Create useTicket hook
-- [x] Show ticket metadata
-- [x] Show replies
-- [x] Show internal notes
-- [x] Show activity logs
-- [x] Add detail skeleton
-- [x] Add not-found state
+Do not implement the ticket detail panel yet except minimal integration if needed for testing.
+After implementing, run npm.cmd run lint and npm.cmd run build when available, then summarize changed files.
+```
 
-## Phase 8: Ticket actions
+## Phase AI-3 prompt — Ticket detail AI Assistant
 
-- [x] Change ticket status
-- [x] Assign agent
-- [x] Change priority
-- [x] Add optimistic update where appropriate
-- [x] Add activity log after important changes
-- [x] Handle failed mutation rollback
+```txt
+Implement Phase AI-3 only.
 
-## Phase 9: Replies and internal notes
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-03-ticket-detail-panel.
 
-- [x] Create reply form
-- [x] Create internal note form
-- [x] Separate customer-visible replies and internal notes
-- [x] Add validation
-- [x] Add loading state
-- [x] Update ticket detail after submission
+Scope:
+- Add an AI Assistant panel to the ticket detail page.
+- Show empty state when no analysis exists.
+- Add Analyze and Regenerate actions.
+- Show category, sentiment, urgency, suggested priority, confidence, needsReview, summary, reason, and replyDraft.
+- Add loading/error states.
+- Add copy reply draft action.
+- Add "Use draft as reply" flow that lets the agent edit before posting.
+- Do not auto-post AI text.
+- Customers must not see the AI panel.
 
-## Phase 10: Dashboard
+Preserve existing ticket detail layout and reply/internal-note functionality.
+After implementing, run npm.cmd run lint and npm.cmd run build when available, then summarize changed files.
+```
 
-- [x] Create dashboard stats API
-- [x] Show total tickets
-- [x] Show open tickets
-- [x] Show in-progress tickets
-- [x] Show resolved tickets
-- [x] Show urgent tickets
-- [x] Show category distribution
-- [x] Show status distribution
+## Phase AI-4 prompt — AI Review Queue
 
-## Phase 11: Polish
+```txt
+Implement Phase AI-4 only.
 
-- [x] Improve responsive layout
-- [x] Add mobile table alternative if needed
-- [x] Add 404 page
-- [x] Add unauthorized page
-- [x] Add loading.tsx and error.tsx where useful
-- [x] Remove unused code
-- [x] Remove any unnecessary `any`
-- [x] Run lint
-- [x] Run build
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-04-review-queue.
 
-## Phase 12: Portfolio documentation
+Scope:
+- Add /tickets/ai-review route.
+- Admins can see all items needing review.
+- Agents can see assigned-ticket review items.
+- Customers see unauthorized state.
+- Add table with title, customer, status, priority, AI urgency, AI sentiment, confidence, review reason, assignee, created date.
+- Add filters using URL query params where practical.
+- Add approve/correct/reject actions.
+- Save review events to ticket_ai_review_events.
+- Add ticket_logs entries for review decisions.
 
-- [x] Write project intro
-- [x] Add demo accounts
-- [x] Add feature list
-- [x] Add tech stack explanation
-- [x] Add folder structure explanation
-- [x] Add troubleshooting section
-- [x] Document deployment target
-- [x] Add screenshots
+Include loading, error, empty, and unauthorized states.
+After implementing, run npm.cmd run lint and npm.cmd run build when available, then summarize changed files.
+```
 
-## Final QA polish
+## Phase AI-5 prompt — Ticket list and dashboard insights
 
-- [x] Route customers to inquiry list instead of dashboard
-- [x] Remove customer priority selection
-- [x] Use customer-facing inquiry terminology in the UI
-- [x] Add workspace navigation and logout
-- [x] Improve visual contrast
-- [x] Add light/dark theme toggle
-- [x] Fix reply creation through Supabase RPC
-- [x] Hide internal operation metadata from customer screens
-- [x] Limit public replies to one official customer answer
-- [x] Refresh public screenshots
+```txt
+Implement Phase AI-5 only.
+
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-05-dashboard-insights.
+
+Scope:
+- Add AI badges/columns to the existing ticket list.
+- Add URL filters:
+  - aiSentiment
+  - aiUrgency
+  - needsReview
+  - confidenceMax
+- Preserve existing status/priority/category/assignee/search/sort/pagination behavior.
+- Add dashboard AI insight cards:
+  - needs review count
+  - negative sentiment count
+  - high/critical urgency count
+  - average confidence
+  - top AI categories
+  - AI analyses this week
+
+Keep visuals simple and consistent with existing shadcn/ui components.
+After implementing, run npm.cmd run lint and npm.cmd run build when available, then summarize changed files.
+```
+
+## Phase AI-6 prompt — README and polish
+
+```txt
+Implement Phase AI-6 only.
+
+Before coding:
+- Check git status.
+- Start from latest develop.
+- Create a dedicated branch such as phase/ai-06-readme-polish.
+
+Scope:
+- Update README to explain the SupportFlow v2 AI upgrade.
+- Add demo accounts.
+- Add AI_PROVIDER=mock demo instructions.
+- Add architecture notes for AI provider abstraction.
+- Add human-in-the-loop AI review explanation.
+- Add troubleshooting.
+- Add portfolio/resume bullet examples.
+- Confirm npm.cmd run lint and npm.cmd run build status.
+
+Do not change app behavior unless fixing documentation-discovered issues.
+```
