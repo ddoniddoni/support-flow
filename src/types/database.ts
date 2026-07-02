@@ -1,4 +1,14 @@
-import type { Role, TicketPriority, TicketStatus } from "@/types/domain";
+import type {
+  AICategory,
+  AIIntent,
+  AIReviewDecision,
+  AISentiment,
+  AIUrgency,
+  AIValidationStatus,
+  Role,
+  TicketPriority,
+  TicketStatus,
+} from "@/types/domain";
 
 export type Json =
   | string
@@ -46,6 +56,11 @@ export type Database = {
           ticket_number: number;
           customer_id: string;
           assignee_id: string | null;
+          latest_ai_analysis_id: string | null;
+          ai_needs_review: boolean;
+          ai_sentiment: AISentiment | null;
+          ai_urgency: AIUrgency | null;
+          ai_confidence: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -59,6 +74,11 @@ export type Database = {
           ticket_number?: number;
           customer_id: string;
           assignee_id?: string | null;
+          latest_ai_analysis_id?: string | null;
+          ai_needs_review?: boolean;
+          ai_sentiment?: AISentiment | null;
+          ai_urgency?: AIUrgency | null;
+          ai_confidence?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -72,6 +92,11 @@ export type Database = {
           ticket_number?: number;
           customer_id?: string;
           assignee_id?: string | null;
+          latest_ai_analysis_id?: string | null;
+          ai_needs_review?: boolean;
+          ai_sentiment?: AISentiment | null;
+          ai_urgency?: AIUrgency | null;
+          ai_confidence?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -86,6 +111,12 @@ export type Database = {
             foreignKeyName: "tickets_assignee_id_fkey";
             columns: ["assignee_id"];
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tickets_latest_ai_analysis_id_fkey";
+            columns: ["latest_ai_analysis_id"];
+            referencedRelation: "ticket_ai_analyses";
             referencedColumns: ["id"];
           },
         ];
@@ -173,6 +204,191 @@ export type Database = {
           },
         ];
       };
+      ai_prompt_versions: {
+        Row: {
+          id: string;
+          name: string;
+          version: string;
+          provider: string;
+          model: string | null;
+          prompt_text: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          version: string;
+          provider: string;
+          model?: string | null;
+          prompt_text: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          version?: string;
+          provider?: string;
+          model?: string | null;
+          prompt_text?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      ticket_ai_analyses: {
+        Row: {
+          id: string;
+          ticket_id: string;
+          prompt_version_id: string | null;
+          provider: string;
+          model: string | null;
+          category: AICategory;
+          sentiment: AISentiment;
+          urgency: AIUrgency;
+          intent: AIIntent;
+          suggested_priority: TicketPriority | null;
+          suggested_status: TicketStatus | null;
+          suggested_assignee_role: string | null;
+          tags: string[];
+          summary: string;
+          reason: string;
+          reply_draft: string | null;
+          confidence: number;
+          needs_review: boolean;
+          escalation_reason: string | null;
+          raw_response: Json;
+          validation_status: AIValidationStatus;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_id: string;
+          prompt_version_id?: string | null;
+          provider: string;
+          model?: string | null;
+          category: AICategory;
+          sentiment: AISentiment;
+          urgency: AIUrgency;
+          intent: AIIntent;
+          suggested_priority?: TicketPriority | null;
+          suggested_status?: TicketStatus | null;
+          suggested_assignee_role?: string | null;
+          tags?: string[];
+          summary: string;
+          reason: string;
+          reply_draft?: string | null;
+          confidence: number;
+          needs_review?: boolean;
+          escalation_reason?: string | null;
+          raw_response?: Json;
+          validation_status?: AIValidationStatus;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticket_id?: string;
+          prompt_version_id?: string | null;
+          provider?: string;
+          model?: string | null;
+          category?: AICategory;
+          sentiment?: AISentiment;
+          urgency?: AIUrgency;
+          intent?: AIIntent;
+          suggested_priority?: TicketPriority | null;
+          suggested_status?: TicketStatus | null;
+          suggested_assignee_role?: string | null;
+          tags?: string[];
+          summary?: string;
+          reason?: string;
+          reply_draft?: string | null;
+          confidence?: number;
+          needs_review?: boolean;
+          escalation_reason?: string | null;
+          raw_response?: Json;
+          validation_status?: AIValidationStatus;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_ai_analyses_ticket_id_fkey";
+            columns: ["ticket_id"];
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_ai_analyses_prompt_version_id_fkey";
+            columns: ["prompt_version_id"];
+            referencedRelation: "ai_prompt_versions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_ai_analyses_created_by_fkey";
+            columns: ["created_by"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ticket_ai_review_events: {
+        Row: {
+          id: string;
+          ticket_ai_analysis_id: string;
+          ticket_id: string;
+          reviewer_id: string;
+          decision: AIReviewDecision;
+          before_value: Json | null;
+          after_value: Json | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          ticket_ai_analysis_id: string;
+          ticket_id: string;
+          reviewer_id: string;
+          decision: AIReviewDecision;
+          before_value?: Json | null;
+          after_value?: Json | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          ticket_ai_analysis_id?: string;
+          ticket_id?: string;
+          reviewer_id?: string;
+          decision?: AIReviewDecision;
+          before_value?: Json | null;
+          after_value?: Json | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_ai_review_events_ticket_ai_analysis_id_fkey";
+            columns: ["ticket_ai_analysis_id"];
+            referencedRelation: "ticket_ai_analyses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_ai_review_events_ticket_id_fkey";
+            columns: ["ticket_id"];
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_ai_review_events_reviewer_id_fkey";
+            columns: ["reviewer_id"];
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -196,6 +412,12 @@ export type Database = {
       user_role: Role;
       ticket_status: TicketStatus;
       ticket_priority: TicketPriority;
+      ai_category: AICategory;
+      ai_sentiment: AISentiment;
+      ai_urgency: AIUrgency;
+      ai_intent: AIIntent;
+      ai_validation_status: AIValidationStatus;
+      ai_review_decision: AIReviewDecision;
     };
     CompositeTypes: Record<string, never>;
   };
