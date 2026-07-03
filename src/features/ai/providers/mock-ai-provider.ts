@@ -3,11 +3,72 @@ import type { TicketPriority } from "@/types/domain";
 import type { TicketAIAnalysisOutput } from "../schemas/ticket-ai-analysis-schema";
 import type { AIProvider } from "./ai-provider";
 
-const billingTerms = ["charge", "payment", "invoice", "billing", "paid"];
-const refundTerms = ["refund", "chargeback", "money back"];
-const technicalTerms = ["bug", "error", "crash", "broken", "fail", "failed"];
-const accountTerms = ["login", "password", "account", "profile", "signin"];
-const shippingTerms = ["shipping", "delivery", "package", "shipment"];
+const billingTerms = [
+  "charge",
+  "payment",
+  "invoice",
+  "billing",
+  "paid",
+  "결제",
+  "청구",
+  "영수증",
+  "인보이스",
+  "카드",
+  "이중 결제",
+  "두 번 결제",
+  "두번 결제",
+  "요금",
+];
+const refundTerms = [
+  "refund",
+  "chargeback",
+  "money back",
+  "환불",
+  "환급",
+  "취소 요청",
+  "결제 취소",
+  "환불 요청",
+];
+const technicalTerms = [
+  "bug",
+  "error",
+  "crash",
+  "broken",
+  "fail",
+  "failed",
+  "버그",
+  "오류",
+  "에러",
+  "장애",
+  "고장",
+  "안 됩니다",
+  "안돼요",
+  "작동하지",
+  "멈춤",
+  "크래시",
+];
+const accountTerms = [
+  "login",
+  "password",
+  "account",
+  "profile",
+  "signin",
+  "로그인",
+  "비밀번호",
+  "계정",
+  "프로필",
+  "인증",
+];
+const shippingTerms = [
+  "shipping",
+  "delivery",
+  "package",
+  "shipment",
+  "배송",
+  "배달",
+  "택배",
+  "출고",
+];
 const negativeTerms = [
   "angry",
   "terrible",
@@ -17,9 +78,63 @@ const negativeTerms = [
   "cancel",
   "unacceptable",
   "frustrated",
+  "화가",
+  "화나요",
+  "화납니다",
+  "짜증",
+  "최악",
+  "불만",
+  "불쾌",
+  "실망",
+  "취소",
+  "해지",
+  "고소",
+  "법적",
+  "말도 안",
+  "너무합니다",
 ];
-const positiveTerms = ["thanks", "thank you", "great", "helpful", "love"];
-const criticalTerms = ["lawsuit", "legal", "security", "privacy", "breach", "fraud"];
+const positiveTerms = [
+  "thanks",
+  "thank you",
+  "great",
+  "helpful",
+  "love",
+  "감사",
+  "고마워",
+  "좋아요",
+  "좋았습니다",
+  "만족",
+  "훌륭",
+];
+const criticalTerms = [
+  "lawsuit",
+  "legal",
+  "security",
+  "privacy",
+  "breach",
+  "fraud",
+  "고소",
+  "법적",
+  "소송",
+  "보안",
+  "개인정보",
+  "유출",
+  "해킹",
+  "사기",
+  "도용",
+];
+const urgentTerms = [
+  "urgent",
+  "immediately",
+  "asap",
+  "급합니다",
+  "긴급",
+  "바로",
+  "즉시",
+  "빨리",
+  "빠르게",
+  "오늘 안에",
+];
 
 function includesAny(text: string, terms: string[]) {
   return terms.some((term) => text.includes(term));
@@ -84,7 +199,7 @@ function getMockIntent(
     return "account_help";
   }
 
-  if (normalizedText.includes("cancel")) {
+  if (normalizedText.includes("cancel") || normalizedText.includes("취소")) {
     return "cancellation_request";
   }
 
@@ -121,7 +236,7 @@ function getMockUrgency(
   }
 
   if (
-    includesAny(normalizedText, ["urgent", "immediately", "asap"]) ||
+    includesAny(normalizedText, urgentTerms) ||
     includesAny(normalizedText, negativeTerms)
   ) {
     return "high";
@@ -163,8 +278,12 @@ function buildTags(
     category,
     intent.replace("_", "-"),
     urgency === "critical" || urgency === "high" ? "priority-review" : null,
-    normalizedText.includes("vip") ? "vip" : null,
-    normalizedText.includes("again") ? "repeat-contact" : null,
+    normalizedText.includes("vip") || normalizedText.includes("중요 고객")
+      ? "vip"
+      : null,
+    normalizedText.includes("again") || normalizedText.includes("또")
+      ? "repeat-contact"
+      : null,
   ].filter((tag): tag is string => Boolean(tag)).slice(0, 8);
 }
 
