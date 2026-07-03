@@ -57,6 +57,7 @@ const categoryLabels = {
 } as const;
 
 const sortLabels: Record<TicketSortOption, string> = {
+  priority_first: "우선처리순",
   created_desc: "최신순",
   created_asc: "오래된순",
   updated_desc: "최근 수정순",
@@ -64,6 +65,7 @@ const sortLabels: Record<TicketSortOption, string> = {
 };
 
 const sortOptions: TicketSortOption[] = [
+  "priority_first",
   "created_desc",
   "created_asc",
   "updated_desc",
@@ -147,6 +149,9 @@ export function TicketListView({
 
   const filters = useMemo<TicketListFilters>(() => {
     const sort = searchParams.get("sort") as TicketSortOption | null;
+    const defaultSort = profile.role === "customer"
+      ? "created_desc"
+      : "priority_first";
 
     return {
       search: searchParams.get("q")?.trim() || undefined,
@@ -156,13 +161,13 @@ export function TicketListView({
       aiNeedsReview: getAIReviewParam(searchParams.get("ai_review")),
       aiSentiment: getAISentimentParam(searchParams.get("ai_sentiment")),
       aiUrgency: getAIUrgencyParam(searchParams.get("ai_urgency")),
-      sort: sortOptions.includes(sort ?? "created_desc")
-        ? sort ?? "created_desc"
-        : "created_desc",
+      sort: sortOptions.includes(sort ?? defaultSort)
+        ? sort ?? defaultSort
+        : defaultSort,
       page: getIntParam(searchParams.get("page"), 1),
       pageSize: 10,
     };
-  }, [searchParams]);
+  }, [profile.role, searchParams]);
 
   const ticketsQuery = useTickets({ profile, filters });
 
