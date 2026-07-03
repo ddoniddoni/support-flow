@@ -163,7 +163,12 @@ function ReviewActions({
         )}
         거절
       </Button>
-      <Button type="button" size="icon-sm" variant="outline" render={<Link href={`/tickets/${item.ticket_id}`} />}>
+      <Button
+        nativeButton={false}
+        size="icon-sm"
+        variant="outline"
+        render={<Link href={`/tickets/${item.ticket_id}`} />}
+      >
         <ExternalLink className="size-4" aria-hidden="true" />
         <span className="sr-only">티켓 상세로 이동</span>
       </Button>
