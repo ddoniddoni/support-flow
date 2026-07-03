@@ -16,6 +16,7 @@ export type TicketReplyItem = Tables<"ticket_replies"> & {
 export type TicketLogItem = Tables<"ticket_logs">;
 
 export type TicketSortOption =
+  | "priority_first"
   | "created_desc"
   | "created_asc"
   | "updated_desc"

@@ -34,8 +34,19 @@ function getCreateTicketErrorMessage(message: string) {
     return "문의를 등록할 권한이 없습니다. Supabase RLS 정책을 확인해 주세요.";
   }
 
-  if (normalizedMessage.includes("login") || normalizedMessage.includes("auth")) {
+  if (
+    normalizedMessage.includes("login") ||
+    normalizedMessage.includes("auth") ||
+    message.includes("로그인")
+  ) {
     return "로그인 후 다시 시도해 주세요.";
+  }
+
+  if (
+    normalizedMessage.includes("forbidden") ||
+    normalizedMessage.includes("customers")
+  ) {
+    return "고객 계정으로 로그인한 뒤 문의를 등록해 주세요.";
   }
 
   return "문의를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";

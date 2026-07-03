@@ -108,6 +108,9 @@ export async function getDashboardStats(
         status,
         priority,
         category,
+        ai_needs_review,
+        ai_urgency,
+        ai_confidence,
         created_at,
         updated_at,
         customer:profiles!tickets_customer_id_fkey(email,name),
@@ -123,9 +126,19 @@ export async function getDashboardStats(
     query = query.eq("assignee_id", profile.id);
   }
 
-  const { data, error } = await query.order("updated_at", {
-    ascending: false,
-  });
+  if (profile.role === "customer") {
+    query = query.order("updated_at", {
+      ascending: false,
+    });
+  } else {
+    query = query
+      .order("ai_needs_review", { ascending: false })
+      .order("ai_urgency", { ascending: true, nullsFirst: false })
+      .order("ai_confidence", { ascending: true, nullsFirst: false })
+      .order("updated_at", { ascending: true });
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw error;

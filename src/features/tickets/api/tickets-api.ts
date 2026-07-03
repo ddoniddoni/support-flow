@@ -20,37 +20,28 @@ const ticketSelectQuery = `
 `;
 
 export async function createTicket(input: CreateTicketInput) {
-  const supabase = createSupabaseBrowserClient();
+  const response = await fetch("/api/tickets", {
+    body: JSON.stringify(input),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const payload = (await response.json().catch(() => null)) as {
+    aiTriageStatus?: "completed" | "failed" | "skipped";
+    id?: string;
+    message?: string;
+  } | null;
 
-  if (userError) {
-    throw userError;
+  if (!response.ok || !payload?.id) {
+    throw new Error(payload?.message ?? "문의를 등록하지 못했습니다.");
   }
 
-  if (!user) {
-    throw new Error("로그인이 필요합니다.");
-  }
-
-  const { data, error } = await supabase
-    .from("tickets")
-    .insert({
-      title: input.title,
-      content: input.content,
-      category: input.category,
-      customer_id: user.id,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  return {
+    aiTriageStatus: payload.aiTriageStatus ?? "skipped",
+    id: payload.id,
+  };
 }
 
 export type TicketListFilters = {
@@ -90,29 +81,12 @@ export type CreateTicketReplyInput = TicketReplyInput & {
 
 const defaultPageSize = 10;
 
-function getSortConfig(sort: TicketSortOption = "created_desc") {
-  if (sort === "created_asc") {
-    return { column: "created_at", ascending: true };
-  }
-
-  if (sort === "updated_desc") {
-    return { column: "updated_at", ascending: false };
-  }
-
-  if (sort === "title_asc") {
-    return { column: "title", ascending: true };
-  }
-
-  return { column: "created_at", ascending: false };
-}
-
 export async function listTickets({ profile, filters }: ListTicketsParams) {
   const supabase = createSupabaseBrowserClient();
   const page = Math.max(filters.page ?? 1, 1);
   const pageSize = filters.pageSize ?? defaultPageSize;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-  const sort = getSortConfig(filters.sort);
 
   let query = supabase.from("tickets").select(ticketSelectQuery, {
     count: "exact",
@@ -154,9 +128,23 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
     query = query.eq("ai_urgency", filters.aiUrgency);
   }
 
-  const { data, error, count } = await query
-    .order(sort.column, { ascending: sort.ascending })
-    .range(from, to);
+  if (filters.sort === "priority_first") {
+    query = query
+      .order("ai_needs_review", { ascending: false })
+      .order("ai_urgency", { ascending: true, nullsFirst: false })
+      .order("ai_confidence", { ascending: true, nullsFirst: false })
+      .order("updated_at", { ascending: true });
+  } else if (filters.sort === "created_asc") {
+    query = query.order("created_at", { ascending: true });
+  } else if (filters.sort === "updated_desc") {
+    query = query.order("updated_at", { ascending: false });
+  } else if (filters.sort === "title_asc") {
+    query = query.order("title", { ascending: true });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
     throw error;
