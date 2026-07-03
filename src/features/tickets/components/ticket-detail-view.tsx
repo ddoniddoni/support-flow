@@ -66,6 +66,8 @@ const actionLabels: Record<string, string> = {
   assignee_changed: "담당자 변경",
   reply_added: "고객 답변 등록",
   internal_note_added: "내부 메모 추가",
+  ai_analysis_generated: "AI 분석 생성",
+  ai_analysis_regenerated: "AI 분석 재생성",
 };
 
 const customerStatusLabels: Record<TicketStatus, string> = {
