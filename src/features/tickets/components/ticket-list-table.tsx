@@ -13,7 +13,12 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
-import type { TicketPriority, TicketStatus } from "@/types/domain";
+import type {
+  AISentiment,
+  AIUrgency,
+  TicketPriority,
+  TicketStatus,
+} from "@/types/domain";
 
 import type { TicketListItem } from "../types";
 
@@ -51,6 +56,7 @@ const adminColumnWidths = [
   "w-[92px]",
   "w-[100px]",
   "w-[112px]",
+  "w-[180px]",
   "w-[104px]",
   "w-[112px]",
   "w-[112px]",
@@ -63,6 +69,19 @@ const customerColumnWidths = [
   "w-[112px]",
   "w-[112px]",
 ];
+
+const sentimentLabels: Record<AISentiment, string> = {
+  positive: "긍정",
+  neutral: "중립",
+  negative: "부정",
+};
+
+const urgencyLabels: Record<AIUrgency, string> = {
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+  critical: "긴급 검토",
+};
 
 const dateHeaderClassName = "text-right";
 const dateCellClassName = "text-right tabular-nums";
@@ -119,6 +138,65 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
   );
 }
 
+function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        sentiment === "negative" && "border-red-200 bg-red-50 text-red-700",
+        sentiment === "neutral" && "border-border bg-muted/60 text-foreground",
+        sentiment === "positive" &&
+          "border-emerald-200 bg-emerald-50 text-emerald-700",
+      )}
+    >
+      {sentimentLabels[sentiment]}
+    </Badge>
+  );
+}
+
+function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        urgency === "critical" && "border-red-200 bg-red-50 text-red-700",
+        urgency === "high" && "border-orange-200 bg-orange-50 text-orange-700",
+        urgency === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
+        urgency === "low" && "border-border bg-muted/60 text-muted-foreground",
+      )}
+    >
+      {urgencyLabels[urgency]}
+    </Badge>
+  );
+}
+
+function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
+  if (!ticket.latest_ai_analysis_id) {
+    return (
+      <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground">
+        미분석
+      </Badge>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {ticket.ai_needs_review ? (
+        <Badge
+          variant="outline"
+          className="border-red-200 bg-red-50 text-red-700"
+        >
+          리뷰 필요
+        </Badge>
+      ) : null}
+      {ticket.ai_sentiment ? (
+        <SentimentBadge sentiment={ticket.ai_sentiment} />
+      ) : null}
+      {ticket.ai_urgency ? <UrgencyBadge urgency={ticket.ai_urgency} /> : null}
+    </div>
+  );
+}
+
 function CustomerStatusBadge({ status }: { status: TicketStatus }) {
   return (
     <Badge variant="outline" className="border-border bg-muted/60 text-foreground">
@@ -156,6 +234,7 @@ function MobileTicketCard({
           <>
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
+            <AIStatusBadges ticket={ticket} />
           </>
         )}
         <Badge variant="outline">
@@ -189,7 +268,7 @@ export function TicketListTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
-        <Table className="min-w-[880px] table-fixed">
+        <Table className="min-w-[980px] table-fixed">
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={index} className={width} />
@@ -203,6 +282,7 @@ export function TicketListTable({
                 <TableHead>우선순위</TableHead>
               )}
               {isCustomer ? null : <TableHead>담당자</TableHead>}
+              {isCustomer ? null : <TableHead>AI</TableHead>}
               <TableHead>카테고리</TableHead>
               <TableHead className={dateHeaderClassName}>생성일</TableHead>
               <TableHead className={dateHeaderClassName}>수정일</TableHead>
@@ -240,6 +320,11 @@ export function TicketListTable({
                 {isCustomer ? null : (
                   <TableCell className="truncate">
                     {ticket.assignee?.name ?? "미배정"}
+                  </TableCell>
+                )}
+                {isCustomer ? null : (
+                  <TableCell>
+                    <AIStatusBadges ticket={ticket} />
                   </TableCell>
                 )}
                 <TableCell className="truncate">

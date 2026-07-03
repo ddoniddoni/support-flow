@@ -10,7 +10,14 @@ import { buttonVariants, Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
-import { ticketPriorities, ticketStatuses } from "@/types/domain";
+import {
+  aiSentiments,
+  aiUrgencies,
+  ticketPriorities,
+  ticketStatuses,
+  type AISentiment,
+  type AIUrgency,
+} from "@/types/domain";
 
 import type { TicketListFilters } from "../api/tickets-api";
 import { useTickets } from "../hooks/use-tickets";
@@ -63,6 +70,27 @@ const sortOptions: TicketSortOption[] = [
   "title_asc",
 ];
 
+const aiReviewLabels = {
+  all: "전체 AI 리뷰",
+  yes: "리뷰 필요",
+  no: "리뷰 불필요",
+} as const;
+
+const aiSentimentLabels = {
+  all: "전체 감정",
+  positive: "긍정",
+  neutral: "중립",
+  negative: "부정",
+} as const;
+
+const aiUrgencyLabels = {
+  all: "전체 긴급도",
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+  critical: "긴급 검토",
+} as const;
+
 function getIntParam(value: string | null, fallback: number) {
   if (!value) {
     return fallback;
@@ -70,6 +98,30 @@ function getIntParam(value: string | null, fallback: number) {
 
   const parsedValue = Number.parseInt(value, 10);
   return Number.isNaN(parsedValue) ? fallback : parsedValue;
+}
+
+function getAIReviewParam(value: string | null) {
+  if (value === "yes" || value === "no") {
+    return value;
+  }
+
+  return "all";
+}
+
+function getAISentimentParam(value: string | null): AISentiment | "all" {
+  if (value && aiSentiments.some((sentiment) => sentiment === value)) {
+    return value as AISentiment;
+  }
+
+  return "all";
+}
+
+function getAIUrgencyParam(value: string | null): AIUrgency | "all" {
+  if (value && aiUrgencies.some((urgency) => urgency === value)) {
+    return value as AIUrgency;
+  }
+
+  return "all";
 }
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
@@ -101,6 +153,9 @@ export function TicketListView({
       status: searchParams.get("status") as TicketListFilters["status"],
       priority: searchParams.get("priority") as TicketListFilters["priority"],
       category: searchParams.get("category") ?? "all",
+      aiNeedsReview: getAIReviewParam(searchParams.get("ai_review")),
+      aiSentiment: getAISentimentParam(searchParams.get("ai_sentiment")),
+      aiUrgency: getAIUrgencyParam(searchParams.get("ai_urgency")),
       sort: sortOptions.includes(sort ?? "created_desc")
         ? sort ?? "created_desc"
         : "created_desc",
@@ -256,6 +311,52 @@ export function TicketListView({
             ))}
           </select>
         </div>
+
+        {profile.role === "customer" ? null : (
+          <div className="grid gap-2 md:grid-cols-3">
+            <select
+              className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              value={filters.aiNeedsReview ?? "all"}
+              onChange={(event) =>
+                updateParams({ ai_review: event.target.value, page: "1" })
+              }
+            >
+              <option value="all">{aiReviewLabels.all}</option>
+              <option value="yes">{aiReviewLabels.yes}</option>
+              <option value="no">{aiReviewLabels.no}</option>
+            </select>
+
+            <select
+              className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              value={filters.aiSentiment ?? "all"}
+              onChange={(event) =>
+                updateParams({ ai_sentiment: event.target.value, page: "1" })
+              }
+            >
+              <option value="all">{aiSentimentLabels.all}</option>
+              {aiSentiments.map((sentiment) => (
+                <option key={sentiment} value={sentiment}>
+                  {aiSentimentLabels[sentiment]}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+              value={filters.aiUrgency ?? "all"}
+              onChange={(event) =>
+                updateParams({ ai_urgency: event.target.value, page: "1" })
+              }
+            >
+              <option value="all">{aiUrgencyLabels.all}</option>
+              {aiUrgencies.map((urgency) => (
+                <option key={urgency} value={urgency}>
+                  {aiUrgencyLabels[urgency]}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {ticketsQuery.isLoading ? <TicketTableSkeleton /> : null}
