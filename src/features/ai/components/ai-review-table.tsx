@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, ExternalLink, Loader2, X } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,16 +14,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { Tables } from "@/types/database";
 import type { AISentiment, AIUrgency } from "@/types/domain";
 
 import type { AIReviewQueueItem } from "../api/get-ai-review-queue";
-import { useReviewAIAnalysis } from "../hooks/use-review-ai-analysis";
 import { AIConfidenceBadge } from "./ai-confidence-badge";
 
 type AIReviewTableProps = {
   items: AIReviewQueueItem[];
-  profile: Pick<Tables<"profiles">, "id" | "role">;
 };
 
 const sentimentLabels: Record<AISentiment, string> = {
@@ -119,74 +115,23 @@ function TicketSummary({ item }: { item: AIReviewQueueItem }) {
   );
 }
 
-function ReviewActions({
-  item,
-  profile,
-  pendingAction,
-  onRunAction,
-}: {
-  item: AIReviewQueueItem;
-  profile: Pick<Tables<"profiles">, "id" | "role">;
-  pendingAction: string | null;
-  onRunAction: (item: AIReviewQueueItem, decision: "approved" | "rejected") => void;
-}) {
-  const approveKey = `${item.id}:approved`;
-  const rejectKey = `${item.id}:rejected`;
-  const isPending = pendingAction === approveKey || pendingAction === rejectKey;
-
+function ReviewActions({ item }: { item: AIReviewQueueItem }) {
   return (
     <div className="grid gap-2 sm:flex">
       <Button
-        type="button"
-        size="sm"
-        disabled={isPending || profile.role === "customer"}
-        onClick={() => onRunAction(item, "approved")}
-      >
-        {pendingAction === approveKey ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Check className="size-4" aria-hidden="true" />
-        )}
-        승인
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={isPending || profile.role === "customer"}
-        onClick={() => onRunAction(item, "rejected")}
-      >
-        {pendingAction === rejectKey ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <X className="size-4" aria-hidden="true" />
-        )}
-        거절
-      </Button>
-      <Button
         nativeButton={false}
-        size="icon-sm"
+        size="sm"
         variant="outline"
         render={<Link href={`/tickets/${item.ticket_id}`} />}
       >
         <ExternalLink className="size-4" aria-hidden="true" />
-        <span className="sr-only">티켓 상세로 이동</span>
+        티켓 확인
       </Button>
     </div>
   );
 }
 
-function MobileReviewCard({
-  item,
-  profile,
-  pendingAction,
-  onRunAction,
-}: {
-  item: AIReviewQueueItem;
-  profile: Pick<Tables<"profiles">, "id" | "role">;
-  pendingAction: string | null;
-  onRunAction: (item: AIReviewQueueItem, decision: "approved" | "rejected") => void;
-}) {
+function MobileReviewCard({ item }: { item: AIReviewQueueItem }) {
   return (
     <div className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
       <TicketSummary item={item} />
@@ -206,71 +151,17 @@ function MobileReviewCard({
       <div className="text-xs text-muted-foreground">
         생성 {formatDateTime(item.created_at)}
       </div>
-      <ReviewActions
-        item={item}
-        profile={profile}
-        pendingAction={pendingAction}
-        onRunAction={onRunAction}
-      />
+      <ReviewActions item={item} />
     </div>
   );
 }
 
-export function AIReviewTable({ items, profile }: AIReviewTableProps) {
-  const reviewAnalysis = useReviewAIAnalysis();
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  function runReviewAction(
-    item: AIReviewQueueItem,
-    decision: "approved" | "rejected",
-  ) {
-    setError(null);
-    setPendingAction(`${item.id}:${decision}`);
-
-    reviewAnalysis.mutate(
-      {
-        analysisId: item.id,
-        ticketId: item.ticket_id,
-        profile,
-        decision,
-        note:
-          decision === "approved"
-            ? "Approved from AI review queue."
-            : "Rejected from AI review queue.",
-      },
-      {
-        onError: (mutationError) => {
-          setError(
-            mutationError instanceof Error
-              ? mutationError.message
-              : "AI 리뷰 액션을 저장하지 못했습니다.",
-          );
-        },
-        onSettled: () => {
-          setPendingAction(null);
-        },
-      },
-    );
-  }
-
+export function AIReviewTable({ items }: AIReviewTableProps) {
   return (
     <div className="grid gap-3">
-      {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
       <div className="grid gap-3 md:hidden">
         {items.map((item) => (
-          <MobileReviewCard
-            key={item.id}
-            item={item}
-            profile={profile}
-            pendingAction={pendingAction}
-            onRunAction={runReviewAction}
-          />
+          <MobileReviewCard key={item.id} item={item} />
         ))}
       </div>
 
@@ -289,7 +180,7 @@ export function AIReviewTable({ items, profile }: AIReviewTableProps) {
               <TableHead>AI 상태</TableHead>
               <TableHead>요약</TableHead>
               <TableHead>생성일</TableHead>
-              <TableHead>액션</TableHead>
+              <TableHead>상세</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -317,12 +208,7 @@ export function AIReviewTable({ items, profile }: AIReviewTableProps) {
                   {formatDateTime(item.created_at)}
                 </TableCell>
                 <TableCell>
-                  <ReviewActions
-                    item={item}
-                    profile={profile}
-                    pendingAction={pendingAction}
-                    onRunAction={runReviewAction}
-                  />
+                  <ReviewActions item={item} />
                 </TableCell>
               </TableRow>
             ))}

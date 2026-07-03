@@ -70,7 +70,7 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
               href="/tickets/ai-review"
             >
               <ShieldAlert className="size-4" aria-hidden="true" />
-              AI 리뷰
+              AI 신호
             </Link>
           ) : null}
           <Link

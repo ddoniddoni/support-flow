@@ -36,7 +36,7 @@ export function AIReviewTableSkeleton() {
               <TableHead>AI 상태</TableHead>
               <TableHead>요약</TableHead>
               <TableHead>생성일</TableHead>
-              <TableHead>액션</TableHead>
+              <TableHead>상세</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

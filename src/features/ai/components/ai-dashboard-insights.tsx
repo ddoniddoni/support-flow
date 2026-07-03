@@ -106,9 +106,9 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
 
   const metrics = [
     {
-      detail: "사람 검토가 필요한 분석",
+      detail: "위험 신호가 감지된 자동 분류",
       icon: ShieldAlert,
-      label: "AI 리뷰 필요",
+      label: "AI 주의 신호",
       tone: "size-4 text-red-600",
       value: String(stats.reviewRequiredCount),
     },
@@ -143,14 +143,14 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
             AI 운영 인사이트
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            AI 분석 결과에서 리뷰 부담, 긴급도, 감정 신호를 추적합니다.
+            AI 자동 분류 결과에서 긴급도, 감정, 위험 신호를 추적합니다.
           </p>
         </div>
         <Link
           className={buttonVariants({ size: "sm", variant: "outline" })}
           href="/tickets/ai-review"
         >
-          리뷰 큐
+          주의 신호
         </Link>
       </div>
 
@@ -200,7 +200,7 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
             {stats.totalAnalyses}
           </p>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            티켓 상세의 AI Assistant와 리뷰 큐에서 생성·검토되는 분석 기준입니다.
+            문의 접수와 티켓 상세에서 생성된 AI 자동 분류 기준입니다.
           </p>
         </div>
       </div>

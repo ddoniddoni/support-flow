@@ -73,9 +73,9 @@ const sortOptions: TicketSortOption[] = [
 ];
 
 const aiReviewLabels = {
-  all: "전체 AI 리뷰",
-  yes: "리뷰 필요",
-  no: "리뷰 불필요",
+  all: "전체 AI 신호",
+  yes: "주의 필요",
+  no: "일반 분류",
 } as const;
 
 const aiSentimentLabels = {
