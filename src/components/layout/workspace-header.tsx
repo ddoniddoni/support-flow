@@ -1,4 +1,4 @@
-import { Activity, LayoutDashboard, ListChecks } from "lucide-react";
+import { Activity, LayoutDashboard, ListChecks, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +57,20 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
             >
               <LayoutDashboard className="size-4" aria-hidden="true" />
               운영 현황
+            </Link>
+          ) : null}
+          {canViewDashboard ? (
+            <Link
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className: "w-full sm:w-auto",
+                }),
+              )}
+              href="/tickets/ai-review"
+            >
+              <ShieldAlert className="size-4" aria-hidden="true" />
+              AI 리뷰
             </Link>
           ) : null}
           <Link
