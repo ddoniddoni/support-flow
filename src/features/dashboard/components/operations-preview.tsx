@@ -18,7 +18,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import type { TicketPriority, TicketStatus } from "@/types/domain";
+import type {
+  AISentiment,
+  AIUrgency,
+  TicketPriority,
+  TicketStatus,
+} from "@/types/domain";
 
 import type {
   DashboardStats,
@@ -60,6 +65,32 @@ const priorityTones: Record<TicketPriority, ToneBadgeProps["tone"]> = {
   medium: "sky",
   high: "orange",
   urgent: "red",
+};
+
+const sentimentLabels: Record<AISentiment, string> = {
+  positive: "긍정",
+  neutral: "중립",
+  negative: "부정",
+};
+
+const sentimentTones: Record<AISentiment, ToneBadgeProps["tone"]> = {
+  positive: "emerald",
+  neutral: "muted",
+  negative: "red",
+};
+
+const urgencyLabels: Record<AIUrgency, string> = {
+  low: "낮음",
+  medium: "보통",
+  high: "높음",
+  critical: "긴급 검토",
+};
+
+const urgencyTones: Record<AIUrgency, ToneBadgeProps["tone"]> = {
+  low: "muted",
+  medium: "sky",
+  high: "orange",
+  critical: "red",
 };
 
 type OperationsPreviewProps = {
@@ -146,6 +177,30 @@ function ToneBadge({ children, tone }: ToneBadgeProps) {
     >
       {children}
     </span>
+  );
+}
+
+function AIStatusBadges({ ticket }: { ticket: DashboardTicket }) {
+  if (!ticket.ai_sentiment && !ticket.ai_urgency) {
+    return <ToneBadge tone="muted">AI 대기</ToneBadge>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {ticket.ai_needs_review ? (
+        <ToneBadge tone="red">주의 필요</ToneBadge>
+      ) : null}
+      {ticket.ai_sentiment ? (
+        <ToneBadge tone={sentimentTones[ticket.ai_sentiment]}>
+          {sentimentLabels[ticket.ai_sentiment]}
+        </ToneBadge>
+      ) : null}
+      {ticket.ai_urgency ? (
+        <ToneBadge tone={urgencyTones[ticket.ai_urgency]}>
+          {urgencyLabels[ticket.ai_urgency]}
+        </ToneBadge>
+      ) : null}
+    </div>
   );
 }
 
@@ -303,10 +358,10 @@ export function OperationsPreview({
             <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  Support queue
+                  우선 처리 큐
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  최근 업데이트와 우선순위 기준으로 확인하는 운영 큐
+                  AI 주의 신호와 긴급도를 기준으로 먼저 볼 문의
                 </p>
               </div>
               {ctaHref ? (
@@ -352,6 +407,9 @@ export function OperationsPreview({
                           {priorityLabels[ticket.priority]}
                         </ToneBadge>
                       </div>
+                      <div className="mt-3">
+                        <AIStatusBadges ticket={ticket} />
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -367,6 +425,7 @@ export function OperationsPreview({
                         담당자
                       </TableHead>
                       <TableHead>상태</TableHead>
+                      <TableHead>AI 신호</TableHead>
                       <TableHead className="hidden sm:table-cell">
                         우선순위
                       </TableHead>
@@ -404,6 +463,9 @@ export function OperationsPreview({
                             {statusLabels[ticket.status]}
                           </ToneBadge>
                         </TableCell>
+                        <TableCell>
+                          <AIStatusBadges ticket={ticket} />
+                        </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <ToneBadge tone={priorityTones[ticket.priority]}>
                             {priorityLabels[ticket.priority]}
@@ -433,9 +495,12 @@ export function OperationsPreview({
                 </h2>
               </div>
               {selectedTicket ? (
-                <ToneBadge tone={priorityTones[selectedTicket.priority]}>
-                  {priorityLabels[selectedTicket.priority]}
-                </ToneBadge>
+                <div className="grid justify-items-end gap-1.5">
+                  <ToneBadge tone={priorityTones[selectedTicket.priority]}>
+                    {priorityLabels[selectedTicket.priority]}
+                  </ToneBadge>
+                  <AIStatusBadges ticket={selectedTicket} />
+                </div>
               ) : null}
             </div>
             <div className="mt-4 grid gap-3 text-sm">

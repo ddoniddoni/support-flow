@@ -2,6 +2,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Database } from "@/types/database";
 import type { Tables } from "@/types/database";
 import {
+  type AISentiment,
+  type AIUrgency,
   ticketStatuses,
   type TicketStatus,
 } from "@/types/domain";
@@ -17,11 +19,19 @@ export type DashboardTicket = Pick<
   | "status"
   | "priority"
   | "category"
+  | "ai_needs_review"
+  | "ai_sentiment"
+  | "ai_urgency"
+  | "ai_confidence"
   | "created_at"
   | "updated_at"
 > & {
   customer: DashboardTicketPerson | null;
   assignee: DashboardTicketPerson | null;
+  ai_needs_review: boolean;
+  ai_sentiment: AISentiment | null;
+  ai_urgency: AIUrgency | null;
+  ai_confidence: number | null;
 };
 type DashboardSupabaseClient = SupabaseClient<Database>;
 
@@ -109,6 +119,7 @@ export async function getDashboardStats(
         priority,
         category,
         ai_needs_review,
+        ai_sentiment,
         ai_urgency,
         ai_confidence,
         created_at,
