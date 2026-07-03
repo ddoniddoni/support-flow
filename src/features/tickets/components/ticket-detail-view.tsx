@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AIAssistantPanel } from "@/features/ai/components/ai-assistant-panel";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import {
@@ -68,6 +69,11 @@ const actionLabels: Record<string, string> = {
   internal_note_added: "내부 메모 추가",
   ai_analysis_generated: "AI 분석 생성",
   ai_analysis_regenerated: "AI 분석 재생성",
+  ai_analysis_approved: "AI 분석 승인",
+  ai_analysis_corrected: "AI 분석 수정",
+  ai_analysis_rejected: "AI 분석 거절",
+  ai_analysis_sent_to_review: "AI 리뷰 전송",
+  ai_draft_used_as_customer_reply: "AI 답변 초안 사용",
 };
 
 const customerStatusLabels: Record<TicketStatus, string> = {
@@ -220,10 +226,18 @@ function ReplyComposerCard({
   ticketId,
   profile,
   isInternal,
+  initialContent,
+  initialContentKey,
+  source,
+  onSubmitted,
 }: {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
+  initialContent?: string;
+  initialContentKey?: string | null;
+  source?: "manual" | "ai_draft";
+  onSubmitted?: () => void;
 }) {
   return (
     <Card className="rounded-lg">
@@ -242,6 +256,10 @@ function ReplyComposerCard({
           ticketId={ticketId}
           profile={profile}
           isInternal={isInternal}
+          initialContent={initialContent}
+          initialContentKey={initialContentKey}
+          source={source}
+          onSubmitted={onSubmitted}
         />
       </CardContent>
     </Card>
@@ -495,6 +513,12 @@ function TicketDetailContent({
   data: TicketDetailData;
   profile: Pick<Tables<"profiles">, "id" | "role">;
 }) {
+  const [replyDraft, setReplyDraft] = useState<{
+    content: string;
+    analysisId: string;
+    version: number;
+  } | null>(null);
+
   if (!data.ticket) {
     return (
       <EmptyState
@@ -579,6 +603,14 @@ function TicketDetailContent({
               ticketId={ticket.id}
               profile={profile}
               isInternal={false}
+              initialContent={replyDraft?.content}
+              initialContentKey={
+                replyDraft
+                  ? `${replyDraft.analysisId}:${replyDraft.version}`
+                  : null
+              }
+              source={replyDraft ? "ai_draft" : "manual"}
+              onSubmitted={() => setReplyDraft(null)}
             />
           ) : null}
 
@@ -605,7 +637,21 @@ function TicketDetailContent({
 
         <div className="grid content-start gap-5">
           {canViewOperations ? (
-            <TicketOperationsPanel ticket={ticket} profile={profile} />
+            <>
+              <AIAssistantPanel
+                ticketId={ticket.id}
+                profile={profile}
+                canUseReplyDraft={!hasPublicReply}
+                onUseReplyDraft={(draft, analysisId) => {
+                  setReplyDraft((current) => ({
+                    content: draft,
+                    analysisId,
+                    version: (current?.version ?? 0) + 1,
+                  }));
+                }}
+              />
+              <TicketOperationsPanel ticket={ticket} profile={profile} />
+            </>
           ) : null}
 
           <Card className="rounded-lg">

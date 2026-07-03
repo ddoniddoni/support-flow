@@ -77,6 +77,7 @@ export type CreateTicketReplyInput = TicketReplyInput & {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
+  source?: "manual" | "ai_draft";
 };
 
 const defaultPageSize = 10;
@@ -366,6 +367,20 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
 
   if (error) {
     throw error;
+  }
+
+  if (input.source === "ai_draft" && !input.isInternal) {
+    const { error: logError } = await supabase.from("ticket_logs").insert({
+      ticket_id: input.ticketId,
+      actor_id: input.profile.id,
+      action: "ai_draft_used_as_customer_reply",
+      before_value: null,
+      after_value: data?.id ?? null,
+    });
+
+    if (logError) {
+      throw logError;
+    }
   }
 
   return data;
