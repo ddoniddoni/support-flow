@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,10 @@ type TicketReplyFormProps = {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
+  initialContent?: string;
+  initialContentKey?: string | null;
+  source?: "manual" | "ai_draft";
+  onSubmitted?: () => void;
 };
 
 function getReplyErrorMessage(error: unknown) {
@@ -43,6 +47,10 @@ export function TicketReplyForm({
   ticketId,
   profile,
   isInternal,
+  initialContent = "",
+  initialContentKey = null,
+  source = "manual",
+  onSubmitted,
 }: TicketReplyFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -57,9 +65,15 @@ export function TicketReplyForm({
   } = useForm<TicketReplyInput>({
     resolver: zodResolver(ticketReplySchema),
     defaultValues: {
-      content: "",
+      content: initialContent,
     },
   });
+
+  useEffect(() => {
+    if (initialContent) {
+      reset({ content: initialContent });
+    }
+  }, [initialContent, initialContentKey, reset]);
 
   async function onSubmit(input: TicketReplyInput) {
     setFormError(null);
@@ -71,8 +85,10 @@ export function TicketReplyForm({
         profile,
         isInternal,
         content: input.content,
+        source,
       });
       reset();
+      onSubmitted?.();
       setSuccessMessage(
         isInternal ? "내부 메모를 추가했습니다." : "고객 답변을 등록했습니다.",
       );
