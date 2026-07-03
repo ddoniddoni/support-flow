@@ -138,7 +138,7 @@ export async function reviewAIAnalysis(
           escalation_reason: null,
         }
       : {
-          needs_review: input.decision === "rejected",
+          needs_review: false,
           escalation_reason:
             input.decision === "rejected"
               ? (input.note ?? "AI analysis was rejected.")
