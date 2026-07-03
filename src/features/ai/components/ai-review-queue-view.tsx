@@ -65,8 +65,8 @@ function UnauthorizedReviewState() {
   return (
     <div className="mx-auto grid max-w-3xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
       <EmptyState
-        title="AI 리뷰 큐에 접근할 수 없습니다"
-        description="AI 분석 결과와 내부 검토 이벤트는 상담원과 관리자만 확인할 수 있습니다."
+        title="AI 주의 신호에 접근할 수 없습니다"
+        description="AI 자동 분류 결과와 운영자용 위험 신호는 상담원과 관리자만 확인할 수 있습니다."
         action={<EmptyStateAction href="/tickets">문의 목록으로 이동</EmptyStateAction>}
       />
     </div>
@@ -127,11 +127,11 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
           <div className="flex items-center gap-2">
             <ShieldAlert className="size-5 text-primary" aria-hidden="true" />
             <h1 className="text-2xl font-semibold text-foreground">
-              AI 리뷰 큐
+              AI 주의 신호
             </h1>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            낮은 신뢰도, 높은 긴급도, 위험 신호가 감지된 AI 분석을 검토합니다.
+            AI가 자동 분류한 문의 중 낮은 신뢰도, 높은 긴급도, 위험 신호가 있는 항목을 모아 봅니다.
           </p>
         </div>
         <Link
@@ -203,7 +203,7 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
         <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
           <div>
-            <p className="font-medium">AI 리뷰 큐를 불러오지 못했습니다.</p>
+            <p className="font-medium">AI 주의 신호를 불러오지 못했습니다.</p>
             <p className="mt-1 text-red-600">
               AI schema migration, RLS 정책, 네트워크 상태를 확인해 주세요.
             </p>
@@ -213,14 +213,14 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
 
       {!reviewQueueQuery.isLoading && !reviewQueueQuery.isError && !hasItems ? (
         <EmptyState
-          title="검토할 AI 분석이 없습니다"
-          description="현재 조건에 맞는 리뷰 대상이 없습니다. 필터를 조정하거나 티켓 상세에서 분석을 실행해 보세요."
+          title="주의 신호가 있는 문의가 없습니다"
+          description="현재 조건에 맞는 위험 신호가 없습니다. 새 문의가 접수되면 AI 자동 분류 결과가 이곳에 반영됩니다."
         />
       ) : null}
 
       {!reviewQueueQuery.isLoading && !reviewQueueQuery.isError && data ? (
         <div className={cn(!hasItems && "hidden")}>
-          <AIReviewTable items={data.items} profile={profile} />
+          <AIReviewTable items={data.items} />
           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               총 {data.total}건 중 {data.items.length}건 표시

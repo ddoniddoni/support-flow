@@ -186,7 +186,7 @@ function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
           variant="outline"
           className="border-red-200 bg-red-50 text-red-700"
         >
-          리뷰 필요
+          주의 필요
         </Badge>
       ) : null}
       {ticket.ai_sentiment ? (

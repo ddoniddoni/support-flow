@@ -69,10 +69,10 @@ const actionLabels: Record<string, string> = {
   internal_note_added: "내부 메모 추가",
   ai_analysis_generated: "AI 분석 생성",
   ai_analysis_regenerated: "AI 분석 재생성",
-  ai_analysis_approved: "AI 분석 승인",
+  ai_analysis_approved: "AI 분석 확인",
   ai_analysis_corrected: "AI 분석 수정",
-  ai_analysis_rejected: "AI 분석 거절",
-  ai_analysis_sent_to_review: "AI 리뷰 전송",
+  ai_analysis_rejected: "AI 분석 제외",
+  ai_analysis_sent_to_review: "AI 주의 신호 표시",
   ai_draft_used_as_customer_reply: "AI 답변 초안 사용",
 };
 

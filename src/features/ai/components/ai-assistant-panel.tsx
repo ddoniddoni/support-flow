@@ -35,10 +35,7 @@ import {
 import type { TicketAIAnalysis } from "../types";
 import { useAIAnalysis } from "../hooks/use-ai-analysis";
 import { useAnalyzeTicket } from "../hooks/use-analyze-ticket";
-import {
-  useReviewAIAnalysis,
-  useSendAIAnalysisToReview,
-} from "../hooks/use-review-ai-analysis";
+import { useReviewAIAnalysis } from "../hooks/use-review-ai-analysis";
 import { AIAnalysisSummaryCard } from "./ai-analysis-summary-card";
 import { AIReplyDraftBox } from "./ai-reply-draft-box";
 
@@ -94,7 +91,7 @@ function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
         variant="outline"
         className="border-red-200 bg-red-50 text-red-700"
       >
-        Review required
+        주의 신호
       </Badge>
     );
   }
@@ -104,7 +101,7 @@ function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
       variant="outline"
       className="border-emerald-200 bg-emerald-50 text-emerald-700"
     >
-      Human checked
+      자동 분류 완료
     </Badge>
   );
 }
@@ -243,7 +240,7 @@ function CorrectAnalysisForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="ai-note">Review note</Label>
+        <Label htmlFor="ai-note">수정 메모</Label>
         <Textarea
           id="ai-note"
           className="min-h-20"
@@ -289,8 +286,6 @@ export function AIAssistantPanel({
   const [isEditing, setIsEditing] = useState(false);
   const analysisQuery = useAIAnalysis({ ticketId, profile });
   const analyzeTicket = useAnalyzeTicket();
-  const reviewAnalysis = useReviewAIAnalysis();
-  const sendToReview = useSendAIAnalysisToReview();
 
   if (profile.role === "customer") {
     return null;
@@ -313,44 +308,8 @@ export function AIAssistantPanel({
     }
   }
 
-  async function confirmAnalysis(analysis: TicketAIAnalysis) {
-    setMessage(null);
-    setError(null);
-
-    try {
-      await reviewAnalysis.mutateAsync({
-        analysisId: analysis.id,
-        ticketId,
-        profile,
-        decision: "approved",
-        note: "AI analysis confirmed from ticket detail.",
-      });
-      setMessage("AI 분석을 확인 처리했습니다.");
-    } catch (mutationError) {
-      setError(getErrorMessage(mutationError));
-    }
-  }
-
-  async function sendAnalysisToReview(analysis: TicketAIAnalysis) {
-    setMessage(null);
-    setError(null);
-
-    try {
-      await sendToReview.mutateAsync({
-        analysisId: analysis.id,
-        ticketId,
-        profile,
-        note: "Sent to review from ticket detail.",
-      });
-      setMessage("AI 분석을 리뷰 대상으로 표시했습니다.");
-    } catch (mutationError) {
-      setError(getErrorMessage(mutationError));
-    }
-  }
-
   const analysis = analysisQuery.data ?? null;
-  const pending =
-    analyzeTicket.isPending || reviewAnalysis.isPending || sendToReview.isPending;
+  const pending = analyzeTicket.isPending;
 
   return (
     <Card className="rounded-lg">
@@ -396,7 +355,7 @@ export function AIAssistantPanel({
                 <div className="flex gap-2">
                   <ShieldAlert className="mt-0.5 size-4" aria-hidden="true" />
                   <div>
-                    <p className="font-medium">사람 검토가 필요합니다.</p>
+                    <p className="font-medium">AI 주의 신호가 감지됐습니다.</p>
                     {analysis.escalation_reason ? (
                       <p className="mt-1 text-red-600">
                         {analysis.escalation_reason}
@@ -449,17 +408,7 @@ export function AIAssistantPanel({
           </Button>
 
           {analysis ? (
-            <div className="grid gap-2 sm:grid-cols-3">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={() => void confirmAnalysis(analysis)}
-              >
-                <Check className="size-4" aria-hidden="true" />
-                확인
-              </Button>
+            <div className="grid gap-2">
               <Button
                 type="button"
                 size="sm"
@@ -469,16 +418,6 @@ export function AIAssistantPanel({
               >
                 <Edit3 className="size-4" aria-hidden="true" />
                 수정
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={() => void sendAnalysisToReview(analysis)}
-              >
-                <ShieldAlert className="size-4" aria-hidden="true" />
-                리뷰
               </Button>
             </div>
           ) : null}
