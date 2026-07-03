@@ -1,6 +1,11 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
-import type { TicketPriority, TicketStatus } from "@/types/domain";
+import type {
+  AISentiment,
+  AIUrgency,
+  TicketPriority,
+  TicketStatus,
+} from "@/types/domain";
 
 import type {
   CreateTicketInput,
@@ -53,6 +58,9 @@ export type TicketListFilters = {
   status?: TicketStatus | "all";
   priority?: TicketPriority | "all";
   category?: string;
+  aiNeedsReview?: "all" | "yes" | "no";
+  aiSentiment?: AISentiment | "all";
+  aiUrgency?: AIUrgency | "all";
   sort?: TicketSortOption;
   page?: number;
   pageSize?: number;
@@ -132,6 +140,18 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
 
   if (filters.category && filters.category !== "all") {
     query = query.eq("category", filters.category);
+  }
+
+  if (filters.aiNeedsReview && filters.aiNeedsReview !== "all") {
+    query = query.eq("ai_needs_review", filters.aiNeedsReview === "yes");
+  }
+
+  if (filters.aiSentiment && filters.aiSentiment !== "all") {
+    query = query.eq("ai_sentiment", filters.aiSentiment);
+  }
+
+  if (filters.aiUrgency && filters.aiUrgency !== "all") {
+    query = query.eq("ai_urgency", filters.aiUrgency);
   }
 
   const { data, error, count } = await query

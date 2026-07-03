@@ -3,6 +3,7 @@
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { AIDashboardInsights } from "@/features/ai/components/ai-dashboard-insights";
 import type { Tables } from "@/types/database";
 
 import { useDashboardStats } from "../hooks/use-dashboard-stats";
@@ -73,6 +74,8 @@ export function DashboardView({ profile }: DashboardViewProps) {
           stats={statsQuery.data}
         />
       ) : null}
+
+      <AIDashboardInsights profile={profile} />
 
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
         <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />
