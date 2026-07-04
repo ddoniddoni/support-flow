@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Inbox,
-  ShieldAlert,
-  UserRound,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 
 import type { AgentManagementRow } from "../api/agent-management-api";
@@ -47,39 +39,9 @@ function getAgentTicketsHref(agentId: string) {
   return `/tickets?status=answer_pending&assignee=${agentId}`;
 }
 
-function SummaryCard({
-  description,
-  icon: Icon,
-  label,
-  tone,
-  value,
-}: {
-  description: string;
-  icon: typeof UserRound;
-  label: string;
-  tone: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-background p-4">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <Icon className={cn("size-4", tone)} aria-hidden="true" />
-      </div>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-    </div>
-  );
-}
-
 function AgentManagementSkeleton() {
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton key={index} className="h-28 rounded-lg" />
-        ))}
-      </div>
       <Skeleton className="h-80 rounded-lg" />
     </div>
   );
@@ -91,21 +53,13 @@ function AgentRow({ agent }: { agent: AgentManagementRow }) {
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-medium text-foreground">{agent.name}</p>
-          {agent.needsReviewCount ? (
-            <Badge
-              variant="outline"
-              className="border-red-200 bg-red-50 text-red-700"
-            >
-              주의 {agent.needsReviewCount}
-            </Badge>
-          ) : null}
         </div>
         <p className="mt-1 truncate text-xs text-muted-foreground">
           {agent.email}
         </p>
       </div>
 
-      <Metric label="답변 대기" value={`${agent.answerPendingCount}건`} />
+      <Metric label="현재 배정" value={`${agent.answerPendingCount}건`} />
       <Metric label="긴급" value={`${agent.urgentCount}건`} />
       <Metric label="이번 주 완료" value={`${agent.completedThisWeekCount}건`} />
       <div className="grid gap-2 lg:justify-items-end">
@@ -157,15 +111,9 @@ export function AgentManagementView({ profile }: AgentManagementViewProps) {
               담당자 관리
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              상담원별 답변 대기 문의와 주의 신호를 확인합니다.
+              상담원 목록과 담당 문의 현황을 관리합니다.
             </p>
           </div>
-          <Link
-            className={buttonVariants({ className: "w-full sm:w-auto" })}
-            href="/tickets?status=answer_pending&assignee=unassigned"
-          >
-            미지정 문의 보기
-          </Link>
         </div>
       </div>
 
@@ -184,58 +132,30 @@ export function AgentManagementView({ profile }: AgentManagementViewProps) {
       ) : null}
 
       {!agentsQuery.isLoading && !agentsQuery.isError && data ? (
-        <>
-          <div className="grid gap-3 md:grid-cols-4">
-            <SummaryCard
-              description="운영 가능한 상담원"
-              icon={UserRound}
-              label="담당자"
-              tone="text-sky-600"
-              value={`${data.summary.totalAgents}명`}
-            />
-            <SummaryCard
-              description="아직 답변 전인 문의"
-              icon={Inbox}
-              label="답변 대기"
-              tone="text-blue-600"
-              value={`${data.summary.totalAnswerPendingCount}건`}
-            />
-            <SummaryCard
-              description="담당자 지정 전"
-              icon={ShieldAlert}
-              label="미지정"
-              tone="text-red-600"
-              value={`${data.summary.unassignedAnswerPendingCount}건`}
-            />
-            <SummaryCard
-              description="AI 주의 신호 포함"
-              icon={CheckCircle2}
-              label="주의 필요"
-              tone="text-amber-600"
-              value={`${data.summary.totalNeedsReviewCount}건`}
-            />
-          </div>
-
-          <Card className="rounded-lg">
-            <CardHeader>
-              <CardTitle>담당자 목록</CardTitle>
-              <CardDescription>
-                담당자별 현재 답변 대기 문의와 최근 활동입니다.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              {data.agents.length ? (
-                data.agents.map((agent) => (
-                  <AgentRow key={agent.id} agent={agent} />
-                ))
-              ) : (
-                <p className="p-4 text-sm text-muted-foreground">
-                  등록된 담당자가 없습니다.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </>
+        <Card className="rounded-lg">
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>담당자 목록</CardTitle>
+                <CardDescription>
+                  담당자별 현재 배정 현황과 최근 활동입니다.
+                </CardDescription>
+              </div>
+              <Badge variant="secondary">{data.summary.totalAgents}명</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {data.agents.length ? (
+              data.agents.map((agent) => (
+                <AgentRow key={agent.id} agent={agent} />
+              ))
+            ) : (
+              <p className="p-4 text-sm text-muted-foreground">
+                등록된 담당자가 없습니다.
+              </p>
+            )}
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );
