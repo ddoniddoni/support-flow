@@ -367,6 +367,18 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
     throw new Error("Customers cannot create support replies.");
   }
 
+  const { data: currentTicket, error: currentTicketError } = input.isInternal
+    ? { data: null, error: null }
+    : await supabase
+        .from("tickets")
+        .select("status")
+        .eq("id", input.ticketId)
+        .maybeSingle();
+
+  if (currentTicketError) {
+    throw currentTicketError;
+  }
+
   const { data, error } = await supabase.rpc("create_ticket_reply", {
     p_ticket_id: input.ticketId,
     p_content: input.content,
@@ -388,6 +400,40 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
 
     if (logError) {
       throw logError;
+    }
+  }
+
+  if (
+    !input.isInternal &&
+    currentTicket &&
+    (currentTicket.status === "open" || currentTicket.status === "in_progress")
+  ) {
+    const { data: updatedTicket, error: updateError } = await supabase
+      .from("tickets")
+      .update({ status: "resolved" })
+      .eq("id", input.ticketId)
+      .in("status", ["open", "in_progress"])
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    if (updatedTicket) {
+      const { error: statusLogError } = await supabase
+        .from("ticket_logs")
+        .insert({
+          ticket_id: input.ticketId,
+          actor_id: input.profile.id,
+          action: "status_changed",
+          before_value: currentTicket.status,
+          after_value: "resolved",
+        });
+
+      if (statusLogError) {
+        throw statusLogError;
+      }
     }
   }
 
