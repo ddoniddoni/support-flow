@@ -94,7 +94,7 @@ Existing abilities:
 3. Agent opens a ticket detail page.
 4. Agent writes a reply.
 5. Agent adds internal notes.
-6. Agent changes status from `open` to `in_progress` or `resolved`.
+6. A public reply moves the ticket from `open`/`in_progress` to `resolved`.
 
 New AI abilities:
 
@@ -504,6 +504,12 @@ Status values:
 - in_progress
 - resolved
 - closed
+
+Product-facing status groups:
+
+- `open` and `in_progress` are shown as `답변 대기`.
+- `resolved` is shown as `답변 완료`.
+- `closed` is shown as `종료`.
 
 Priority values:
 

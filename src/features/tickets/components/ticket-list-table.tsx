@@ -23,9 +23,9 @@ import type {
 import type { TicketListItem } from "../types";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+  open: "답변 대기",
+  in_progress: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
 
@@ -45,8 +45,8 @@ const categoryLabels: Record<string, string> = {
 };
 
 const customerStatusLabels: Record<TicketStatus, string> = {
-  open: "접수 완료",
-  in_progress: "처리 중",
+  open: "답변 대기",
+  in_progress: "답변 대기",
   resolved: "답변 완료",
   closed: "종료",
 };
@@ -108,7 +108,7 @@ function getAssigneeLabel(ticket: TicketListItem) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "처리 완료"
+    ? "배정 없이 완료"
     : "담당자 지정 전";
 }
 
@@ -119,7 +119,7 @@ function StatusBadge({ status }: { status: TicketStatus }) {
       className={cn(
         status === "open" && "border-blue-200 bg-blue-50 text-blue-700",
         status === "in_progress" &&
-          "border-amber-200 bg-amber-50 text-amber-700",
+          "border-blue-200 bg-blue-50 text-blue-700",
         status === "resolved" &&
           "border-emerald-200 bg-emerald-50 text-emerald-700",
         status === "closed" &&
@@ -287,7 +287,7 @@ export function TicketListTable({
           <TableHeader>
             <TableRow>
               <TableHead>제목</TableHead>
-              <TableHead>{isCustomer ? "처리 상태" : "상태"}</TableHead>
+              <TableHead>답변 상태</TableHead>
               {isCustomer ? null : (
                 <TableHead>우선순위</TableHead>
               )}

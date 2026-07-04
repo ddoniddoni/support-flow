@@ -14,7 +14,6 @@ import {
   aiSentiments,
   aiUrgencies,
   ticketPriorities,
-  ticketStatuses,
   type AISentiment,
   type AIUrgency,
 } from "@/types/domain";
@@ -33,11 +32,12 @@ type TicketListViewProps = {
 
 const statusLabels = {
   all: "전체 상태",
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+  answer_pending: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 } as const;
+
+const statusFilterOptions = ["answer_pending", "resolved", "closed"] as const;
 
 const priorityLabels = {
   all: "전체 우선순위",
@@ -57,7 +57,7 @@ const categoryLabels = {
 } as const;
 
 const sortLabels: Record<TicketSortOption, string> = {
-  priority_first: "우선처리순",
+  priority_first: "우선 확인순",
   created_desc: "최신순",
   created_asc: "오래된순",
   updated_desc: "최근 수정순",
@@ -102,6 +102,22 @@ function getIntParam(value: string | null, fallback: number) {
   return Number.isNaN(parsedValue) ? fallback : parsedValue;
 }
 
+function getStatusParam(value: string | null): TicketListFilters["status"] {
+  if (
+    value === "answer_pending" ||
+    value === "open" ||
+    value === "in_progress"
+  ) {
+    return "answer_pending";
+  }
+
+  if (value === "resolved" || value === "closed") {
+    return value;
+  }
+
+  return "all";
+}
+
 function getAIReviewParam(value: string | null) {
   if (value === "yes" || value === "no") {
     return value;
@@ -132,10 +148,10 @@ function getRoleDescription(role: Tables<"profiles">["role"]) {
   }
 
   if (role === "agent") {
-    return "나에게 배정된 문의를 확인하고 처리 흐름을 관리합니다.";
+    return "나에게 배정된 문의를 확인하고 답변 상태를 관리합니다.";
   }
 
-  return "전체 고객 문의를 검색하고 운영 상태를 확인합니다.";
+  return "전체 고객 문의를 검색하고 답변 상태를 확인합니다.";
 }
 
 export function TicketListView({
@@ -155,7 +171,7 @@ export function TicketListView({
 
     return {
       search: searchParams.get("q")?.trim() || undefined,
-      status: searchParams.get("status") as TicketListFilters["status"],
+      status: getStatusParam(searchParams.get("status")),
       priority: searchParams.get("priority") as TicketListFilters["priority"],
       category: searchParams.get("category") ?? "all",
       aiNeedsReview: getAIReviewParam(searchParams.get("ai_review")),
@@ -263,7 +279,7 @@ export function TicketListView({
                 }
               >
                 <option value="all">{statusLabels.all}</option>
-                {ticketStatuses.map((status) => (
+                {statusFilterOptions.map((status) => (
                   <option key={status} value={status}>
                     {statusLabels[status]}
                   </option>

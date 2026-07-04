@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import {
   ticketPriorities,
-  ticketStatuses,
   type TicketPriority,
   type TicketStatus,
 } from "@/types/domain";
@@ -45,11 +44,13 @@ type TicketDetailViewProps = {
 type OperationField = "status" | "priority" | "assignee";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+  open: "답변 대기",
+  in_progress: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
+
+const visibleStatusOptions = ["open", "resolved", "closed"] as const;
 
 const priorityLabels: Record<TicketPriority, string> = {
   low: "낮음",
@@ -82,8 +83,8 @@ const actionLabels: Record<string, string> = {
 };
 
 const customerStatusLabels: Record<TicketStatus, string> = {
-  open: "접수 완료",
-  in_progress: "처리 중",
+  open: "답변 대기",
+  in_progress: "답변 대기",
   resolved: "답변 완료",
   closed: "종료",
 };
@@ -146,7 +147,7 @@ function getTicketAssigneeLabel(ticket: TicketDetail) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "처리 완료"
+    ? "배정 없이 완료"
     : "담당자 지정 전";
 }
 
@@ -157,7 +158,7 @@ function StatusBadge({ status }: { status: TicketStatus }) {
       className={cn(
         status === "open" && "border-blue-200 bg-blue-50 text-blue-700",
         status === "in_progress" &&
-          "border-amber-200 bg-amber-50 text-amber-700",
+          "border-blue-200 bg-blue-50 text-blue-700",
         status === "resolved" &&
           "border-emerald-200 bg-emerald-50 text-emerald-700",
         status === "closed" &&
@@ -262,7 +263,7 @@ function ReplyComposerCard({
         </CardTitle>
         <CardDescription>
           {isInternal
-            ? "고객에게 보이지 않는 처리 맥락과 인수인계 내용을 남깁니다."
+            ? "고객에게 보이지 않는 응대 맥락과 인수인계 내용을 남깁니다."
             : "고객에게 표시되는 공식 답변을 남깁니다."}
         </CardDescription>
       </CardHeader>
@@ -343,6 +344,8 @@ function TicketOperationsPanel({
   const updateAction = useUpdateTicketAction();
   const isAdmin = profile.role === "admin";
   const isPending = updateAction.isPending;
+  const visibleStatusValue =
+    ticket.status === "in_progress" ? "open" : ticket.status;
 
   function runAction(
     field: OperationField,
@@ -383,7 +386,7 @@ function TicketOperationsPanel({
   function getAgentLabel(agentId: string | null) {
     if (!agentId) {
       return ticket.status === "resolved" || ticket.status === "closed"
-        ? "처리 완료"
+        ? "배정 없이 완료"
         : "담당자 지정 전";
     }
 
@@ -402,13 +405,13 @@ function TicketOperationsPanel({
       <CardContent className="grid gap-4">
         <div className="grid gap-1.5">
           <label className="text-sm font-medium text-foreground" htmlFor="status">
-            상태
+            답변 상태
           </label>
           <div className="relative">
             <select
               id="status"
               className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              value={ticket.status}
+              value={visibleStatusValue}
               disabled={isPending}
               onChange={(event) =>
                 runAction("status", {
@@ -416,7 +419,7 @@ function TicketOperationsPanel({
                 })
               }
             >
-              {ticketStatuses.map((status) => (
+              {visibleStatusOptions.map((status) => (
                 <option key={status} value={status}>
                   {statusLabels[status]}
                 </option>
@@ -709,9 +712,7 @@ function TicketDetailContent({
                 </>
               ) : null}
               <div>
-                <p className="text-muted-foreground">
-                  {isCustomer ? "처리 상태" : "상태"}
-                </p>
+                <p className="text-muted-foreground">답변 상태</p>
                 <p className="font-medium text-foreground">
                   {isCustomer
                     ? customerStatusLabels[ticket.status]

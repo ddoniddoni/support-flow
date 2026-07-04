@@ -26,9 +26,9 @@ const priorityLabels: Record<TicketPriority, string> = {
 };
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+  open: "답변 대기",
+  in_progress: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
 

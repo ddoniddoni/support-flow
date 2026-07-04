@@ -7,12 +7,12 @@ export const demoDashboardStats: DashboardStats = {
   openTickets: 12,
   inProgressTickets: 14,
   resolvedTickets: 9,
+  closedTickets: 3,
   urgentTickets: 7,
   createdToday: 6,
   statusDistribution: [
-    { key: "open", label: "접수 대기", count: 12, percentage: 32 },
-    { key: "in_progress", label: "처리 중", count: 14, percentage: 37 },
-    { key: "resolved", label: "해결 완료", count: 9, percentage: 24 },
+    { key: "answer_pending", label: "답변 대기", count: 26, percentage: 68 },
+    { key: "resolved", label: "답변 완료", count: 9, percentage: 24 },
     { key: "closed", label: "종료", count: 3, percentage: 8 },
   ],
   categoryDistribution: [

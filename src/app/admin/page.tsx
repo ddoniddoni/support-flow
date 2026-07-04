@@ -21,7 +21,7 @@ const adminAreas = [
   },
   {
     title: "운영 통계",
-    description: "접수 대기, 처리 중, 해결 완료와 AI 주의 신호를 확인합니다.",
+    description: "답변 대기, 답변 완료, 종료와 AI 주의 신호를 확인합니다.",
     icon: BarChart3,
   },
   {
@@ -49,7 +49,7 @@ export default async function AdminPage() {
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                 관리자 기능은 문의 목록, 문의 상세, 운영 대시보드에 연결되어
                 있습니다. 실제 지원팀이 쓰는 흐름처럼 문의를 중심으로 배정과
-                상태 변경을 처리합니다.
+                상태 변경을 관리합니다.
               </p>
             </div>
             <div className="grid gap-2 sm:flex">

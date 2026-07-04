@@ -312,9 +312,7 @@ export function createMockAIProvider(): AIProvider {
         intent,
         suggestedPriority,
         suggestedStatus:
-          ticket.status === "open" && urgency !== "low"
-            ? "in_progress"
-            : ticket.status,
+          ticket.status === "in_progress" ? "open" : ticket.status,
         suggestedAssigneeRole: category === "billing" || category === "refund"
           ? "billing-specialist"
           : "support-agent",
