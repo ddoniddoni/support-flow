@@ -23,9 +23,9 @@ import type {
 import type { TicketListItem } from "../types";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
+  open: "접수 대기",
+  in_progress: "처리 중",
+  resolved: "해결 완료",
   closed: "종료",
 };
 
@@ -100,6 +100,16 @@ function formatTicketNumber(ticketNumber: number | null | undefined) {
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
+}
+
+function getAssigneeLabel(ticket: TicketListItem) {
+  if (ticket.assignee?.name) {
+    return ticket.assignee.name;
+  }
+
+  return ticket.status === "resolved" || ticket.status === "closed"
+    ? "처리 완료"
+    : "담당자 지정 전";
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -319,7 +329,7 @@ export function TicketListTable({
                 )}
                 {isCustomer ? null : (
                   <TableCell className="truncate">
-                    {ticket.assignee?.name ?? "미배정"}
+                    {getAssigneeLabel(ticket)}
                   </TableCell>
                 )}
                 {isCustomer ? null : (

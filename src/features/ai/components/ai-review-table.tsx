@@ -54,6 +54,16 @@ function formatTicketNumber(ticketNumber: number | null | undefined) {
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
 }
 
+function getAssigneeLabel(ticket: NonNullable<AIReviewQueueItem["ticket"]>) {
+  if (ticket.assignee?.name) {
+    return ticket.assignee.name;
+  }
+
+  return ticket.status === "resolved" || ticket.status === "closed"
+    ? "처리 완료"
+    : "담당자 지정 전";
+}
+
 function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
   return (
     <Badge
@@ -109,7 +119,7 @@ function TicketSummary({ item }: { item: AIReviewQueueItem }) {
       <p className="mt-1 truncate text-xs text-muted-foreground">
         {formatTicketNumber(ticket.ticket_number)} ·{" "}
         {ticket.customer?.name ?? "고객 정보 없음"} ·{" "}
-        {ticket.assignee?.name ?? "미배정"}
+        {getAssigneeLabel(ticket)}
       </p>
     </div>
   );

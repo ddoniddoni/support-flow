@@ -33,9 +33,9 @@ type TicketListViewProps = {
 
 const statusLabels = {
   all: "전체 상태",
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
+  open: "접수 대기",
+  in_progress: "처리 중",
+  resolved: "해결 완료",
   closed: "종료",
 } as const;
 

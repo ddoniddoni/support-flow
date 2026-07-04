@@ -21,7 +21,7 @@ const adminAreas = [
   },
   {
     title: "운영 통계",
-    description: "열린 문의, 진행 중 문의, 긴급 문의와 카테고리 분포를 확인합니다.",
+    description: "접수 대기, 처리 중, 해결 완료와 AI 주의 신호를 확인합니다.",
     icon: BarChart3,
   },
   {

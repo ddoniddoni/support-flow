@@ -55,9 +55,9 @@ export type DashboardStats = {
 };
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
+  open: "접수 대기",
+  in_progress: "처리 중",
+  resolved: "해결 완료",
   closed: "종료",
 };
 
@@ -156,6 +156,9 @@ export async function getDashboardStats(
   }
 
   const tickets = (data ?? []) as DashboardTicket[];
+  const activeTickets = tickets.filter(
+    (ticket) => ticket.status !== "resolved" && ticket.status !== "closed",
+  );
   const todayStart = getTodayStart();
 
   return {
@@ -183,6 +186,6 @@ export async function getDashboardStats(
       (ticket) => ticket.category,
       (key) => categoryLabels[key] ?? key,
     ),
-    recentTickets: tickets.slice(0, 5),
+    recentTickets: activeTickets.slice(0, 5),
   };
 }
