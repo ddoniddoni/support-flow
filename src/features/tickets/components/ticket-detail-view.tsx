@@ -28,7 +28,12 @@ import type { AgentOption } from "../api/tickets-api";
 import { useAgents } from "../hooks/use-agents";
 import { useTicket } from "../hooks/use-ticket";
 import { useUpdateTicketAction } from "../hooks/use-update-ticket-action";
-import type { TicketDetailData, TicketLogItem, TicketReplyItem } from "../types";
+import type {
+  TicketDetail,
+  TicketDetailData,
+  TicketLogItem,
+  TicketReplyItem,
+} from "../types";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
 import { TicketReplyForm } from "./ticket-reply-form";
 
@@ -40,9 +45,9 @@ type TicketDetailViewProps = {
 type OperationField = "status" | "priority" | "assignee";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
+  open: "접수 대기",
+  in_progress: "처리 중",
+  resolved: "해결 완료",
   closed: "종료",
 };
 
@@ -133,6 +138,16 @@ function formatReplyAuthor(reply: TicketReplyItem, isCustomerView: boolean) {
   }
 
   return `${authorRoleLabels[reply.author.role]} ${reply.author.name} (${reply.author.email})`;
+}
+
+function getTicketAssigneeLabel(ticket: TicketDetail) {
+  if (ticket.assignee?.name) {
+    return ticket.assignee.name;
+  }
+
+  return ticket.status === "resolved" || ticket.status === "closed"
+    ? "처리 완료"
+    : "담당자 지정 전";
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -367,7 +382,9 @@ function TicketOperationsPanel({
 
   function getAgentLabel(agentId: string | null) {
     if (!agentId) {
-      return "미배정";
+      return ticket.status === "resolved" || ticket.status === "closed"
+        ? "처리 완료"
+        : "담당자 지정 전";
     }
 
     const agent = agentsQuery.data?.find((item) => item.id === agentId);
@@ -472,7 +489,7 @@ function TicketOperationsPanel({
                     })
                   }
                 >
-                  <option value="unassigned">미배정</option>
+                  <option value="unassigned">담당자 지정 전</option>
                   {(agentsQuery.data ?? []).map((agent: AgentOption) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name} ({agent.email})
@@ -681,7 +698,7 @@ function TicketDetailContent({
                   <div>
                     <p className="text-muted-foreground">담당자</p>
                     <p className="font-medium text-foreground">
-                      {ticket.assignee?.name ?? "미배정"}
+                      {getTicketAssigneeLabel(ticket)}
                     </p>
                     {ticket.assignee?.email ? (
                       <p className="mt-0.5 text-xs text-muted-foreground">

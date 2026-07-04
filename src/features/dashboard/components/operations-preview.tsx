@@ -1,6 +1,6 @@
 import {
+  CheckCircle2,
   Clock3,
-  Flame,
   Inbox,
   TicketCheck,
   type LucideIcon,
@@ -24,9 +24,9 @@ import type {
 } from "../api/dashboard-api";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "열림",
-  in_progress: "진행 중",
-  resolved: "해결됨",
+  open: "접수 대기",
+  in_progress: "처리 중",
+  resolved: "해결 완료",
   closed: "종료",
 };
 
@@ -132,11 +132,23 @@ function getSelectedTicket(stats: DashboardStats) {
   );
 }
 
+function isCompletedTicket(ticket: DashboardTicket) {
+  return ticket.status === "resolved" || ticket.status === "closed";
+}
+
+function getAssigneeLabel(ticket: DashboardTicket) {
+  if (ticket.assignee?.name) {
+    return ticket.assignee.name;
+  }
+
+  return isCompletedTicket(ticket) ? "처리 완료" : "담당자 지정 전";
+}
+
 function getWorkloadItems(tickets: DashboardTicket[]) {
   const counts = new Map<string, number>();
 
   tickets.forEach((ticket) => {
-    const assignee = ticket.assignee?.name ?? "미배정";
+    const assignee = getAssigneeLabel(ticket);
     counts.set(assignee, (counts.get(assignee) ?? 0) + 1);
   });
 
@@ -174,7 +186,7 @@ function ToneBadge({ children, tone }: ToneBadgeProps) {
 
 function AIStatusBadges({ ticket }: { ticket: DashboardTicket }) {
   if (!ticket.ai_sentiment && !ticket.ai_urgency) {
-    return <ToneBadge tone="muted">AI 대기</ToneBadge>;
+    return <ToneBadge tone="muted">분류 대기</ToneBadge>;
   }
 
   return (
@@ -232,7 +244,7 @@ function PriorityQueueItem({
 
       <div className="flex items-center justify-between gap-2 lg:justify-end">
         <span className="truncate text-xs text-muted-foreground">
-          {ticket.assignee?.name ?? "미배정"}
+          {getAssigneeLabel(ticket)}
         </span>
         <ToneBadge tone={priorityTones[ticket.priority]}>
           {priorityLabels[ticket.priority]}
@@ -316,10 +328,10 @@ function EmptyQueue({
       <div>
         <Inbox className="mx-auto size-8 text-muted-foreground" />
         <p className="mt-3 text-sm font-medium text-foreground">
-          아직 표시할 문의가 없습니다
+          처리할 문의가 없습니다
         </p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          문의가 접수되거나 배정되면 이곳에서 운영 흐름을 확인할 수 있습니다.
+          신규 문의가 접수되면 운영자가 먼저 확인할 항목을 보여줍니다.
         </p>
         {emptyHref && emptyLabel ? (
           <Link
@@ -351,32 +363,32 @@ export function OperationsPreview({
   const workloadItems = getWorkloadItems(stats.recentTickets);
   const metrics = [
     {
-      detail: `오늘 새 접수 ${stats.createdToday}건`,
+      detail: `오늘 접수 ${stats.createdToday}건`,
       icon: TicketCheck,
       label: "전체 문의",
       tone: "text-sky-600",
       value: String(stats.totalTickets),
     },
     {
-      detail: "아직 처리가 시작되지 않은 요청",
+      detail: "상담 시작 전 문의",
       icon: Inbox,
-      label: "열린 문의",
+      label: "접수 대기",
       tone: "text-blue-600",
       value: String(stats.openTickets),
     },
     {
-      detail: "상담원이 현재 처리 중",
+      detail: "담당자가 응대 중",
       icon: Clock3,
-      label: "진행 중",
+      label: "처리 중",
       tone: "text-amber-600",
       value: String(stats.inProgressTickets),
     },
     {
       detail: `해결률 ${getResolvedRate(stats)}%`,
-      icon: Flame,
-      label: "긴급 문의",
-      tone: "text-red-600",
-      value: String(stats.urgentTickets),
+      icon: CheckCircle2,
+      label: "해결 완료",
+      tone: "text-emerald-600",
+      value: String(stats.resolvedTickets),
     },
   ];
   const getTicketHref = (ticketId: string) =>
@@ -396,10 +408,10 @@ export function OperationsPreview({
             <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  우선 처리 큐
+                  처리 대상 문의
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  AI 주의 신호와 긴급도를 기준으로 먼저 볼 문의
+                  주의 신호와 접수 상태를 기준으로 먼저 볼 문의입니다.
                 </p>
               </div>
               {ctaHref ? (
@@ -433,10 +445,10 @@ export function OperationsPreview({
             <div className="grid gap-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
-                  가장 먼저 볼 문의
+                  먼저 확인할 문의
                 </p>
                 <h2 className="mt-2 text-base font-semibold text-foreground">
-                  {selectedTicket?.title ?? "대기 중인 문의가 없습니다"}
+                  {selectedTicket?.title ?? "처리할 문의가 없습니다"}
                 </h2>
               </div>
               {selectedTicket ? (
@@ -451,7 +463,7 @@ export function OperationsPreview({
             <div className="mt-4 grid gap-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">상태</p>
+                  <p className="text-xs text-muted-foreground">처리 상태</p>
                   <p className="mt-1 font-medium text-foreground">
                     {selectedTicket
                       ? statusLabels[selectedTicket.status]
@@ -461,7 +473,9 @@ export function OperationsPreview({
                 <div>
                   <p className="text-xs text-muted-foreground">담당자</p>
                   <p className="mt-1 font-medium text-foreground">
-                    {selectedTicket?.assignee?.name ?? "미배정"}
+                    {selectedTicket
+                      ? getAssigneeLabel(selectedTicket)
+                      : "대기 없음"}
                   </p>
                 </div>
               </div>
@@ -472,7 +486,7 @@ export function OperationsPreview({
                     )} 문의는 최근 ${formatDateTime(
                       selectedTicket.updated_at,
                     )}에 업데이트되었습니다.`
-                  : "새 문의가 들어오면 이 영역에서 우선 확인할 항목을 보여줍니다."}
+                  : "새 문의가 들어오면 이 영역에서 먼저 확인할 항목을 보여줍니다."}
               </div>
             </div>
           </div>
@@ -510,7 +524,7 @@ export function OperationsPreview({
           <DistributionPanel
             description="현재 문의의 처리 단계별 비율입니다."
             items={stats.statusDistribution}
-            title="상태 분포"
+            title="처리 상태 분포"
           />
           <DistributionPanel
             description="문의 유형별 접수 비중입니다."

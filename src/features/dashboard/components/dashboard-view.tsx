@@ -20,10 +20,10 @@ function getRoleLabel(role: Tables<"profiles">["role"]) {
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
   if (role === "agent") {
-    return "나에게 배정된 문의의 처리 상태와 우선순위를 추적합니다.";
+    return "오늘 처리할 문의와 AI 주의 신호를 확인합니다.";
   }
 
-  return "전체 지원 운영 현황과 병목 구간을 한눈에 확인합니다.";
+  return "지원팀의 처리 상태와 위험 신호를 한눈에 확인합니다.";
 }
 
 export function DashboardView({ profile }: DashboardViewProps) {
