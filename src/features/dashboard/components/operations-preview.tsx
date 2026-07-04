@@ -9,14 +9,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type {
   AISentiment,
@@ -204,6 +196,52 @@ function AIStatusBadges({ ticket }: { ticket: DashboardTicket }) {
   );
 }
 
+function PriorityQueueItem({
+  href,
+  ticket,
+}: {
+  href: string;
+  ticket: DashboardTicket;
+}) {
+  return (
+    <Link
+      className={cn(
+        "grid gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/50",
+        "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
+        "lg:grid-cols-[minmax(0,1fr)_220px_150px] lg:items-center",
+      )}
+      href={href}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="min-w-0 truncate font-medium text-foreground">
+            {ticket.title}
+          </p>
+          <ToneBadge tone={statusTones[ticket.status]}>
+            {statusLabels[ticket.status]}
+          </ToneBadge>
+        </div>
+        <p className="mt-1 truncate text-xs text-muted-foreground">
+          {formatTicketNumber(ticket.ticket_number)} ·{" "}
+          {categoryLabels[ticket.category] ?? ticket.category} ·{" "}
+          {ticket.customer?.name ?? "고객 정보 없음"}
+        </p>
+      </div>
+
+      <AIStatusBadges ticket={ticket} />
+
+      <div className="flex items-center justify-between gap-2 lg:justify-end">
+        <span className="truncate text-xs text-muted-foreground">
+          {ticket.assignee?.name ?? "미배정"}
+        </span>
+        <ToneBadge tone={priorityTones[ticket.priority]}>
+          {priorityLabels[ticket.priority]}
+        </ToneBadge>
+      </div>
+    </Link>
+  );
+}
+
 function MetricCard({
   detail,
   icon: Icon,
@@ -377,125 +415,32 @@ export function OperationsPreview({
             {!hasTickets ? (
               <EmptyQueue emptyHref={emptyHref} emptyLabel={emptyLabel} />
             ) : (
-              <>
-                <div className="grid gap-2 p-3 sm:hidden">
-                  {stats.recentTickets.map((ticket) => (
-                    <Link
-                      key={ticket.id}
-                      className="rounded-md border border-border bg-card p-3"
-                      href={getTicketHref(ticket.id)}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-medium leading-5 text-foreground">
-                            {ticket.title}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {formatTicketNumber(ticket.ticket_number)} ·{" "}
-                            {categoryLabels[ticket.category] ?? ticket.category}
-                          </p>
-                        </div>
-                        <ToneBadge tone={statusTones[ticket.status]}>
-                          {statusLabels[ticket.status]}
-                        </ToneBadge>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between gap-3 text-xs">
-                        <span className="truncate text-muted-foreground">
-                          {ticket.customer?.name ?? "고객 정보 없음"}
-                        </span>
-                        <ToneBadge tone={priorityTones[ticket.priority]}>
-                          {priorityLabels[ticket.priority]}
-                        </ToneBadge>
-                      </div>
-                      <div className="mt-3">
-                        <AIStatusBadges ticket={ticket} />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-
-                <Table className="hidden sm:table">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>문의</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        고객
-                      </TableHead>
-                      <TableHead className="hidden md:table-cell">
-                        담당자
-                      </TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead>AI 신호</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        우선순위
-                      </TableHead>
-                      <TableHead className="hidden text-right lg:table-cell">
-                        업데이트
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {stats.recentTickets.map((ticket) => (
-                      <TableRow key={ticket.id}>
-                        <TableCell>
-                          <div className="min-w-52">
-                            <Link
-                              className="font-medium text-foreground hover:underline"
-                              href={getTicketHref(ticket.id)}
-                            >
-                              {ticket.title}
-                            </Link>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {formatTicketNumber(ticket.ticket_number)} ·{" "}
-                              {categoryLabels[ticket.category] ??
-                                ticket.category}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground sm:table-cell">
-                          {ticket.customer?.name ?? "고객 정보 없음"}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {ticket.assignee?.name ?? "미배정"}
-                        </TableCell>
-                        <TableCell>
-                          <ToneBadge tone={statusTones[ticket.status]}>
-                            {statusLabels[ticket.status]}
-                          </ToneBadge>
-                        </TableCell>
-                        <TableCell>
-                          <AIStatusBadges ticket={ticket} />
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <ToneBadge tone={priorityTones[ticket.priority]}>
-                            {priorityLabels[ticket.priority]}
-                          </ToneBadge>
-                        </TableCell>
-                        <TableCell className="hidden text-right text-muted-foreground lg:table-cell">
-                          {formatDateTime(ticket.updated_at)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </>
+              <div>
+                {stats.recentTickets.map((ticket) => (
+                  <PriorityQueueItem
+                    key={ticket.id}
+                    href={getTicketHref(ticket.id)}
+                    ticket={ticket}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>
 
         <aside className="grid content-start gap-4">
           <div className="rounded-lg border border-border bg-background p-4">
-            <div className="flex items-start justify-between gap-3">
+            <div className="grid gap-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
-                  선택된 문의
+                  가장 먼저 볼 문의
                 </p>
                 <h2 className="mt-2 text-base font-semibold text-foreground">
                   {selectedTicket?.title ?? "대기 중인 문의가 없습니다"}
                 </h2>
               </div>
               {selectedTicket ? (
-                <div className="grid justify-items-end gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   <ToneBadge tone={priorityTones[selectedTicket.priority]}>
                     {priorityLabels[selectedTicket.priority]}
                   </ToneBadge>
