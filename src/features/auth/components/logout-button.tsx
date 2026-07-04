@@ -6,8 +6,19 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { cn } from "@/lib/utils";
 
-export function LogoutButton() {
+type LogoutButtonProps = {
+  className?: string;
+  showLabel?: boolean;
+  size?: "default" | "icon" | "icon-sm";
+};
+
+export function LogoutButton({
+  className,
+  showLabel = true,
+  size = "default",
+}: LogoutButtonProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
@@ -20,9 +31,15 @@ export function LogoutButton() {
   }
 
   return (
-    <Button disabled={isPending} onClick={handleLogout} variant="outline">
+    <Button
+      className={cn(className)}
+      disabled={isPending}
+      onClick={handleLogout}
+      size={size}
+      variant="outline"
+    >
       <LogOut className="size-4" aria-hidden="true" />
-      로그아웃
+      {showLabel ? "로그아웃" : <span className="sr-only">로그아웃</span>}
     </Button>
   );
 }

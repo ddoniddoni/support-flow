@@ -16,7 +16,8 @@ import type { TicketDetailData, TicketSortOption } from "../types";
 const ticketSelectQuery = `
   *,
   customer:profiles!tickets_customer_id_fkey(email,name),
-  assignee:profiles!tickets_assignee_id_fkey(email,name)
+  assignee:profiles!tickets_assignee_id_fkey(email,name),
+  latest_ai_analysis:ticket_ai_analyses!tickets_latest_ai_analysis_id_fkey(intent,summary,tags)
 `;
 
 export async function createTicket(input: CreateTicketInput) {

@@ -1,9 +1,14 @@
 import type { Tables } from "@/types/database";
 
 export type TicketPerson = Pick<Tables<"profiles">, "email" | "name">;
+export type TicketLatestAnalysis = Pick<
+  Tables<"ticket_ai_analyses">,
+  "intent" | "summary" | "tags"
+>;
 export type TicketListItem = Tables<"tickets"> & {
   customer: TicketPerson | null;
   assignee: TicketPerson | null;
+  latest_ai_analysis: TicketLatestAnalysis | null;
 };
 export type TicketDetail = TicketListItem;
 export type TicketReplyAuthor = Pick<

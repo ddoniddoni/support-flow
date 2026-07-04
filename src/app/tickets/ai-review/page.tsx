@@ -6,7 +6,7 @@ export default async function AIReviewQueuePage() {
   const profile = await requireServerProfile();
 
   return (
-    <main className="min-h-screen bg-muted/40">
+    <main className="min-h-screen bg-background sf-workspace-main">
       <WorkspaceHeader profile={profile} />
       <AIReviewQueueView profile={profile} />
     </main>

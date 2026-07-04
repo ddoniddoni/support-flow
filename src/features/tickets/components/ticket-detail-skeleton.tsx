@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function TicketDetailSkeleton() {
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
+    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
       <div className="grid gap-2">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-8 w-80" />
