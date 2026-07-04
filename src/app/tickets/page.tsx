@@ -13,7 +13,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const params = await searchParams;
 
   return (
-    <main className="min-h-screen bg-muted/40">
+    <main className="min-h-screen bg-background sf-workspace-main">
       <WorkspaceHeader profile={profile} />
       <TicketListView profile={profile} createdTicketId={params.created} />
     </main>

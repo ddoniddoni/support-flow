@@ -30,7 +30,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
   const statsQuery = useDashboardStats({ profile });
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
+    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -39,10 +39,10 @@ export function DashboardView({ profile }: DashboardViewProps) {
               {profile.email}
             </span>
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-foreground">
+          <h1 className="mt-2 text-xl font-semibold text-foreground">
             {profile.name}님의 운영 대시보드
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
           </p>
         </div>

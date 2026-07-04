@@ -59,6 +59,13 @@ const priorityLabels: Record<TicketPriority, string> = {
   urgent: "긴급",
 };
 
+const slaTargetsByPriority: Record<TicketPriority, number> = {
+  low: 48,
+  medium: 24,
+  high: 8,
+  urgent: 4,
+};
+
 const categoryLabels: Record<string, string> = {
   account: "계정",
   billing: "결제",
@@ -203,6 +210,29 @@ function getTicketAssigneeLabel(ticket: TicketDetail) {
   return ticket.status === "resolved" || ticket.status === "closed"
     ? "배정 없이 완료"
     : "담당자 지정 전";
+}
+
+function getSlaLabel(ticket: TicketDetail) {
+  if (ticket.status === "resolved" || ticket.status === "closed") {
+    return "SLA 충족";
+  }
+
+  const createdAt = new Date(ticket.created_at).getTime();
+  const elapsedHours = (Date.now() - createdAt) / (1000 * 60 * 60);
+  const targetHours = slaTargetsByPriority[ticket.priority];
+
+  if (elapsedHours >= targetHours) {
+    return "SLA 초과";
+  }
+
+  return `SLA ${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`;
+}
+
+function getTicketTags(ticket: TicketDetail) {
+  return [
+    categoryLabels[ticket.category] ?? ticket.category,
+    ...(ticket.latest_ai_analysis?.tags ?? []),
+  ].slice(0, 6);
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -475,9 +505,9 @@ function TicketOperationsPanel({
   return (
     <Card className="rounded-lg">
       <CardHeader>
-        <CardTitle>운영 액션</CardTitle>
+        <CardTitle>처리 속성</CardTitle>
         <CardDescription>
-          권한에 따라 상태, 우선순위, 담당자를 관리합니다.
+          답변 상태, 우선순위, 담당자를 관리합니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
@@ -593,7 +623,7 @@ function TicketOperationsPanel({
           </>
         ) : null}
 
-        <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+        <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
           현재 담당자: {getAgentLabel(ticket.assignee_id)}
         </div>
 
@@ -640,7 +670,7 @@ function TicketDetailContent({
   const hasPublicReply = data.replies.length > 0;
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
+    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
       <div className="flex flex-col gap-3">
         <Link
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -663,10 +693,10 @@ function TicketDetailContent({
               {categoryLabels[ticket.category] ?? ticket.category}
             </Badge>
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-foreground">
+          <h1 className="mt-3 text-xl font-semibold text-foreground">
             {ticket.title}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {formatTicketNumber(ticket.ticket_number)} · 접수{" "}
             {formatDateTime(ticket.created_at)} · 최근 수정{" "}
             {formatDateTime(ticket.updated_at)}
@@ -674,8 +704,8 @@ function TicketDetailContent({
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="grid gap-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-4">
           <Card className="rounded-lg">
             <CardHeader>
               <CardTitle>문의 내용</CardTitle>
@@ -733,7 +763,7 @@ function TicketDetailContent({
           ) : null}
         </div>
 
-        <div className="grid content-start gap-5">
+        <div className="grid content-start gap-4">
           {canViewOperations ? (
             <>
               <AIAssistantPanel
@@ -754,7 +784,7 @@ function TicketDetailContent({
 
           <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle>문의 정보</CardTitle>
+              <CardTitle>고객 Context</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               {canViewOperations ? (
@@ -804,6 +834,30 @@ function TicketDetailContent({
                     {priorityLabels[ticket.priority]}
                   </p>
                 </div>
+              ) : null}
+              {canViewOperations ? (
+                <>
+                  <div>
+                    <p className="text-muted-foreground">SLA</p>
+                    <p className="font-medium text-foreground">
+                      {getSlaLabel(ticket)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">태그</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {getTicketTags(ticket).map((tag) => (
+                        <Badge
+                          className="border-border bg-background text-muted-foreground"
+                          key={tag}
+                          variant="outline"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
               ) : null}
             </CardContent>
           </Card>

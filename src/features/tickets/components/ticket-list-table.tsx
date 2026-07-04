@@ -54,17 +54,16 @@ const customerStatusLabels: Record<TicketStatus, string> = {
 const adminColumnWidths = [
   "w-auto",
   "w-[92px]",
-  "w-[100px]",
-  "w-[112px]",
+  "w-[92px]",
+  "w-[88px]",
+  "w-[132px]",
   "w-[180px]",
+  "w-[150px]",
   "w-[104px]",
-  "w-[112px]",
-  "w-[112px]",
 ];
 
 const customerColumnWidths = [
   "w-auto",
-  "w-[112px]",
   "w-[112px]",
   "w-[112px]",
   "w-[112px]",
@@ -83,6 +82,50 @@ const urgencyLabels: Record<AIUrgency, string> = {
   critical: "긴급 검토",
 };
 
+const slaTargetsByPriority: Record<TicketPriority, number> = {
+  low: 48,
+  medium: 24,
+  high: 8,
+  urgent: 4,
+};
+
+type SLATone = "breached" | "done" | "normal" | "risk";
+
+function getSLAState(ticket: TicketListItem): {
+  label: string;
+  tone: SLATone;
+} {
+  if (ticket.status === "resolved" || ticket.status === "closed") {
+    return {
+      label: "충족",
+      tone: "done",
+    };
+  }
+
+  const createdAt = new Date(ticket.created_at).getTime();
+  const elapsedHours = (Date.now() - createdAt) / (1000 * 60 * 60);
+  const targetHours = slaTargetsByPriority[ticket.priority];
+
+  if (elapsedHours >= targetHours) {
+    return {
+      label: "초과",
+      tone: "breached",
+    };
+  }
+
+  if (elapsedHours >= targetHours * 0.75) {
+    return {
+      label: `${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`,
+      tone: "risk",
+    };
+  }
+
+  return {
+    label: `${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`,
+    tone: "normal",
+  };
+}
+
 const dateHeaderClassName = "text-right";
 const dateCellClassName = "text-right tabular-nums";
 
@@ -91,6 +134,15 @@ function formatDate(value: string) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatShortDateTime(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(value));
 }
 
@@ -180,6 +232,26 @@ function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
   );
 }
 
+function SLABadge({ ticket }: { ticket: TicketListItem }) {
+  const state = getSLAState(ticket);
+
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        state.tone === "normal" &&
+          "border-border bg-background text-muted-foreground",
+        state.tone === "risk" &&
+          "border-amber-200 bg-amber-50 text-amber-700",
+        state.tone === "breached" && "border-red-200 bg-red-50 text-red-700",
+        state.tone === "done" && "border-border bg-muted text-muted-foreground",
+      )}
+    >
+      SLA {state.label}
+    </Badge>
+  );
+}
+
 function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
   if (!ticket.latest_ai_analysis_id) {
     return (
@@ -207,6 +279,27 @@ function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
   );
 }
 
+function TicketTagList({ ticket }: { ticket: TicketListItem }) {
+  const tags = [
+    categoryLabels[ticket.category] ?? ticket.category,
+    ...(ticket.latest_ai_analysis?.tags ?? []),
+  ].slice(0, 3);
+
+  return (
+    <div className="flex min-w-0 flex-wrap gap-1">
+      {tags.map((tag) => (
+        <Badge
+          className="max-w-[8rem] truncate border-border bg-background text-muted-foreground"
+          key={tag}
+          variant="outline"
+        >
+          {tag}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
 function CustomerStatusBadge({ status }: { status: TicketStatus }) {
   return (
     <Badge variant="outline" className="border-border bg-muted/60 text-foreground">
@@ -216,9 +309,11 @@ function CustomerStatusBadge({ status }: { status: TicketStatus }) {
 }
 
 function MobileTicketCard({
+  href,
   ticket,
   role,
 }: {
+  href: string;
   ticket: TicketListItem;
   role: Tables<"profiles">["role"];
 }) {
@@ -226,8 +321,8 @@ function MobileTicketCard({
 
   return (
     <Link
-      href={`/tickets/${ticket.id}`}
-      className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-sm"
+      href={href}
+      className="grid gap-3 rounded-lg border border-border bg-card p-3 shadow-xs"
     >
       <div>
         <p className="font-medium text-foreground">{ticket.title}</p>
@@ -244,12 +339,11 @@ function MobileTicketCard({
           <>
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
+            <SLABadge ticket={ticket} />
             <AIStatusBadges ticket={ticket} />
           </>
         )}
-        <Badge variant="outline">
-          {categoryLabels[ticket.category] ?? ticket.category}
-        </Badge>
+        <TicketTagList ticket={ticket} />
       </div>
       <div className="grid gap-1 text-xs text-muted-foreground">
         <p>생성일 {formatDate(ticket.created_at)}</p>
@@ -260,25 +354,36 @@ function MobileTicketCard({
 }
 
 export function TicketListTable({
+  getTicketHref,
+  selectedTicketId,
   tickets,
   role,
 }: {
+  getTicketHref?: (ticketId: string) => string;
+  selectedTicketId?: string | null;
   tickets: TicketListItem[];
   role: Tables<"profiles">["role"];
 }) {
   const isCustomer = role === "customer";
   const columnWidths = isCustomer ? customerColumnWidths : adminColumnWidths;
+  const resolveTicketHref =
+    getTicketHref ?? ((ticketId: string) => `/tickets/${ticketId}`);
 
   return (
     <>
       <div className="grid gap-3 md:hidden">
         {tickets.map((ticket) => (
-          <MobileTicketCard key={ticket.id} ticket={ticket} role={role} />
+          <MobileTicketCard
+            href={resolveTicketHref(ticket.id)}
+            key={ticket.id}
+            ticket={ticket}
+            role={role}
+          />
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
-        <Table className="min-w-[980px] table-fixed">
+      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-xs md:block">
+        <Table className="min-w-[1040px] table-fixed">
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={index} className={width} />
@@ -286,25 +391,29 @@ export function TicketListTable({
           </colgroup>
           <TableHeader>
             <TableRow>
-              <TableHead>제목</TableHead>
+              <TableHead>문의</TableHead>
               <TableHead>답변 상태</TableHead>
-              {isCustomer ? null : (
-                <TableHead>우선순위</TableHead>
-              )}
+              {isCustomer ? null : <TableHead>우선순위</TableHead>}
+              {isCustomer ? null : <TableHead>SLA</TableHead>}
               {isCustomer ? null : <TableHead>담당자</TableHead>}
+              {isCustomer ? null : <TableHead>태그</TableHead>}
               {isCustomer ? null : <TableHead>AI</TableHead>}
-              <TableHead>카테고리</TableHead>
-              <TableHead className={dateHeaderClassName}>생성일</TableHead>
-              <TableHead className={dateHeaderClassName}>수정일</TableHead>
+              {isCustomer ? <TableHead>카테고리</TableHead> : null}
+              <TableHead className={dateHeaderClassName}>업데이트</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tickets.map((ticket) => (
-              <TableRow key={ticket.id}>
+              <TableRow
+                className={cn(
+                  selectedTicketId === ticket.id && "bg-accent/50 hover:bg-accent/60",
+                )}
+                key={ticket.id}
+              >
                 <TableCell className="min-w-0">
                   <Link
-                    href={`/tickets/${ticket.id}`}
-                    className="block truncate font-medium text-foreground hover:underline"
+                    href={resolveTicketHref(ticket.id)}
+                    className="block truncate font-medium text-foreground hover:text-primary"
                   >
                     {ticket.title}
                   </Link>
@@ -328,8 +437,18 @@ export function TicketListTable({
                   </TableCell>
                 )}
                 {isCustomer ? null : (
+                  <TableCell>
+                    <SLABadge ticket={ticket} />
+                  </TableCell>
+                )}
+                {isCustomer ? null : (
                   <TableCell className="truncate">
                     {getAssigneeLabel(ticket)}
+                  </TableCell>
+                )}
+                {isCustomer ? null : (
+                  <TableCell>
+                    <TicketTagList ticket={ticket} />
                   </TableCell>
                 )}
                 {isCustomer ? null : (
@@ -337,14 +456,15 @@ export function TicketListTable({
                     <AIStatusBadges ticket={ticket} />
                   </TableCell>
                 )}
-                <TableCell className="truncate">
-                  {categoryLabels[ticket.category] ?? ticket.category}
-                </TableCell>
+                {isCustomer ? (
+                  <TableCell className="truncate">
+                    {categoryLabels[ticket.category] ?? ticket.category}
+                  </TableCell>
+                ) : null}
                 <TableCell className={dateCellClassName}>
-                  {formatDate(ticket.created_at)}
-                </TableCell>
-                <TableCell className={dateCellClassName}>
-                  {formatDate(ticket.updated_at)}
+                  {isCustomer
+                    ? formatDate(ticket.updated_at)
+                    : formatShortDateTime(ticket.updated_at)}
                 </TableCell>
               </TableRow>
             ))}

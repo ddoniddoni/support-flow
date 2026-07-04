@@ -6,7 +6,7 @@ export default async function AdminAgentsPage() {
   const profile = await requireServerRole(["admin"]);
 
   return (
-    <main className="min-h-screen bg-muted/40">
+    <main className="min-h-screen bg-background sf-workspace-main">
       <WorkspaceHeader profile={profile} />
       <AgentManagementView profile={profile} />
     </main>

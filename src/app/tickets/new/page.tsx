@@ -15,7 +15,7 @@ export default async function NewTicketPage() {
   const profile = await requireServerRole(["customer"]);
 
   return (
-    <main className="min-h-screen bg-muted/40">
+    <main className="min-h-screen bg-background sf-workspace-main">
       <WorkspaceHeader profile={profile} />
 
       <div className="mx-auto grid max-w-3xl gap-6 px-5 py-7 sm:px-6 lg:px-8">

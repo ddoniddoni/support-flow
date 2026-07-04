@@ -95,7 +95,7 @@ export function AgentManagementView({ profile }: AgentManagementViewProps) {
   const data = agentsQuery.data;
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-5 px-5 py-7 sm:px-6 lg:px-8">
+    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
       <div className="flex flex-col gap-3">
         <Link
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
