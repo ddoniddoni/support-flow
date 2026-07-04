@@ -299,12 +299,6 @@ function DistributionPanel({
   );
 }
 
-function getAssigneeHref(item: AssigneeWorkloadItem) {
-  const assignee = item.assigneeId ?? "unassigned";
-
-  return `/tickets?status=answer_pending&assignee=${assignee}`;
-}
-
 function AssigneeManagementPanel({
   isAdmin,
   items,
@@ -333,7 +327,7 @@ function AssigneeManagementPanel({
         {isAdmin ? (
           <Link
             className={buttonVariants({ size: "sm", variant: "outline" })}
-            href="/tickets?status=answer_pending"
+            href="/admin/agents"
           >
             관리
           </Link>
@@ -373,7 +367,7 @@ function AssigneeManagementPanel({
               <Link
                 key={item.key}
                 className="block rounded-md p-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
-                href={getAssigneeHref(item)}
+                href="/admin/agents"
               >
                 {content}
               </Link>

@@ -1,4 +1,10 @@
-import { Activity, LayoutDashboard, ListChecks, ShieldAlert } from "lucide-react";
+import {
+  Activity,
+  LayoutDashboard,
+  ListChecks,
+  ShieldAlert,
+  UsersRound,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +77,20 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
             >
               <ShieldAlert className="size-4" aria-hidden="true" />
               AI 신호
+            </Link>
+          ) : null}
+          {profile.role === "admin" ? (
+            <Link
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className: "w-full sm:w-auto",
+                }),
+              )}
+              href="/admin/agents"
+            >
+              <UsersRound className="size-4" aria-hidden="true" />
+              담당자
             </Link>
           ) : null}
           <Link

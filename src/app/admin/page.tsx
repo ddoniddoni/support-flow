@@ -25,6 +25,11 @@ const adminAreas = [
     icon: BarChart3,
   },
   {
+    title: "담당자 관리",
+    description: "상담원별 답변 대기 문의와 주의 신호를 확인합니다.",
+    icon: UsersRound,
+  },
+  {
     title: "역할과 권한",
     description: "관리자 권한은 Supabase RLS와 서버 라우트 가드로 보호됩니다.",
     icon: ShieldCheck,
@@ -62,11 +67,17 @@ export default async function AdminPage() {
               >
                 운영 현황
               </Link>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                href="/admin/agents"
+              >
+                담당자 관리
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           {adminAreas.map((area) => (
             <Card key={area.title} className="rounded-lg">
               <CardHeader>
@@ -88,13 +99,13 @@ export default async function AdminPage() {
               포트폴리오 데모 기준
             </CardTitle>
             <CardDescription>
-              사용자 관리 전용 화면은 확장 지점으로 남겨두고, 현재 버전은
-              문의 운영 경험의 완성도에 집중합니다.
+              현재 버전은 상담원별 문의 배정 현황과 답변 대기 흐름을 중심으로
+              운영 경험을 구성합니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm leading-6 text-muted-foreground">
-            관리자 계정으로 로그인하면 전체 문의 조회, 상담원 배정, 우선순위
-            변경, 상태 변경, 활동 로그 확인이 가능합니다.
+            관리자 계정으로 로그인하면 전체 문의 조회, 상담원 배정, 담당자별
+            답변 대기 현황, 우선순위 변경, 활동 로그 확인이 가능합니다.
           </CardContent>
         </Card>
       </div>
