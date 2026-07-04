@@ -48,6 +48,7 @@ export type TicketListFilters = {
   search?: string;
   status?: TicketStatus | "all" | "answer_pending";
   priority?: TicketPriority | "all";
+  assignee?: string | "all" | "unassigned";
   category?: string;
   aiNeedsReview?: "all" | "yes" | "no";
   aiSentiment?: AISentiment | "all";
@@ -98,6 +99,13 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
 
   if (profile.role === "agent") {
     query = query.eq("assignee_id", profile.id);
+  }
+
+  if (profile.role === "admin" && filters.assignee && filters.assignee !== "all") {
+    query =
+      filters.assignee === "unassigned"
+        ? query.is("assignee_id", null)
+        : query.eq("assignee_id", filters.assignee);
   }
 
   if (filters.search) {

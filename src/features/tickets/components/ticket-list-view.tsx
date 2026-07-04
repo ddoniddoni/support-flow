@@ -19,6 +19,7 @@ import {
 } from "@/types/domain";
 
 import type { TicketListFilters } from "../api/tickets-api";
+import { useAgents } from "../hooks/use-agents";
 import { useTickets } from "../hooks/use-tickets";
 import { ticketCategories } from "../schemas/ticket-schema";
 import type { TicketSortOption } from "../types";
@@ -118,6 +119,10 @@ function getStatusParam(value: string | null): TicketListFilters["status"] {
   return "all";
 }
 
+function getAssigneeParam(value: string | null) {
+  return value?.trim() || "all";
+}
+
 function getAIReviewParam(value: string | null) {
   if (value === "yes" || value === "no") {
     return value;
@@ -162,6 +167,7 @@ export function TicketListView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
+  const agentsQuery = useAgents(profile.role === "admin");
 
   const filters = useMemo<TicketListFilters>(() => {
     const sort = searchParams.get("sort") as TicketSortOption | null;
@@ -173,6 +179,7 @@ export function TicketListView({
       search: searchParams.get("q")?.trim() || undefined,
       status: getStatusParam(searchParams.get("status")),
       priority: searchParams.get("priority") as TicketListFilters["priority"],
+      assignee: getAssigneeParam(searchParams.get("assignee")),
       category: searchParams.get("category") ?? "all",
       aiNeedsReview: getAIReviewParam(searchParams.get("ai_review")),
       aiSentiment: getAISentimentParam(searchParams.get("ai_sentiment")),
@@ -266,7 +273,11 @@ export function TicketListView({
         <div
           className={cn(
             "grid gap-2",
-            profile.role === "customer" ? "md:grid-cols-2" : "md:grid-cols-4",
+            profile.role === "customer"
+              ? "md:grid-cols-2"
+              : profile.role === "admin"
+                ? "md:grid-cols-5"
+                : "md:grid-cols-4",
           )}
         >
           {profile.role === "customer" ? null : (
@@ -300,6 +311,25 @@ export function TicketListView({
                   </option>
                 ))}
               </select>
+
+              {profile.role === "admin" ? (
+                <select
+                  className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                  value={filters.assignee ?? "all"}
+                  disabled={agentsQuery.isLoading}
+                  onChange={(event) =>
+                    updateParams({ assignee: event.target.value, page: "1" })
+                  }
+                >
+                  <option value="all">전체 담당자</option>
+                  <option value="unassigned">담당자 지정 전</option>
+                  {(agentsQuery.data ?? []).map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
             </>
           )}
 

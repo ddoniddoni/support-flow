@@ -13,11 +13,13 @@ import { cn } from "@/lib/utils";
 import type {
   AISentiment,
   AIUrgency,
+  Role,
   TicketPriority,
   TicketStatus,
 } from "@/types/domain";
 
 import type {
+  AssigneeWorkloadItem,
   DashboardStats,
   DashboardTicket,
   DistributionItem,
@@ -91,6 +93,7 @@ type OperationsPreviewProps = {
   ctaLabel?: string;
   emptyHref?: string;
   emptyLabel?: string;
+  profileRole?: Role;
   ticketHrefMode?: "detail" | "tickets";
 };
 
@@ -142,26 +145,6 @@ function getAssigneeLabel(ticket: DashboardTicket) {
   }
 
   return isCompletedTicket(ticket) ? "배정 없이 완료" : "담당자 지정 전";
-}
-
-function getWorkloadItems(tickets: DashboardTicket[]) {
-  const counts = new Map<string, number>();
-
-  tickets.forEach((ticket) => {
-    const assignee = getAssigneeLabel(ticket);
-    counts.set(assignee, (counts.get(assignee) ?? 0) + 1);
-  });
-
-  const items = Array.from(counts.entries())
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3);
-  const maxCount = Math.max(...items.map(([, count]) => count), 1);
-
-  return items.map(([label, count]) => ({
-    label,
-    value: `${count}건`,
-    width: `${Math.max(Math.round((count / maxCount) * 100), 12)}%`,
-  }));
 }
 
 function ToneBadge({ children, tone }: ToneBadgeProps) {
@@ -316,6 +299,100 @@ function DistributionPanel({
   );
 }
 
+function getAssigneeHref(item: AssigneeWorkloadItem) {
+  const assignee = item.assigneeId ?? "unassigned";
+
+  return `/tickets?status=answer_pending&assignee=${assignee}`;
+}
+
+function AssigneeManagementPanel({
+  isAdmin,
+  items,
+}: {
+  isAdmin: boolean;
+  items: AssigneeWorkloadItem[];
+}) {
+  const maxCount = Math.max(
+    ...items.map((item) => item.answerPendingCount),
+    1,
+  );
+
+  return (
+    <div className="rounded-lg border border-border bg-background p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            {isAdmin ? "담당자 관리" : "내 담당 문의"}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {isAdmin
+              ? "답변 대기 문의를 담당자별로 확인합니다."
+              : "내게 배정된 답변 대기 문의입니다."}
+          </p>
+        </div>
+        {isAdmin ? (
+          <Link
+            className={buttonVariants({ size: "sm", variant: "outline" })}
+            href="/tickets?status=answer_pending"
+          >
+            관리
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {items.length ? (
+          items.slice(0, 5).map((item) => {
+            const width = `${Math.max(
+              Math.round((item.answerPendingCount / maxCount) * 100),
+              12,
+            )}%`;
+            const content = (
+              <>
+                <div className="flex items-center justify-between gap-3 text-xs">
+                  <span className="min-w-0 truncate font-medium text-foreground">
+                    {item.label}
+                  </span>
+                  <span className="shrink-0 text-muted-foreground">
+                    {item.answerPendingCount}건
+                  </span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-muted">
+                  <div
+                    className="h-2 rounded-full bg-primary"
+                    style={{ width }}
+                  />
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  주의 {item.needsReviewCount}건 · 긴급 {item.urgentCount}건
+                </p>
+              </>
+            );
+
+            return isAdmin ? (
+              <Link
+                key={item.key}
+                className="block rounded-md p-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+                href={getAssigneeHref(item)}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div key={item.key} className="rounded-md p-2">
+                {content}
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-xs leading-5 text-muted-foreground">
+            답변 대기 문의가 생기면 담당자별 현황이 표시됩니다.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EmptyQueue({
   emptyHref,
   emptyLabel,
@@ -355,12 +432,13 @@ export function OperationsPreview({
   ctaLabel = "전체 보기",
   emptyHref,
   emptyLabel,
+  profileRole = "agent",
   stats,
   ticketHrefMode = "detail",
 }: OperationsPreviewProps) {
   const hasTickets = stats.recentTickets.length > 0;
   const selectedTicket = getSelectedTicket(stats);
-  const workloadItems = getWorkloadItems(stats.recentTickets);
+  const isAdmin = profileRole === "admin";
   const answerPendingCount = stats.openTickets + stats.inProgressTickets;
   const metrics = [
     {
@@ -492,35 +570,10 @@ export function OperationsPreview({
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-background p-4">
-            <p className="text-sm font-semibold text-foreground">상담원 현황</p>
-            <div className="mt-4 grid gap-3">
-              {workloadItems.length ? (
-                workloadItems.map((item) => (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-foreground">
-                        {item.label}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {item.value}
-                      </span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-muted">
-                      <div
-                        className="h-2 rounded-full bg-primary"
-                        style={{ width: item.width }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs leading-5 text-muted-foreground">
-                  배정된 문의가 생기면 상담원별 업무량이 표시됩니다.
-                </p>
-              )}
-            </div>
-          </div>
+          <AssigneeManagementPanel
+            isAdmin={isAdmin}
+            items={stats.assigneeWorkload}
+          />
 
           <DistributionPanel
             description="현재 문의의 답변 상태별 비율입니다."

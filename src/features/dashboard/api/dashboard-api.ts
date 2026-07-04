@@ -5,7 +5,10 @@ import { type AISentiment, type AIUrgency } from "@/types/domain";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type DashboardProfile = Pick<Tables<"profiles">, "id" | "role">;
-export type DashboardTicketPerson = Pick<Tables<"profiles">, "email" | "name">;
+export type DashboardTicketPerson = Pick<
+  Tables<"profiles">,
+  "email" | "id" | "name"
+>;
 export type DashboardTicket = Pick<
   Tables<"tickets">,
   | "id"
@@ -37,6 +40,16 @@ export type DistributionItem = {
   percentage: number;
 };
 
+export type AssigneeWorkloadItem = {
+  key: string;
+  assigneeId: string | null;
+  label: string;
+  email: string | null;
+  answerPendingCount: number;
+  urgentCount: number;
+  needsReviewCount: number;
+};
+
 export type DashboardStats = {
   totalTickets: number;
   openTickets: number;
@@ -47,6 +60,7 @@ export type DashboardStats = {
   createdToday: number;
   statusDistribution: DistributionItem[];
   categoryDistribution: DistributionItem[];
+  assigneeWorkload: AssigneeWorkloadItem[];
   recentTickets: DashboardTicket[];
 };
 
@@ -111,6 +125,41 @@ function getDashboardStatusKey(ticket: DashboardTicket) {
   return "answer_pending";
 }
 
+function buildAssigneeWorkload(tickets: DashboardTicket[]) {
+  const workload = new Map<string, AssigneeWorkloadItem>();
+
+  tickets.forEach((ticket) => {
+    const assigneeId = ticket.assignee?.id ?? null;
+    const key = assigneeId ?? "unassigned";
+    const current = workload.get(key) ?? {
+      key,
+      assigneeId,
+      label: ticket.assignee?.name ?? "담당자 지정 전",
+      email: ticket.assignee?.email ?? null,
+      answerPendingCount: 0,
+      urgentCount: 0,
+      needsReviewCount: 0,
+    };
+
+    current.answerPendingCount += 1;
+    current.urgentCount += ticket.priority === "urgent" ? 1 : 0;
+    current.needsReviewCount += ticket.ai_needs_review ? 1 : 0;
+    workload.set(key, current);
+  });
+
+  return Array.from(workload.values()).sort((a, b) => {
+    if (a.assigneeId === null && b.assigneeId !== null) {
+      return -1;
+    }
+
+    if (a.assigneeId !== null && b.assigneeId === null) {
+      return 1;
+    }
+
+    return b.answerPendingCount - a.answerPendingCount;
+  });
+}
+
 export async function getDashboardStats(
   profile: DashboardProfile,
   supabase: DashboardSupabaseClient = createSupabaseBrowserClient(),
@@ -131,8 +180,8 @@ export async function getDashboardStats(
         ai_confidence,
         created_at,
         updated_at,
-        customer:profiles!tickets_customer_id_fkey(email,name),
-        assignee:profiles!tickets_assignee_id_fkey(email,name)
+        customer:profiles!tickets_customer_id_fkey(id,email,name),
+        assignee:profiles!tickets_assignee_id_fkey(id,email,name)
       `,
     );
 
@@ -196,6 +245,7 @@ export async function getDashboardStats(
       (ticket) => ticket.category,
       (key) => categoryLabels[key] ?? key,
     ),
+    assigneeWorkload: buildAssigneeWorkload(activeTickets),
     recentTickets: activeTickets.slice(0, 5),
   };
 }
