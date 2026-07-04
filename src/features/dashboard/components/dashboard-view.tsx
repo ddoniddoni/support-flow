@@ -71,6 +71,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
           ctaLabel="문의 목록"
           emptyHref={profile.role === "customer" ? "/tickets/new" : "/tickets"}
           emptyLabel={profile.role === "customer" ? "문의 등록" : "문의 목록"}
+          profileRole={profile.role}
           stats={statsQuery.data}
         />
       ) : null}

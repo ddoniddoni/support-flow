@@ -105,6 +105,60 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatDateGroup(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }).format(new Date(value));
+}
+
+function getDateGroupKey(value: string) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function groupItemsByDate<T>(
+  items: T[],
+  getDate: (item: T) => string,
+) {
+  const groups = new Map<
+    string,
+    {
+      key: string;
+      label: string;
+      items: T[];
+    }
+  >();
+
+  items.forEach((item) => {
+    const value = getDate(item);
+    const key = getDateGroupKey(value);
+    const group = groups.get(key) ?? {
+      key,
+      label: formatDateGroup(value),
+      items: [],
+    };
+
+    group.items.push(item);
+    groups.set(key, group);
+  });
+
+  return Array.from(groups.values());
+}
+
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
     return "접수번호 미지정";
@@ -208,6 +262,8 @@ function ReplyList({
   emptyText: string;
   isCustomerView?: boolean;
 }) {
+  const groupedReplies = groupItemsByDate(replies, (reply) => reply.created_at);
+
   return (
     <Card className="rounded-lg">
       <CardHeader>
@@ -216,19 +272,29 @@ function ReplyList({
       </CardHeader>
       <CardContent className="grid gap-3">
         {replies.length ? (
-          replies.map((reply) => (
-            <div
-              key={reply.id}
-              className="rounded-lg border border-border bg-muted/40 p-3"
-            >
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {reply.content}
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {formatReplyAuthor(reply, isCustomerView)} ·{" "}
-                {formatDateTime(reply.created_at)}
-              </p>
-            </div>
+          groupedReplies.map((group) => (
+            <section key={group.key} className="grid gap-2">
+              <div className="flex items-center gap-3">
+                <p className="shrink-0 text-xs font-medium text-muted-foreground">
+                  {group.label}
+                </p>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              {group.items.map((reply) => (
+                <div
+                  key={reply.id}
+                  className="rounded-lg border border-border bg-muted/40 p-3"
+                >
+                  <p className="whitespace-pre-wrap text-sm text-foreground">
+                    {reply.content}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {formatReplyAuthor(reply, isCustomerView)} ·{" "}
+                    {formatTime(reply.created_at)}
+                  </p>
+                </div>
+              ))}
+            </section>
           ))
         ) : (
           <p className="text-sm text-muted-foreground">{emptyText}</p>
@@ -296,6 +362,8 @@ function PublicReplyCompletedCard() {
 }
 
 function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
+  const groupedLogs = groupItemsByDate(logs, (log) => log.created_at);
+
   return (
     <Card className="rounded-lg">
       <CardHeader>
@@ -306,19 +374,29 @@ function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
       </CardHeader>
       <CardContent className="grid gap-3">
         {logs.length ? (
-          logs.map((log) => (
-            <div key={log.id} className="border-l-2 border-border pl-3">
-              <p className="text-sm font-medium text-foreground">
-                {actionLabels[log.action] ?? log.action}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {formatLogValue(log.before_value)} →{" "}
-                {formatLogValue(log.after_value)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {formatDateTime(log.created_at)}
-              </p>
-            </div>
+          groupedLogs.map((group) => (
+            <section key={group.key} className="grid gap-2">
+              <div className="flex items-center gap-3">
+                <p className="shrink-0 text-xs font-medium text-muted-foreground">
+                  {group.label}
+                </p>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              {group.items.map((log) => (
+                <div key={log.id} className="border-l-2 border-border pl-3">
+                  <p className="text-sm font-medium text-foreground">
+                    {actionLabels[log.action] ?? log.action}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {formatLogValue(log.before_value)} →{" "}
+                    {formatLogValue(log.after_value)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {formatTime(log.created_at)}
+                  </p>
+                </div>
+              ))}
+            </section>
           ))
         ) : (
           <p className="text-sm text-muted-foreground">
