@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { Tables } from "@/types/database";
-import { ticketPriorities, ticketStatuses } from "@/types/domain";
+import { ticketPriorities, type TicketStatus } from "@/types/domain";
 
 import {
   correctAIAnalysisSchema,
@@ -53,12 +53,14 @@ const priorityLabels: Record<(typeof ticketPriorities)[number], string> = {
   urgent: "긴급",
 };
 
-const statusLabels: Record<(typeof ticketStatuses)[number], string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+const statusLabels: Record<TicketStatus, string> = {
+  open: "답변 대기",
+  in_progress: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
+
+const visibleStatusOptions = ["open", "resolved", "closed"] as const;
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
@@ -124,7 +126,10 @@ function CorrectAnalysisForm({
       reason: analysis.reason,
       replyDraft: analysis.reply_draft ?? "",
       suggestedPriority: analysis.suggested_priority ?? "none",
-      suggestedStatus: analysis.suggested_status ?? "none",
+      suggestedStatus:
+        analysis.suggested_status === "in_progress"
+          ? "open"
+          : analysis.suggested_status ?? "none",
       note: "",
     },
   });
@@ -230,7 +235,7 @@ function CorrectAnalysisForm({
             {...form.register("suggestedStatus")}
           >
             <option value="none">없음</option>
-            {ticketStatuses.map((status) => (
+            {visibleStatusOptions.map((status) => (
               <option key={status} value={status}>
                 {statusLabels[status]}
               </option>

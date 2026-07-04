@@ -46,7 +46,7 @@ export async function createTicket(input: CreateTicketInput) {
 
 export type TicketListFilters = {
   search?: string;
-  status?: TicketStatus | "all";
+  status?: TicketStatus | "all" | "answer_pending";
   priority?: TicketPriority | "all";
   category?: string;
   aiNeedsReview?: "all" | "yes" | "no";
@@ -104,7 +104,9 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
     query = query.ilike("title", `%${filters.search}%`);
   }
 
-  if (filters.status && filters.status !== "all") {
+  if (filters.status === "answer_pending") {
+    query = query.in("status", ["open", "in_progress"]);
+  } else if (filters.status && filters.status !== "all") {
     query = query.eq("status", filters.status);
   }
 

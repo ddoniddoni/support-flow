@@ -38,7 +38,7 @@ export default async function NewTicketPage() {
           <CardHeader>
             <CardTitle>문의 정보</CardTitle>
             <CardDescription>
-              접수 후 지원팀이 내용을 검토하고 처리 상태를 안내합니다.
+              접수 후 지원팀이 내용을 검토하고 답변 상태를 안내합니다.
             </CardDescription>
           </CardHeader>
           <CardContent>

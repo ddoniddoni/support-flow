@@ -110,7 +110,7 @@ export function TicketReplyForm({
           className="min-h-28 resize-y"
           placeholder={
             isInternal
-              ? "지원팀끼리 공유할 처리 맥락을 남겨 주세요."
+              ? "지원팀끼리 공유할 응대 맥락을 남겨 주세요."
               : "고객에게 전달할 답변을 입력해 주세요."
           }
           disabled={pending}

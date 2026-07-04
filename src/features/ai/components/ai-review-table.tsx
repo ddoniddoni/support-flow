@@ -60,7 +60,7 @@ function getAssigneeLabel(ticket: NonNullable<AIReviewQueueItem["ticket"]>) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "처리 완료"
+    ? "배정 없이 완료"
     : "담당자 지정 전";
 }
 

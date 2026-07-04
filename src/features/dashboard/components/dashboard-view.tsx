@@ -20,10 +20,10 @@ function getRoleLabel(role: Tables<"profiles">["role"]) {
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
   if (role === "agent") {
-    return "오늘 처리할 문의와 AI 주의 신호를 확인합니다.";
+    return "오늘 확인할 문의와 AI 주의 신호를 확인합니다.";
   }
 
-  return "지원팀의 처리 상태와 위험 신호를 한눈에 확인합니다.";
+  return "지원팀의 답변 상태와 위험 신호를 한눈에 확인합니다.";
 }
 
 export function DashboardView({ profile }: DashboardViewProps) {

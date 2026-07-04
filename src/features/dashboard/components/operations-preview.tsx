@@ -1,6 +1,6 @@
 import {
+  Archive,
   CheckCircle2,
-  Clock3,
   Inbox,
   TicketCheck,
   type LucideIcon,
@@ -24,9 +24,9 @@ import type {
 } from "../api/dashboard-api";
 
 const statusLabels: Record<TicketStatus, string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+  open: "답변 대기",
+  in_progress: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
 
@@ -47,7 +47,7 @@ const categoryLabels: Record<string, string> = {
 
 const statusTones: Record<TicketStatus, ToneBadgeProps["tone"]> = {
   open: "blue",
-  in_progress: "amber",
+  in_progress: "blue",
   resolved: "emerald",
   closed: "muted",
 };
@@ -141,7 +141,7 @@ function getAssigneeLabel(ticket: DashboardTicket) {
     return ticket.assignee.name;
   }
 
-  return isCompletedTicket(ticket) ? "처리 완료" : "담당자 지정 전";
+  return isCompletedTicket(ticket) ? "배정 없이 완료" : "담당자 지정 전";
 }
 
 function getWorkloadItems(tickets: DashboardTicket[]) {
@@ -328,7 +328,7 @@ function EmptyQueue({
       <div>
         <Inbox className="mx-auto size-8 text-muted-foreground" />
         <p className="mt-3 text-sm font-medium text-foreground">
-          처리할 문의가 없습니다
+          확인할 문의가 없습니다
         </p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
           신규 문의가 접수되면 운영자가 먼저 확인할 항목을 보여줍니다.
@@ -361,6 +361,7 @@ export function OperationsPreview({
   const hasTickets = stats.recentTickets.length > 0;
   const selectedTicket = getSelectedTicket(stats);
   const workloadItems = getWorkloadItems(stats.recentTickets);
+  const answerPendingCount = stats.openTickets + stats.inProgressTickets;
   const metrics = [
     {
       detail: `오늘 접수 ${stats.createdToday}건`,
@@ -370,25 +371,25 @@ export function OperationsPreview({
       value: String(stats.totalTickets),
     },
     {
-      detail: "상담 시작 전 문의",
+      detail: "아직 답변 전인 문의",
       icon: Inbox,
-      label: "접수 대기",
+      label: "답변 대기",
       tone: "text-blue-600",
-      value: String(stats.openTickets),
-    },
-    {
-      detail: "담당자가 응대 중",
-      icon: Clock3,
-      label: "처리 중",
-      tone: "text-amber-600",
-      value: String(stats.inProgressTickets),
+      value: String(answerPendingCount),
     },
     {
       detail: `해결률 ${getResolvedRate(stats)}%`,
       icon: CheckCircle2,
-      label: "해결 완료",
+      label: "답변 완료",
       tone: "text-emerald-600",
       value: String(stats.resolvedTickets),
+    },
+    {
+      detail: "후속 추적 종료",
+      icon: Archive,
+      label: "종료",
+      tone: "text-muted-foreground",
+      value: String(stats.closedTickets),
     },
   ];
   const getTicketHref = (ticketId: string) =>
@@ -408,10 +409,10 @@ export function OperationsPreview({
             <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  처리 대상 문의
+                  확인할 문의
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  주의 신호와 접수 상태를 기준으로 먼저 볼 문의입니다.
+                  주의 신호와 답변 대기 상태를 기준으로 먼저 볼 문의입니다.
                 </p>
               </div>
               {ctaHref ? (
@@ -448,7 +449,7 @@ export function OperationsPreview({
                   먼저 확인할 문의
                 </p>
                 <h2 className="mt-2 text-base font-semibold text-foreground">
-                  {selectedTicket?.title ?? "처리할 문의가 없습니다"}
+                  {selectedTicket?.title ?? "확인할 문의가 없습니다"}
                 </h2>
               </div>
               {selectedTicket ? (
@@ -463,7 +464,7 @@ export function OperationsPreview({
             <div className="mt-4 grid gap-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">처리 상태</p>
+                  <p className="text-xs text-muted-foreground">답변 상태</p>
                   <p className="mt-1 font-medium text-foreground">
                     {selectedTicket
                       ? statusLabels[selectedTicket.status]
@@ -522,9 +523,9 @@ export function OperationsPreview({
           </div>
 
           <DistributionPanel
-            description="현재 문의의 처리 단계별 비율입니다."
+            description="현재 문의의 답변 상태별 비율입니다."
             items={stats.statusDistribution}
-            title="처리 상태 분포"
+            title="답변 상태 분포"
           />
           <DistributionPanel
             description="문의 유형별 접수 비중입니다."

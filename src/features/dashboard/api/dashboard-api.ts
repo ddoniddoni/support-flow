@@ -1,12 +1,7 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Database } from "@/types/database";
 import type { Tables } from "@/types/database";
-import {
-  type AISentiment,
-  type AIUrgency,
-  ticketStatuses,
-  type TicketStatus,
-} from "@/types/domain";
+import { type AISentiment, type AIUrgency } from "@/types/domain";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type DashboardProfile = Pick<Tables<"profiles">, "id" | "role">;
@@ -47,6 +42,7 @@ export type DashboardStats = {
   openTickets: number;
   inProgressTickets: number;
   resolvedTickets: number;
+  closedTickets: number;
   urgentTickets: number;
   createdToday: number;
   statusDistribution: DistributionItem[];
@@ -54,10 +50,13 @@ export type DashboardStats = {
   recentTickets: DashboardTicket[];
 };
 
-const statusLabels: Record<TicketStatus, string> = {
-  open: "접수 대기",
-  in_progress: "처리 중",
-  resolved: "해결 완료",
+const dashboardStatusKeys = ["answer_pending", "resolved", "closed"] as const;
+const dashboardStatusLabels: Record<
+  (typeof dashboardStatusKeys)[number],
+  string
+> = {
+  answer_pending: "답변 대기",
+  resolved: "답변 완료",
   closed: "종료",
 };
 
@@ -102,6 +101,14 @@ function getCategoryKeys(tickets: DashboardTicket[]) {
     .filter((category) => !knownKeys.includes(category));
 
   return [...knownKeys, ...Array.from(new Set(dynamicKeys))];
+}
+
+function getDashboardStatusKey(ticket: DashboardTicket) {
+  if (ticket.status === "resolved" || ticket.status === "closed") {
+    return ticket.status;
+  }
+
+  return "answer_pending";
 }
 
 export async function getDashboardStats(
@@ -169,6 +176,8 @@ export async function getDashboardStats(
     ).length,
     resolvedTickets: tickets.filter((ticket) => ticket.status === "resolved")
       .length,
+    closedTickets: tickets.filter((ticket) => ticket.status === "closed")
+      .length,
     urgentTickets: tickets.filter((ticket) => ticket.priority === "urgent")
       .length,
     createdToday: tickets.filter(
@@ -176,9 +185,10 @@ export async function getDashboardStats(
     ).length,
     statusDistribution: buildDistribution(
       tickets,
-      ticketStatuses,
-      (ticket) => ticket.status,
-      (key) => statusLabels[key as TicketStatus],
+      dashboardStatusKeys,
+      getDashboardStatusKey,
+      (key) =>
+        dashboardStatusLabels[key as (typeof dashboardStatusKeys)[number]],
     ),
     categoryDistribution: buildDistribution(
       tickets,
