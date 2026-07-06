@@ -4,7 +4,7 @@ SupportFlow는 고객 문의를 접수하고, 지원팀이 처리 우선순위�
 
 고객은 문의를 남기고 답변을 확인합니다. 상담원은 배정된 문의를 처리하고 고객 답변과 내부 메모를 구분해 남깁니다. 관리자는 전체 문의 흐름, 담당자 배정, 응답 위험, AI 검토가 필요한 항목을 한 화면에서 확인합니다.
 
-배포: https://supportflow-gules.vercel.app/
+배포: https://support-flow-five.vercel.app/
 
 ## 제품 개요
 
