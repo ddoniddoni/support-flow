@@ -18,10 +18,20 @@ function clearSupabaseAuthCookies(
     });
 }
 
+function hasSupabaseAuthCookie(request: NextRequest) {
+  return request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
+
+  if (!hasSupabaseAuthCookie(request)) {
+    return response;
+  }
 
   const supabase = createServerClient<Database>(
     env.supabaseUrl,
