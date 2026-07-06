@@ -33,6 +33,7 @@ import {
   type CorrectAIAnalysisFormInput,
 } from "../schemas/review-ai-analysis-schema";
 import type { TicketAIAnalysis } from "../types";
+import { formatAIVisibleText } from "../utils/ai-display-text";
 import { useAIAnalysis } from "../hooks/use-ai-analysis";
 import { useAnalyzeTicket } from "../hooks/use-analyze-ticket";
 import { useReviewAIAnalysis } from "../hooks/use-review-ai-analysis";
@@ -123,7 +124,7 @@ function CorrectAnalysisForm({
     resolver: zodResolver(correctAIAnalysisSchema),
     defaultValues: {
       summary: analysis.summary,
-      reason: analysis.reason,
+      reason: formatAIVisibleText(analysis.reason),
       replyDraft: analysis.reply_draft ?? "",
       suggestedPriority: analysis.suggested_priority ?? "none",
       suggestedStatus:
@@ -363,7 +364,7 @@ export function AIAssistantPanel({
                     <p className="font-medium">AI 검토가 필요합니다.</p>
                     {analysis.escalation_reason ? (
                       <p className="mt-1 text-red-600">
-                        {analysis.escalation_reason}
+                        {formatAIVisibleText(analysis.escalation_reason)}
                       </p>
                     ) : null}
                   </div>

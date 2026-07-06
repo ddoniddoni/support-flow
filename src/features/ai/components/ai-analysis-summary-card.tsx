@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import type { AISentiment, AIUrgency, TicketPriority, TicketStatus } from "@/types/domain";
 
 import { AIConfidenceBadge } from "./ai-confidence-badge";
+import { formatAIVisibleText } from "../utils/ai-display-text";
 
 const sentimentLabels: Record<AISentiment, string> = {
   positive: "긍정",
@@ -153,7 +154,7 @@ export function AIAnalysisSummaryCard({
           판단 근거
         </p>
         <p className="text-sm leading-6 text-muted-foreground">
-          {analysis.reason}
+          {formatAIVisibleText(analysis.reason)}
         </p>
       </div>
 
