@@ -50,6 +50,9 @@ const roleLabels: Record<Tables<"profiles">["role"], string> = {
   admin: "관리자",
 };
 
+const sidebarActionButtonClass =
+  "border-sidebar-border bg-sidebar-accent/60 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:border-sidebar-border dark:bg-sidebar-accent/60 dark:text-sidebar-foreground dark:hover:bg-sidebar-accent";
+
 function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
   const items: NavItem[] = [
     {
@@ -406,8 +409,9 @@ export function WorkspaceHeader({
               isCompact ? "justify-items-center" : "grid-cols-[auto_1fr]",
             )}
           >
-            <ThemeToggle />
+            <ThemeToggle className={sidebarActionButtonClass} />
             <LogoutButton
+              className={sidebarActionButtonClass}
               showLabel={!isCompact}
               size={isCompact ? "icon" : "default"}
             />
@@ -431,8 +435,8 @@ export function WorkspaceHeader({
         <div className="flex items-center justify-between gap-3">
           <WorkspaceLogo href={workspaceHomeHref} mode="expanded" />
           <div className="flex shrink-0 items-center gap-2">
-            <ThemeToggle />
-            <LogoutButton />
+            <ThemeToggle className={sidebarActionButtonClass} />
+            <LogoutButton className={sidebarActionButtonClass} />
           </div>
         </div>
         <nav

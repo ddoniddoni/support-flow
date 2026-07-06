@@ -6,6 +6,12 @@
 
 배포: https://supportflow-gules.vercel.app/
 
+## 빠른 소개
+
+SupportFlow v2는 고객 문의를 접수하고, 담당자와 상태를 관리하며, AI가 문의 요약과 긴급도 판단을 보조하는 고객지원 운영 대시보드입니다. 공개 홈 화면은 실제 제품 화면 캡처를 사용한 랜딩 페이지로 구성했고, 로그인 후에는 역할에 따라 문의함, 대시보드, AI 검토, 리포트 화면을 확인할 수 있습니다.
+
+실제 AI 키가 없어도 `AI_PROVIDER=mock`으로 전체 데모 흐름이 동작합니다.
+
 ## 어떤 제품인가
 
 SupportFlow는 고객 문의가 접수된 뒤 해결되기까지의 운영 흐름을 관리합니다.
@@ -364,9 +370,14 @@ AI 확장 테이블:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 AI_PROVIDER=mock
+OPENAI_API_KEY=
+AI_MODEL=
 AI_CONFIDENCE_REVIEW_THRESHOLD=0.7
 ```
+
+Vercel 배포 시에는 위 값을 Project Settings의 Environment Variables에 등록합니다. `SUPABASE_SERVICE_ROLE_KEY`는 서버 전용 값이므로 `NEXT_PUBLIC_` prefix를 붙이지 않습니다. OpenAI 연동을 쓰지 않는 데모 배포에서는 `AI_PROVIDER=mock`만으로 충분합니다.
 
 Supabase SQL 문서는 `docs/`에 있습니다.
 

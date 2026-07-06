@@ -430,7 +430,7 @@ function getReasonText({
   sentiment: TicketAIAnalysisOutput["sentiment"];
   urgency: TicketAIAnalysisOutput["urgency"];
 }) {
-  return `Mock AI가 제목과 본문에서 ${categoryLabels[category]} / ${intentLabels[intent]} 관련 표현을 감지했습니다. 감정은 ${sentimentLabels[sentiment]}, 긴급도는 ${urgencyLabels[urgency]}로 판단했으며 신뢰도는 ${Math.round(confidence * 100)}%입니다.`;
+  return `AI가 제목과 본문에서 ${categoryLabels[category]} / ${intentLabels[intent]} 관련 표현을 감지했습니다. 감정은 ${sentimentLabels[sentiment]}, 긴급도는 ${urgencyLabels[urgency]}로 판단했으며 신뢰도는 ${Math.round(confidence * 100)}%입니다.`;
 }
 
 function getReplyDraftText(

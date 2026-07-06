@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import type { AISentiment, AIUrgency } from "@/types/domain";
 
 import type { AIReviewQueueItem } from "../api/get-ai-review-queue";
+import { formatAIVisibleText } from "../utils/ai-display-text";
 import { AIConfidenceBadge } from "./ai-confidence-badge";
 
 type AIReviewTableProps = {
@@ -172,7 +173,7 @@ function MobileReviewCard({ item }: { item: AIReviewQueueItem }) {
       </p>
       {item.escalation_reason ? (
         <p className="rounded-md border border-red-200 bg-red-50 p-2 text-xs leading-5 text-red-700">
-          {item.escalation_reason}
+          {formatAIVisibleText(item.escalation_reason)}
         </p>
       ) : null}
       <div className="text-xs text-muted-foreground">
@@ -231,7 +232,9 @@ export function AIReviewTable({ items }: AIReviewTableProps) {
                       {item.summary}
                     </p>
                     <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {item.escalation_reason ?? item.reason}
+                      {formatAIVisibleText(
+                        item.escalation_reason ?? item.reason,
+                      )}
                     </p>
                   </TableCell>
                   <TableCell className="text-right text-xs tabular-nums text-muted-foreground">

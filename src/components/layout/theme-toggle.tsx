@@ -13,6 +13,10 @@ const themeLabels = {
 
 type ThemeName = keyof typeof themeLabels;
 
+type ThemeToggleProps = {
+  className?: string;
+};
+
 function subscribe() {
   return () => {};
 }
@@ -29,7 +33,7 @@ function isThemeName(value: string | undefined): value is ThemeName {
   return value === "light" || value === "dark";
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme();
   const mounted = useSyncExternalStore(
     subscribe,
@@ -47,6 +51,7 @@ export function ThemeToggle() {
       type="button"
       variant="outline"
       size="icon"
+      className={className}
       aria-label={`테마 변경: 현재 ${themeLabels[currentTheme]}`}
       title={`현재 ${themeLabels[currentTheme]}`}
       onClick={() => setTheme(nextTheme)}

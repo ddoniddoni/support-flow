@@ -47,28 +47,6 @@ const categoryLabels: Record<string, string> = {
   other: "기타",
 };
 
-const tagLabels: Record<string, string> = {
-  technical: "기술 지원",
-  billing: "결제",
-  account: "계정",
-  product: "제품 문의",
-  shipping: "배송",
-  refund: "환불",
-  complaint: "불만",
-  other: "기타",
-  question: "문의",
-  "refund-request": "환불 요청",
-  "bug-report": "오류 신고",
-  "account-help": "계정 지원",
-  "billing-issue": "결제 문제",
-  "cancellation-request": "해지 요청",
-  "feature-request": "기능 요청",
-  "priority-review": "검토 필요",
-  "repeat-contact": "반복 문의",
-  "needs-human-review": "검토 필요",
-  vip: "VIP",
-};
-
 const customerStatusLabels: Record<TicketStatus, string> = {
   open: "답변 대기",
   in_progress: "답변 대기",
@@ -82,7 +60,7 @@ const adminColumnWidths = [
   "w-[92px]",
   "w-[88px]",
   "w-[132px]",
-  "w-[164px]",
+  "w-[88px]",
   "w-[104px]",
   "w-[104px]",
 ];
@@ -163,12 +141,13 @@ function formatDate(value: string) {
 }
 
 function formatShortDateTime(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
+  const date = new Date(value);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${month}.${day} ${hours}:${minutes}`;
 }
 
 function formatTicketNumber(ticketNumber: number | null | undefined) {
@@ -230,6 +209,7 @@ function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
     <Badge
       variant="outline"
       className={cn(
+        "whitespace-nowrap",
         sentiment === "negative" && "border-red-200 bg-red-50 text-red-700",
         sentiment === "neutral" && "border-border bg-muted/60 text-foreground",
         sentiment === "positive" &&
@@ -246,6 +226,7 @@ function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
     <Badge
       variant="outline"
       className={cn(
+        "whitespace-nowrap",
         urgency === "critical" && "border-red-200 bg-red-50 text-red-700",
         urgency === "high" && "border-orange-200 bg-orange-50 text-orange-700",
         urgency === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
@@ -259,12 +240,12 @@ function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
 
 function SLABadge({ ticket }: { ticket: TicketListItem }) {
   const state = getSLAState(ticket);
-  const label = state.tone === "done" ? state.label : `SLA ${state.label}`;
 
   return (
     <Badge
       variant="outline"
       className={cn(
+        "whitespace-nowrap",
         state.tone === "normal" &&
           "border-border bg-background text-muted-foreground",
         state.tone === "risk" &&
@@ -273,7 +254,7 @@ function SLABadge({ ticket }: { ticket: TicketListItem }) {
         state.tone === "done" && "border-border bg-muted text-muted-foreground",
       )}
     >
-      {label}
+      {state.label}
     </Badge>
   );
 }
@@ -281,49 +262,54 @@ function SLABadge({ ticket }: { ticket: TicketListItem }) {
 function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
   if (!ticket.latest_ai_analysis_id) {
     return (
-      <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground">
+      <Badge
+        variant="outline"
+        className="whitespace-nowrap border-border bg-muted/60 text-muted-foreground"
+      >
         AI 대기
       </Badge>
     );
   }
 
+  if (ticket.ai_needs_review) {
+    return (
+      <Badge
+        variant="outline"
+        className="whitespace-nowrap border-red-200 bg-red-50 text-red-700"
+      >
+        주의 필요
+      </Badge>
+    );
+  }
+
+  if (ticket.ai_urgency) {
+    return <UrgencyBadge urgency={ticket.ai_urgency} />;
+  }
+
+  if (ticket.ai_sentiment) {
+    return <SentimentBadge sentiment={ticket.ai_sentiment} />;
+  }
+
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {ticket.ai_needs_review ? (
-        <Badge
-          variant="outline"
-          className="border-red-200 bg-red-50 text-red-700"
-        >
-          주의 필요
-        </Badge>
-      ) : null}
-      {ticket.ai_sentiment ? (
-        <SentimentBadge sentiment={ticket.ai_sentiment} />
-      ) : null}
-      {ticket.ai_urgency ? <UrgencyBadge urgency={ticket.ai_urgency} /> : null}
-    </div>
+    <Badge
+      variant="outline"
+      className="whitespace-nowrap border-border bg-muted/60 text-muted-foreground"
+    >
+      AI 완료
+    </Badge>
   );
 }
 
 function TicketTagList({ ticket }: { ticket: TicketListItem }) {
-  const tags = Array.from(new Set([
-    categoryLabels[ticket.category] ?? ticket.category,
-    ...(ticket.latest_ai_analysis?.tags.map((tag) => tagLabels[tag] ?? tag) ??
-      []),
-  ])).slice(0, 3);
+  const tag = categoryLabels[ticket.category] ?? ticket.category;
 
   return (
-    <div className="flex min-w-0 flex-wrap gap-1">
-      {tags.map((tag, index) => (
-        <Badge
-          className="max-w-[8rem] truncate border-border bg-background text-muted-foreground"
-          key={`${tag}-${index}`}
-          variant="outline"
-        >
-          {tag}
-        </Badge>
-      ))}
-    </div>
+    <Badge
+      className="max-w-[4.75rem] truncate whitespace-nowrap border-border bg-background text-muted-foreground"
+      variant="outline"
+    >
+      {tag}
+    </Badge>
   );
 }
 
@@ -410,7 +396,7 @@ export function TicketListTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-xs md:block">
-        <Table className="min-w-[1040px] table-fixed">
+        <Table className="min-w-[960px] table-fixed">
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={index} className={width} />

@@ -6,7 +6,7 @@ export function createOpenAIAIProvider(): AIProvider {
     model: process.env.AI_MODEL ?? null,
     async analyzeTicket() {
       throw new Error(
-        "OpenAI provider is not configured in this portfolio demo. Use AI_PROVIDER=mock for the full local flow.",
+        "OpenAI provider is not configured. Use the default local AI provider for the full support workflow.",
       );
     },
   };

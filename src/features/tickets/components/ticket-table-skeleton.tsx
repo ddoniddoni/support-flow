@@ -12,7 +12,7 @@ export function TicketTableSkeleton() {
   return (
     <>
       <div className="grid gap-3 md:hidden">
-        {Array.from({ length: 4 }).map((_, index) => (
+        {Array.from({ length: 7 }).map((_, index) => (
           <div key={index} className="rounded-lg border border-border bg-card p-4 shadow-sm">
             <Skeleton className="h-4 w-10/12" />
             <Skeleton className="mt-2 h-3 w-7/12" />
@@ -29,16 +29,18 @@ export function TicketTableSkeleton() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>제목</TableHead>
-              <TableHead>상태</TableHead>
+              <TableHead>문의</TableHead>
+              <TableHead>답변 상태</TableHead>
               <TableHead>우선순위</TableHead>
-              <TableHead>카테고리</TableHead>
-              <TableHead>생성일</TableHead>
-              <TableHead>수정일</TableHead>
+              <TableHead>SLA</TableHead>
+              <TableHead>담당자</TableHead>
+              <TableHead>태그</TableHead>
+              <TableHead>AI</TableHead>
+              <TableHead>업데이트</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 6 }).map((_, index) => (
+            {Array.from({ length: 7 }).map((_, index) => (
               <TableRow key={index}>
                 <TableCell>
                   <Skeleton className="h-4 w-64" />
@@ -51,13 +53,19 @@ export function TicketTableSkeleton() {
                   <Skeleton className="h-5 w-14 rounded-full" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-20" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-5 w-14 rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-16" />
                 </TableCell>
               </TableRow>
             ))}

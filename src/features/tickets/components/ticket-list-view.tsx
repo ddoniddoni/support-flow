@@ -2,6 +2,8 @@
 
 import {
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   Search,
 } from "lucide-react";
@@ -196,7 +198,7 @@ export function TicketListView({
         ? sort ?? defaultSort
         : defaultSort,
       page: getIntParam(searchParams.get("page"), 1),
-      pageSize: 10,
+      pageSize: 7,
     };
   }, [profile.role, searchParams]);
 
@@ -498,7 +500,7 @@ export function TicketListView({
       {!ticketsQuery.isLoading && !ticketsQuery.isError && data ? (
         <div className={cn(!hasTickets && "hidden")}>
           <TicketListTable tickets={data.tickets} role={profile.role} />
-          <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 grid justify-items-center gap-2 text-sm text-muted-foreground">
             <p>
               총 {data.total}건 중 {data.tickets.length}건 표시
             </p>
@@ -506,23 +508,25 @@ export function TicketListView({
               <Button
                 type="button"
                 variant="outline"
+                size="icon-sm"
                 disabled={page <= 1}
-                className="w-full sm:w-auto"
+                aria-label="이전 페이지"
                 onClick={() => updateParams({ page: String(page - 1) })}
               >
-                이전
+                <ChevronLeft className="size-4" aria-hidden="true" />
               </Button>
-              <span>
+              <span className="min-w-14 text-center tabular-nums">
                 {page} / {data.pageCount}
               </span>
               <Button
                 type="button"
                 variant="outline"
+                size="icon-sm"
                 disabled={page >= data.pageCount}
-                className="w-full sm:w-auto"
+                aria-label="다음 페이지"
                 onClick={() => updateParams({ page: String(page + 1) })}
               >
-                다음
+                <ChevronRight className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Activity,
   AlertTriangle,
@@ -15,6 +17,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -42,6 +55,19 @@ type MockTicket = {
   status: string;
   tags: string[];
   sentiment: "부정" | "중립" | "긍정";
+};
+
+const operationTagLabels: Record<string, string> = {
+  account: "계정",
+  api: "API",
+  billing: "결제",
+  invoice: "인보이스",
+  negative: "부정 감정",
+  payment: "결제",
+  product: "제품",
+  sso: "SSO",
+  team: "팀 관리",
+  technical: "기술 지원",
 };
 
 const flowColumns = [
@@ -166,24 +192,24 @@ const boardTickets: Record<(typeof flowColumns)[number]["key"], MockTicket[]> =
 const automationRules = [
   {
     name: "결제 실패 긴급 라우팅",
-    trigger: "payment, charge, invoice 포함",
-    action: "우선순위 긴급 + Billing 담당자 지정",
+    trigger: "결제 실패, 청구, 인보이스 관련 표현이 포함된 문의",
+    action: "우선순위를 긴급으로 올리고 결제 담당자에게 배정",
     status: "활성",
     lastRun: "오늘 09:42",
     runCount: "18",
   },
   {
     name: "부정 감정 SLA 단축",
-    trigger: "AI 감정 = 부정 또는 긴급도 = critical",
-    action: "SLA 4h 적용 + 관리자 알림",
+    trigger: "AI가 부정 감정이거나 긴급 검토가 필요하다고 판단한 문의",
+    action: "응답 목표를 4시간으로 줄이고 관리자에게 알림",
     status: "활성",
     lastRun: "오늘 08:18",
     runCount: "7",
   },
   {
     name: "기술 문의 자동 태깅",
-    trigger: "error, bug, crash 포함",
-    action: "technical, bug 태그 추가",
+    trigger: "오류, 버그, 장애 관련 표현이 포함된 문의",
+    action: "기술 지원과 오류 신고 태그 추가",
     status: "초안",
     lastRun: "미실행",
     runCount: "0",
@@ -204,6 +230,24 @@ const reportRows = [
   ["AI 자동 분류율", "91%", "+5%", "수동 수정 9%"],
   ["부정 감정 문의", "11", "+3건", "결제 이슈 집중"],
   ["이번 주 완료", "128", "+18%", "재오픈 4건"],
+];
+
+const weeklyReportTrend = [
+  { day: "월", tickets: 18, slaRisk: 4, firstResponseHours: 3.1 },
+  { day: "화", tickets: 24, slaRisk: 5, firstResponseHours: 2.7 },
+  { day: "수", tickets: 20, slaRisk: 3, firstResponseHours: 2.4 },
+  { day: "목", tickets: 31, slaRisk: 8, firstResponseHours: 2.9 },
+  { day: "금", tickets: 28, slaRisk: 6, firstResponseHours: 2.2 },
+  { day: "토", tickets: 15, slaRisk: 2, firstResponseHours: 1.9 },
+  { day: "일", tickets: 17, slaRisk: 3, firstResponseHours: 2.1 },
+];
+
+const categoryReportRows = [
+  { category: "결제", tickets: 34, negativeRate: "24%" },
+  { category: "기술 지원", tickets: 28, negativeRate: "18%" },
+  { category: "계정", tickets: 21, negativeRate: "9%" },
+  { category: "제품 문의", tickets: 17, negativeRate: "7%" },
+  { category: "환불", tickets: 12, negativeRate: "31%" },
 ];
 
 const integrations = [
@@ -228,7 +272,7 @@ const integrations = [
   {
     name: "OpenAI Provider",
     description: "실서비스 AI provider로 전환할 때 사용하는 연결입니다.",
-    status: "Mock",
+    status: "준비 중",
     owner: "System",
   },
 ];
@@ -365,7 +409,7 @@ function BoardTicketCard({ ticket }: { ticket: MockTicket }) {
           {ticket.sentiment}
         </ToneBadge>
         {ticket.tags.slice(0, 3).map((tag) => (
-          <ToneBadge key={tag}>{tag}</ToneBadge>
+          <ToneBadge key={tag}>{operationTagLabels[tag] ?? tag}</ToneBadge>
         ))}
       </div>
     </article>
@@ -506,20 +550,20 @@ export function AutomationRulesView({
           <div className="flex items-center gap-2">
             <Workflow className="size-4 text-primary" aria-hidden="true" />
             <h2 className="text-sm font-semibold text-foreground">
-              Rule Preview
+              규칙 미리보기
             </h2>
           </div>
           <div className="mt-4 grid gap-3 text-sm">
             <div className="rounded-md border border-border bg-muted/40 p-3">
-              <p className="text-xs font-medium text-muted-foreground">When</p>
+              <p className="text-xs font-medium text-muted-foreground">조건</p>
               <p className="mt-1 text-foreground">
-                감정 = 부정 AND 우선순위 = 긴급
+                고객 감정이 부정이고 우선순위가 긴급인 문의
               </p>
             </div>
             <div className="rounded-md border border-border bg-muted/40 p-3">
-              <p className="text-xs font-medium text-muted-foreground">Then</p>
+              <p className="text-xs font-medium text-muted-foreground">처리</p>
               <p className="mt-1 text-foreground">
-                SLA 4h 적용, 관리자 알림, Billing queue 이동
+                응답 목표를 4시간으로 줄이고 관리자에게 알린 뒤 결제 담당 큐로 보냅니다.
               </p>
             </div>
           </div>
@@ -556,38 +600,182 @@ export function ReportsView({ profile }: { profile: OperationProfile }) {
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-lg border border-border bg-card p-4 shadow-xs">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              SLA & Priority Trend
-            </h2>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">
+                문의량과 응답 위험 추이
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                접수량, SLA 위험, 평균 첫 응답 시간을 함께 봅니다.
+              </p>
+            </div>
             <ToneBadge tone="blue">최근 7일</ToneBadge>
           </div>
-          <div className="mt-5 grid h-64 items-end gap-2 border-b border-l border-border px-3 pb-3 sm:grid-cols-7">
-            {[42, 58, 35, 72, 61, 46, 80].map((height, index) => (
-              <div className="grid h-full items-end gap-1" key={index}>
-                <div
-                  className="rounded-t-md bg-primary/80"
-                  style={{ height: `${height}%` }}
+          <div className="mt-5 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={weeklyReportTrend}
+                margin={{ top: 8, right: 8, bottom: 0, left: -20 }}
+              >
+                <CartesianGrid
+                  stroke="var(--border)"
+                  strokeDasharray="3 3"
+                  vertical={false}
                 />
-                <div
-                  className="rounded-t-md bg-muted-foreground/30"
-                  style={{ height: `${Math.max(12, 90 - height)}%` }}
+                <XAxis
+                  axisLine={false}
+                  dataKey="day"
+                  tickLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
                 />
-              </div>
-            ))}
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                />
+                <YAxis
+                  axisLine={false}
+                  domain={[0, 4]}
+                  orientation="right"
+                  tickFormatter={(value) => `${value}h`}
+                  tickLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                  yAxisId="time"
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--muted)" }}
+                  contentStyle={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: 8,
+                    boxShadow: "var(--shadow-xs)",
+                    color: "var(--foreground)",
+                  }}
+                  formatter={(value, name) => {
+                    const labels: Record<string, string> = {
+                      firstResponseHours: "평균 첫 응답",
+                      slaRisk: "SLA 위험",
+                      tickets: "접수 문의",
+                    };
+                    const suffix = name === "firstResponseHours" ? "h" : "건";
+
+                    return [`${value}${suffix}`, labels[String(name)] ?? name];
+                  }}
+                />
+                <Bar
+                  dataKey="tickets"
+                  fill="var(--chart-1)"
+                  name="접수 문의"
+                  radius={[6, 6, 0, 0]}
+                />
+                <Bar
+                  dataKey="slaRisk"
+                  fill="var(--chart-5)"
+                  name="SLA 위험"
+                  radius={[6, 6, 0, 0]}
+                />
+                <Line
+                  dataKey="firstResponseHours"
+                  dot={{ fill: "var(--card)", r: 3, strokeWidth: 2 }}
+                  name="평균 첫 응답"
+                  stroke="var(--chart-3)"
+                  strokeWidth={2.5}
+                  type="monotone"
+                  yAxisId="time"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-            <span>파랑: 답변 완료</span>
-            <span>회색: SLA 위험</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[var(--chart-1)]" />
+              접수 문의
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[var(--chart-5)]" />
+              SLA 위험
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-0.5 w-3 rounded-full bg-[var(--chart-3)]" />
+              평균 첫 응답
+            </span>
           </div>
         </section>
 
-        <aside className="rounded-lg border border-border bg-card p-4 shadow-xs">
-          <h2 className="text-sm font-semibold text-foreground">
-            이번 주 운영 신호
-          </h2>
-          <div className="mt-4 grid gap-3">
+        <aside className="grid gap-3">
+          <section className="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                카테고리별 문의
+              </h2>
+              <ToneBadge>이번 주</ToneBadge>
+            </div>
+            <div className="mt-4 h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={categoryReportRows}
+                  layout="vertical"
+                  margin={{ top: 0, right: 8, bottom: 0, left: 12 }}
+                >
+                  <CartesianGrid
+                    horizontal={false}
+                    stroke="var(--border)"
+                    strokeDasharray="3 3"
+                  />
+                  <XAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    type="number"
+                  />
+                  <YAxis
+                    axisLine={false}
+                    dataKey="category"
+                    tickLine={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    type="category"
+                    width={64}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "var(--muted)" }}
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      boxShadow: "var(--shadow-xs)",
+                      color: "var(--foreground)",
+                    }}
+                    formatter={(value) => [`${value}건`, "문의"]}
+                  />
+                  <Bar
+                    dataKey="tickets"
+                    fill="var(--chart-1)"
+                    radius={[0, 6, 6, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-3 grid gap-2 text-xs text-muted-foreground">
+              {categoryReportRows.slice(0, 3).map((row) => (
+                <div
+                  className="flex items-center justify-between gap-3"
+                  key={row.category}
+                >
+                  <span>{row.category}</span>
+                  <span className="tabular-nums">
+                    부정 감정 {row.negativeRate}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <h2 className="text-sm font-semibold text-foreground">
+              이번 주 운영 신호
+            </h2>
+            <div className="mt-4 grid gap-3">
             {[
-              ["결제 문의 증가", "billing 태그가 전주 대비 24% 증가했습니다."],
+              ["결제 문의 증가", "결제 태그가 전주 대비 24% 증가했습니다."],
               ["SLA 위험 집중", "긴급 문의 6건이 4시간 이내 응답을 기다립니다."],
               ["AI 수정률 안정", "수동 수정률이 9%로 목표 범위 안에 있습니다."],
             ].map(([title, detail]) => (
@@ -598,7 +786,8 @@ export function ReportsView({ profile }: { profile: OperationProfile }) {
                 </p>
               </div>
             ))}
-          </div>
+            </div>
+          </section>
         </aside>
       </div>
     </PageShell>
@@ -614,7 +803,7 @@ export function IntegrationsSettingsView({
     <PageShell
       eyebrow={profile.role === "admin" ? "Settings" : "Workspace Settings"}
       title="연동 설정"
-      description="지원 운영에 연결된 외부 도구와 AI provider, 알림 채널, 이메일 inbox를 관리하는 mock 설정 화면입니다."
+      description="지원 운영에 연결된 외부 도구와 AI provider, 알림 채널, 이메일 inbox를 관리합니다."
     >
       <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="rounded-lg border border-border bg-card p-2 shadow-xs">
@@ -654,7 +843,7 @@ export function IntegrationsSettingsView({
               tone={
                 integration.status === "연결됨"
                   ? "emerald"
-                  : integration.status === "Mock"
+                  : integration.status === "준비 중"
                     ? "blue"
                     : "amber"
               }
@@ -791,7 +980,7 @@ export function PublicOperationsHome({
                     <ToneBadge tone="red" key="priority">긴급</ToneBadge>,
                     "1h 남음",
                     "담당자 필요",
-                    "billing · payment",
+                    "결제 · 결제 확인",
                   ],
                   [
                     "SF-1035 API rate limit 문의",
@@ -799,7 +988,7 @@ export function PublicOperationsHome({
                     <ToneBadge tone="orange" key="priority">높음</ToneBadge>,
                     "5h 남음",
                     "Doni",
-                    "product · api",
+                    "제품 · API",
                   ],
                   [
                     "SF-1026 팀 멤버 초대 제한",
@@ -807,7 +996,7 @@ export function PublicOperationsHome({
                     <ToneBadge key="priority">낮음</ToneBadge>,
                     "응답 완료",
                     "Doni",
-                    "account · team",
+                    "계정 · 팀 관리",
                   ],
                 ]}
               />
@@ -831,13 +1020,13 @@ export function PublicOperationsHome({
                   <p className="text-xs text-muted-foreground">AI 요약</p>
                   <p className="mt-1 leading-6 text-muted-foreground">
                     결제 성공 후 권한 동기화가 지연되어 고객이 강한 불만을
-                    표현했습니다. Billing 담당자의 빠른 확인이 필요합니다.
+                    표현했습니다. 결제 담당자의 빠른 확인이 필요합니다.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   <ToneBadge tone="red">부정</ToneBadge>
                   <ToneBadge tone="red">긴급</ToneBadge>
-                  <ToneBadge>payment</ToneBadge>
+                  <ToneBadge>결제</ToneBadge>
                 </div>
               </div>
             </aside>
