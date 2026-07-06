@@ -338,10 +338,6 @@ function SelectedTicketPanel({ ticket }: { ticket: TicketListItem | null }) {
         </Link>
       </div>
 
-      <p className="line-clamp-5 text-sm leading-6 text-muted-foreground">
-        {ticket.latest_ai_analysis?.summary ?? ticket.content}
-      </p>
-
       <div className="grid grid-cols-2 gap-3 border-y border-border py-3">
         <DetailMetric
           label="답변 상태"
