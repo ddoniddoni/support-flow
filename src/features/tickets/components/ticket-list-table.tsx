@@ -41,7 +41,32 @@ const categoryLabels: Record<string, string> = {
   billing: "결제",
   technical: "기술 지원",
   product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
   other: "기타",
+};
+
+const tagLabels: Record<string, string> = {
+  technical: "기술 지원",
+  billing: "결제",
+  account: "계정",
+  product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
+  other: "기타",
+  question: "문의",
+  "refund-request": "환불 요청",
+  "bug-report": "오류 신고",
+  "account-help": "계정 지원",
+  "billing-issue": "결제 문제",
+  "cancellation-request": "해지 요청",
+  "feature-request": "기능 요청",
+  "priority-review": "검토 필요",
+  "repeat-contact": "반복 문의",
+  "needs-human-review": "검토 필요",
+  vip: "VIP",
 };
 
 const customerStatusLabels: Record<TicketStatus, string> = {
@@ -57,8 +82,8 @@ const adminColumnWidths = [
   "w-[92px]",
   "w-[88px]",
   "w-[132px]",
-  "w-[180px]",
-  "w-[150px]",
+  "w-[164px]",
+  "w-[104px]",
   "w-[104px]",
 ];
 
@@ -97,7 +122,7 @@ function getSLAState(ticket: TicketListItem): {
 } {
   if (ticket.status === "resolved" || ticket.status === "closed") {
     return {
-      label: "충족",
+      label: "응답 완료",
       tone: "done",
     };
   }
@@ -148,7 +173,7 @@ function formatShortDateTime(value: string) {
 
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
-    return "접수번호 미지정";
+    return "접수번호 없음";
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
@@ -160,8 +185,8 @@ function getAssigneeLabel(ticket: TicketListItem) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "배정 없이 완료"
-    : "담당자 지정 전";
+    ? "담당자 없음"
+    : "담당자 필요";
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -234,6 +259,7 @@ function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
 
 function SLABadge({ ticket }: { ticket: TicketListItem }) {
   const state = getSLAState(ticket);
+  const label = state.tone === "done" ? state.label : `SLA ${state.label}`;
 
   return (
     <Badge
@@ -247,7 +273,7 @@ function SLABadge({ ticket }: { ticket: TicketListItem }) {
         state.tone === "done" && "border-border bg-muted text-muted-foreground",
       )}
     >
-      SLA {state.label}
+      {label}
     </Badge>
   );
 }
@@ -256,7 +282,7 @@ function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
   if (!ticket.latest_ai_analysis_id) {
     return (
       <Badge variant="outline" className="border-border bg-muted/60 text-muted-foreground">
-        미분석
+        AI 대기
       </Badge>
     );
   }
@@ -280,17 +306,18 @@ function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
 }
 
 function TicketTagList({ ticket }: { ticket: TicketListItem }) {
-  const tags = [
+  const tags = Array.from(new Set([
     categoryLabels[ticket.category] ?? ticket.category,
-    ...(ticket.latest_ai_analysis?.tags ?? []),
-  ].slice(0, 3);
+    ...(ticket.latest_ai_analysis?.tags.map((tag) => tagLabels[tag] ?? tag) ??
+      []),
+  ])).slice(0, 3);
 
   return (
     <div className="flex min-w-0 flex-wrap gap-1">
-      {tags.map((tag) => (
+      {tags.map((tag, index) => (
         <Badge
           className="max-w-[8rem] truncate border-border bg-background text-muted-foreground"
-          key={tag}
+          key={`${tag}-${index}`}
           variant="outline"
         >
           {tag}

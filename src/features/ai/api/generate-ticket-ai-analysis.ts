@@ -37,7 +37,7 @@ function toJson(value: unknown): Json {
     return JSON.parse(JSON.stringify(value ?? null)) as Json;
   } catch {
     return {
-      error: "Unable to serialize raw AI response.",
+      error: "원본 AI 응답을 JSON으로 저장하지 못했습니다.",
     };
   }
 }
@@ -74,20 +74,20 @@ function createFallbackAnalysis({
     intent: "other",
     suggestedPriority: ticket.priority,
     suggestedStatus: ticket.status,
-    suggestedAssigneeRole: "support-agent",
-    tags: ["needs-human-review"],
+    suggestedAssigneeRole: "지원 담당자",
+    tags: ["검토 필요"],
     summary: truncate(
       `${ticket.title}: ${ticket.content}`,
       fallbackSummaryMaxLength,
     ),
     reason: truncate(
-      `AI output could not be validated. ${validationError}`,
+      `AI 응답 형식을 검증하지 못해 기본 분석값을 사용했습니다. ${validationError}`,
       fallbackReasonMaxLength,
     ),
     replyDraft: null,
     confidence: 0,
     needsReview: true,
-    escalationReason: "AI output could not be validated.",
+    escalationReason: "AI 응답 형식을 검증하지 못했습니다.",
   };
 }
 
@@ -123,7 +123,7 @@ function validateAIProviderResult({
     };
   } catch (error) {
     const validationError =
-      error instanceof Error ? error.message : "Malformed AI provider output.";
+      error instanceof Error ? error.message : "AI provider 응답 형식 오류";
 
     return {
       output: createFallbackAnalysis({ ticket, validationError }),
@@ -177,7 +177,7 @@ export async function generateTicketAIAnalysis({
   }
 
   if (!ticket) {
-    throw new Error("Ticket not found or access denied.");
+    throw new Error("문의를 찾을 수 없거나 접근 권한이 없습니다.");
   }
 
   const promptVersion = await getActivePromptVersion({

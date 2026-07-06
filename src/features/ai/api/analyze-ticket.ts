@@ -18,7 +18,7 @@ export async function analyzeTicket({
   regenerate = false,
 }: AnalyzeTicketInput): Promise<TicketAIAnalysis> {
   if (profile.role === "customer") {
-    throw new Error("Customers cannot run AI ticket analysis.");
+    throw new Error("고객 계정은 AI 분석을 실행할 수 없습니다.");
   }
 
   const supabase = createSupabaseBrowserClient();

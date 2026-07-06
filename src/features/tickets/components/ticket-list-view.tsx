@@ -63,7 +63,51 @@ const categoryLabels: Record<string, string> = {
   billing: "결제",
   technical: "기술 지원",
   product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
   other: "기타",
+};
+
+const intentLabels: Record<string, string> = {
+  question: "문의",
+  complaint: "불만",
+  refund_request: "환불 요청",
+  "refund-request": "환불 요청",
+  bug_report: "오류 신고",
+  "bug-report": "오류 신고",
+  account_help: "계정 지원",
+  "account-help": "계정 지원",
+  billing_issue: "결제 문제",
+  "billing-issue": "결제 문제",
+  cancellation_request: "해지 요청",
+  "cancellation-request": "해지 요청",
+  feature_request: "기능 요청",
+  "feature-request": "기능 요청",
+  praise: "긍정 피드백",
+  other: "기타",
+};
+
+const tagLabels: Record<string, string> = {
+  technical: "기술 지원",
+  billing: "결제",
+  account: "계정",
+  product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
+  other: "기타",
+  question: "문의",
+  "refund-request": "환불 요청",
+  "bug-report": "오류 신고",
+  "account-help": "계정 지원",
+  "billing-issue": "결제 문제",
+  "cancellation-request": "해지 요청",
+  "feature-request": "기능 요청",
+  "priority-review": "검토 필요",
+  "repeat-contact": "반복 문의",
+  "needs-human-review": "검토 필요",
+  vip: "VIP",
 };
 
 const ticketStatusLabels = {
@@ -90,8 +134,8 @@ const sortOptions: TicketSortOption[] = [
 ];
 
 const aiReviewLabels = {
-  all: "전체 AI 신호",
-  yes: "주의 필요",
+  all: "전체 AI 검토",
+  yes: "검토 필요",
   no: "일반 분류",
 } as const;
 
@@ -184,7 +228,7 @@ function getRoleDescription(role: Tables<"profiles">["role"]) {
 
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
-    return "접수번호 미지정";
+    return "접수번호 없음";
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
@@ -205,13 +249,13 @@ function getAssigneeLabel(ticket: TicketListItem) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "배정 없이 완료"
-    : "담당자 지정 전";
+    ? "담당자 없음"
+    : "담당자 필요";
 }
 
 function getSlaLabel(ticket: TicketListItem) {
   if (ticket.status === "resolved" || ticket.status === "closed") {
-    return "SLA 충족";
+    return "응답 완료";
   }
 
   const createdAt = new Date(ticket.created_at).getTime();
@@ -226,10 +270,21 @@ function getSlaLabel(ticket: TicketListItem) {
 }
 
 function getTicketTags(ticket: TicketListItem) {
-  return [
+  const tags = [
     categoryLabels[ticket.category] ?? ticket.category,
-    ...(ticket.latest_ai_analysis?.tags ?? []),
-  ].slice(0, 5);
+    ...(ticket.latest_ai_analysis?.tags.map((tag) => tagLabels[tag] ?? tag) ??
+      []),
+  ];
+
+  return Array.from(new Set(tags)).slice(0, 5);
+}
+
+function getAIIntentLabel(intent: string | null | undefined) {
+  if (!intent) {
+    return "AI 대기";
+  }
+
+  return intentLabels[intent] ?? intent;
 }
 
 function DetailMetric({
@@ -257,7 +312,7 @@ function SelectedTicketPanel({ ticket }: { ticket: TicketListItem | null }) {
           선택된 문의가 없습니다
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          문의가 접수되면 이 영역에서 처리 맥락을 확인합니다.
+          왼쪽 목록에서 문의를 선택하면 응답에 필요한 정보를 보여줍니다.
         </p>
       </aside>
     );
@@ -300,10 +355,10 @@ function SelectedTicketPanel({ ticket }: { ticket: TicketListItem | null }) {
       <div>
         <p className="text-xs font-medium text-muted-foreground">태그</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {getTicketTags(ticket).map((tag) => (
+          {getTicketTags(ticket).map((tag, index) => (
             <Badge
               className="border-border bg-background text-muted-foreground"
-              key={tag}
+              key={`${tag}-${index}`}
               variant="outline"
             >
               {tag}
@@ -315,11 +370,11 @@ function SelectedTicketPanel({ ticket }: { ticket: TicketListItem | null }) {
   );
 }
 
-function CustomerContextPanel({ ticket }: { ticket: TicketListItem | null }) {
+function CustomerInfoPanel({ ticket }: { ticket: TicketListItem | null }) {
   if (!ticket) {
     return (
       <aside className="rounded-lg border border-border bg-card p-4 shadow-xs">
-        <p className="text-sm font-medium text-foreground">고객 Context</p>
+        <p className="text-sm font-medium text-foreground">고객 정보</p>
         <p className="mt-1 text-xs text-muted-foreground">
           문의를 선택하면 고객과 최근 접수 정보를 표시합니다.
         </p>
@@ -350,7 +405,7 @@ function CustomerContextPanel({ ticket }: { ticket: TicketListItem | null }) {
         />
         <DetailMetric
           label="AI 의도"
-          value={ticket.latest_ai_analysis?.intent ?? "분류 대기"}
+          value={getAIIntentLabel(ticket.latest_ai_analysis?.intent)}
         />
         <DetailMetric
           label="접수 시각"
@@ -365,11 +420,11 @@ function CustomerContextPanel({ ticket }: { ticket: TicketListItem | null }) {
       <div className="rounded-md border border-border bg-muted/40 p-3">
         <div className="flex items-center gap-2 text-xs font-medium text-foreground">
           <Clock3 className="size-3.5" aria-hidden="true" />
-          처리 메모
+          운영 기준
         </div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          답변 전에는 SLA와 우선순위를 먼저 확인하고, 답변 완료 후에는 담당자
-          미지정 상태가 운영 리스크로 표시되지 않도록 처리됩니다.
+          응답 전 문의는 SLA와 우선순위를 기준으로 관리하고, 응답 완료 후에는
+          담당자 없음 상태를 위험 항목으로 보지 않습니다.
         </p>
       </div>
     </aside>
@@ -476,7 +531,7 @@ export function TicketListView({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
-            {profile.role === "customer" ? "내 문의" : "문의 Inbox"}
+            {profile.role === "customer" ? "내 문의" : "문의함"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
@@ -600,7 +655,7 @@ export function TicketListView({
                   }
                 >
                   <option value="all">전체 담당자</option>
-                  <option value="unassigned">담당자 지정 전</option>
+                  <option value="unassigned">담당자 필요</option>
                   {(agentsQuery.data ?? []).map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name}
@@ -735,7 +790,7 @@ export function TicketListView({
                 />
               </section>
               <SelectedTicketPanel ticket={selectedTicket} />
-              <CustomerContextPanel ticket={selectedTicket} />
+              <CustomerInfoPanel ticket={selectedTicket} />
             </div>
           )}
           <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

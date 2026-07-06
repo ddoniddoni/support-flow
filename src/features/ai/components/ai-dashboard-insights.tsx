@@ -106,9 +106,9 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
 
   const metrics = [
     {
-      detail: "위험 신호가 감지된 자동 분류",
+      detail: "상담원이 확인해야 할 AI 분류",
       icon: ShieldAlert,
-      label: "AI 주의 신호",
+      label: "AI 검토 필요",
       tone: "size-4 text-red-600",
       value: String(stats.reviewRequiredCount),
     },
@@ -143,14 +143,14 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
             AI 운영 인사이트
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            AI 자동 분류 결과에서 긴급도, 감정, 위험 신호를 추적합니다.
+            자동 분류 결과에서 긴급도, 감정, 검토 필요 항목을 추적합니다.
           </p>
         </div>
         <Link
           className={buttonVariants({ size: "sm", variant: "outline" })}
           href="/tickets/ai-review"
         >
-          주의 신호
+          AI 검토
         </Link>
       </div>
 

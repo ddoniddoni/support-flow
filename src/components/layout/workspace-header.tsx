@@ -3,7 +3,6 @@
 import {
   Activity,
   BarChart3,
-  GitBranch,
   Inbox,
   LayoutDashboard,
   PanelLeftClose,
@@ -17,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,16 @@ import { LogoutButton } from "@/features/auth/components/logout-button";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import { ThemeToggle } from "./theme-toggle";
+import {
+  isSidebarMode,
+  sidebarCookieName,
+  sidebarStorageKey,
+  sidebarWidths,
+  type SidebarMode,
+} from "./workspace-sidebar-state";
 
 type WorkspaceHeaderProps = {
+  initialSidebarMode?: SidebarMode;
   profile: Pick<Tables<"profiles">, "email" | "name" | "role">;
 };
 
@@ -35,16 +42,6 @@ type NavItem = {
   icon: LucideIcon;
   label: string;
   match?: (pathname: string) => boolean;
-};
-
-type SidebarMode = "compact" | "expanded" | "hidden";
-
-const sidebarStorageKey = "supportflow:workspace-sidebar";
-
-const sidebarWidths: Record<SidebarMode, string> = {
-  compact: "4.5rem",
-  expanded: "16rem",
-  hidden: "0px",
 };
 
 const roleLabels: Record<Tables<"profiles">["role"], string> = {
@@ -60,7 +57,10 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
       icon: Inbox,
       label: "문의함",
       match: (pathname) =>
-        pathname === "/tickets" || pathname.startsWith("/tickets/"),
+        pathname === "/tickets" ||
+        (pathname.startsWith("/tickets/") &&
+          pathname !== "/tickets/new" &&
+          !pathname.startsWith("/tickets/ai-review")),
     },
   ];
 
@@ -82,16 +82,9 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
   });
 
   items.push({
-    href: "/flow-board",
-    icon: GitBranch,
-    label: "Flow Board",
-    match: (pathname) => pathname === "/flow-board",
-  });
-
-  items.push({
     href: "/tickets/ai-review",
     icon: ShieldAlert,
-    label: "AI 신호",
+    label: "AI 검토",
     match: (pathname) => pathname.startsWith("/tickets/ai-review"),
   });
 
@@ -128,11 +121,17 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
   return items;
 }
 
-function isSidebarMode(value: string | null): value is SidebarMode {
-  return value === "expanded" || value === "compact" || value === "hidden";
+function getWorkspaceHomeHref(role: Tables<"profiles">["role"]) {
+  return role === "customer" ? "/tickets" : "/dashboard";
 }
 
-function WorkspaceLogo({ mode }: { mode: SidebarMode }) {
+function WorkspaceLogo({
+  href,
+  mode,
+}: {
+  href: string;
+  mode: SidebarMode;
+}) {
   const isCompact = mode === "compact";
 
   return (
@@ -141,8 +140,8 @@ function WorkspaceLogo({ mode }: { mode: SidebarMode }) {
         "flex min-w-0 items-center gap-2 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-sidebar-ring/40",
         isCompact && "justify-center",
       )}
-      href="/"
-      aria-label="SupportFlow 홈으로 이동"
+      href={href}
+      aria-label="워크스페이스 홈으로 이동"
       title={isCompact ? "SupportFlow" : undefined}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
@@ -289,28 +288,46 @@ function SidebarToggleIcon({ mode }: { mode: SidebarMode }) {
   return <PanelLeftOpen className="size-4" aria-hidden="true" />;
 }
 
-export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
+function persistSidebarMode(mode: SidebarMode) {
+  window.localStorage.setItem(sidebarStorageKey, mode);
+  document.cookie = `${sidebarCookieName}=${mode}; path=/; max-age=31536000; samesite=lax`;
+}
+
+function setWorkspaceSidebarWidth(mode: SidebarMode) {
+  const width = sidebarWidths[mode];
+
+  document.documentElement.style.setProperty(
+    "--workspace-sidebar-width",
+    width,
+  );
+  document
+    .querySelector<HTMLElement>("[data-workspace-main]")
+    ?.style.setProperty("--workspace-sidebar-width", width);
+}
+
+export function WorkspaceHeader({
+  initialSidebarMode = "expanded",
+  profile,
+}: WorkspaceHeaderProps) {
   const pathname = usePathname();
   const navItems = getNavItems(profile.role);
+  const workspaceHomeHref = getWorkspaceHomeHref(profile.role);
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => {
     if (typeof window === "undefined") {
-      return "expanded";
+      return initialSidebarMode;
     }
 
     const savedMode = window.localStorage.getItem(sidebarStorageKey);
 
-    return isSidebarMode(savedMode) ? savedMode : "expanded";
+    return isSidebarMode(savedMode) ? savedMode : initialSidebarMode;
   });
   const isCompact = sidebarMode === "compact";
   const isHidden = sidebarMode === "hidden";
   const sidebarToggleLabel = getSidebarToggleLabel(sidebarMode);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--workspace-sidebar-width",
-      sidebarWidths[sidebarMode],
-    );
-    window.localStorage.setItem(sidebarStorageKey, sidebarMode);
+  useLayoutEffect(() => {
+    setWorkspaceSidebarWidth(sidebarMode);
+    persistSidebarMode(sidebarMode);
   }, [sidebarMode]);
 
   function toggleSidebarMode() {
@@ -333,7 +350,7 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
             isCompact ? "justify-center" : "justify-between",
           )}
         >
-          <WorkspaceLogo mode={sidebarMode} />
+          <WorkspaceLogo href={workspaceHomeHref} mode={sidebarMode} />
           <div className={cn("flex items-center gap-1", isCompact && "hidden")}>
             <Button
               type="button"
@@ -399,22 +416,20 @@ export function WorkspaceHeader({ profile }: WorkspaceHeaderProps) {
       </aside>
 
       {isHidden ? (
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="icon-sm"
-          className="fixed top-3 left-3 z-40 hidden shadow-sm lg:inline-flex"
+          className="fixed inset-y-0 left-0 z-40 hidden w-9 items-start justify-center border-r border-border bg-background/95 pt-3 text-muted-foreground shadow-xs transition-[background-color,color] hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30 lg:flex"
           aria-label="사이드바 열기"
           title="사이드바 열기"
           onClick={() => setSidebarMode("expanded")}
         >
           <PanelLeftOpen className="size-4" aria-hidden="true" />
-        </Button>
+        </button>
       ) : null}
 
       <header className="sticky top-0 z-30 border-b border-border bg-sidebar px-3 py-2 text-sidebar-foreground lg:hidden">
         <div className="flex items-center justify-between gap-3">
-          <WorkspaceLogo mode="expanded" />
+          <WorkspaceLogo href={workspaceHomeHref} mode="expanded" />
           <div className="flex shrink-0 items-center gap-2">
             <ThemeToggle />
             <LogoutButton />

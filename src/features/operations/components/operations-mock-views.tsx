@@ -5,7 +5,6 @@ import {
   Bot,
   CheckCircle2,
   Clock3,
-  GitBranch,
   Inbox,
   Plug,
   Settings2,
@@ -80,7 +79,7 @@ const boardTickets: Record<(typeof flowColumns)[number]["key"], MockTicket[]> =
         id: "SF-1042",
         title: "결제 후 플랜이 활성화되지 않음",
         customer: "Minerva Labs",
-        assignee: "미지정",
+        assignee: "담당자 필요",
         priority: "긴급",
         sla: "1h 남음",
         status: "신규",
@@ -91,7 +90,7 @@ const boardTickets: Record<(typeof flowColumns)[number]["key"], MockTicket[]> =
         id: "SF-1041",
         title: "SSO 설정 중 redirect 오류",
         customer: "Northstar AI",
-        assignee: "미지정",
+        assignee: "담당자 필요",
         priority: "높음",
         sla: "3h 남음",
         status: "신규",
@@ -263,7 +262,7 @@ function PageShell({
             href="/tickets"
           >
             <Inbox className="size-4" aria-hidden="true" />
-            Inbox
+            문의함
           </Link>
           <Link className={buttonVariants({ size: "sm" })} href="/tickets">
             문의 처리
@@ -412,8 +411,8 @@ export function FlowBoardView({ profile }: { profile: OperationProfile }) {
   return (
     <PageShell
       eyebrow={profile.role === "admin" ? "Admin Flow" : "Agent Flow"}
-      title="Flow Board"
-      description="문의가 접수된 뒤 AI 분류, 담당자 배정, 답변 작성, 고객 확인, 완료까지 어떤 상태로 흐르는지 한눈에 보는 보드입니다."
+      title="처리 흐름"
+      description="접수, AI 분류, 담당자 배정, 응답, 완료까지 문의가 어디에 머무는지 확인합니다."
     >
       <div className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="rounded-lg border border-border bg-card p-3 shadow-xs">
@@ -424,7 +423,7 @@ export function FlowBoardView({ profile }: { profile: OperationProfile }) {
               <p className="mt-1 text-lg font-semibold text-foreground">6건</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">미지정 문의</p>
+              <p className="text-xs text-muted-foreground">담당자 필요</p>
               <p className="mt-1 text-lg font-semibold text-foreground">2건</p>
             </div>
             <div>
@@ -472,7 +471,7 @@ export function AutomationRulesView({
   return (
     <PageShell
       eyebrow={profile.role === "admin" ? "Flow Rules" : "Rule Visibility"}
-      title="Automations / Flow Rules"
+      title="자동화 규칙"
       description="AI 분류 결과와 문의 속성을 기준으로 담당자, 우선순위, SLA, 태그를 자동 제안하는 운영 규칙 화면입니다."
     >
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -534,7 +533,7 @@ export function ReportsView({ profile }: { profile: OperationProfile }) {
   return (
     <PageShell
       eyebrow={profile.role === "admin" ? "Operations Report" : "Team Report"}
-      title="Reports"
+      title="리포트"
       description="지원팀의 응답 속도, SLA 위험, AI 분류 품질, 부정 감정 트렌드를 추적하는 리포트 화면입니다."
     >
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -614,7 +613,7 @@ export function IntegrationsSettingsView({
   return (
     <PageShell
       eyebrow={profile.role === "admin" ? "Settings" : "Workspace Settings"}
-      title="Settings / Integrations"
+      title="연동 설정"
       description="지원 운영에 연결된 외부 도구와 AI provider, 알림 채널, 이메일 inbox를 관리하는 mock 설정 화면입니다."
     >
       <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)]">
@@ -701,12 +700,11 @@ export function PublicOperationsHome({
           </div>
           <nav className="mt-6 grid gap-1 text-sm">
             {[
-              ["Dashboard", Activity],
-              ["Inbox / Queue", Inbox],
-              ["Flow Board", GitBranch],
-              ["Automations", Workflow],
-              ["Reports", SlidersHorizontal],
-              ["Integrations", Settings2],
+              ["운영 현황", Activity],
+              ["문의함", Inbox],
+              ["자동화", Workflow],
+              ["리포트", SlidersHorizontal],
+              ["연동 설정", Settings2],
             ].map(([label, Icon], index) => {
               const ItemIcon = Icon as typeof Activity;
 
@@ -734,8 +732,8 @@ export function PublicOperationsHome({
                 고객 문의 Flow를 운영하는 SupportFlow
               </h1>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-                첫 화면부터 문의 큐, SLA, 담당자, AI 분류, 고객 context를
-                확인하는 실제 CS 운영툴 형태로 구성했습니다.
+                문의함, SLA, 담당자, AI 분류, 고객 정보를 한 화면에서
+                확인하는 CS 운영툴입니다.
               </p>
             </div>
             <Link className={buttonVariants()} href={workspaceHref}>
@@ -792,7 +790,7 @@ export function PublicOperationsHome({
                     <ToneBadge tone="blue" key="status">답변 대기</ToneBadge>,
                     <ToneBadge tone="red" key="priority">긴급</ToneBadge>,
                     "1h 남음",
-                    "미지정",
+                    "담당자 필요",
                     "billing · payment",
                   ],
                   [
@@ -807,7 +805,7 @@ export function PublicOperationsHome({
                     "SF-1026 팀 멤버 초대 제한",
                     <ToneBadge tone="emerald" key="status">답변 완료</ToneBadge>,
                     <ToneBadge key="priority">낮음</ToneBadge>,
-                    "충족",
+                    "응답 완료",
                     "Doni",
                     "account · team",
                   ],
@@ -817,7 +815,7 @@ export function PublicOperationsHome({
 
             <aside className="rounded-lg border border-border bg-card p-4 shadow-xs">
               <p className="text-xs font-medium text-muted-foreground">
-                Customer Context
+                고객 정보
               </p>
               <h2 className="mt-1 text-base font-semibold text-foreground">
                 Minerva Labs

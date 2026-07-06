@@ -71,7 +71,32 @@ const categoryLabels: Record<string, string> = {
   billing: "결제",
   technical: "기술 지원",
   product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
   other: "기타",
+};
+
+const tagLabels: Record<string, string> = {
+  technical: "기술 지원",
+  billing: "결제",
+  account: "계정",
+  product: "제품 문의",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
+  other: "기타",
+  question: "문의",
+  "refund-request": "환불 요청",
+  "bug-report": "오류 신고",
+  "account-help": "계정 지원",
+  "billing-issue": "결제 문제",
+  "cancellation-request": "해지 요청",
+  "feature-request": "기능 요청",
+  "priority-review": "검토 필요",
+  "repeat-contact": "반복 문의",
+  "needs-human-review": "검토 필요",
+  vip: "VIP",
 };
 
 const actionLabels: Record<string, string> = {
@@ -85,7 +110,7 @@ const actionLabels: Record<string, string> = {
   ai_analysis_approved: "AI 분석 확인",
   ai_analysis_corrected: "AI 분석 수정",
   ai_analysis_rejected: "AI 분석 제외",
-  ai_analysis_sent_to_review: "AI 주의 신호 표시",
+  ai_analysis_sent_to_review: "AI 검토 필요 표시",
   ai_draft_used_as_customer_reply: "AI 답변 초안 사용",
 };
 
@@ -168,7 +193,7 @@ function groupItemsByDate<T>(
 
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
-    return "접수번호 미지정";
+    return "접수번호 없음";
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
@@ -208,13 +233,13 @@ function getTicketAssigneeLabel(ticket: TicketDetail) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "배정 없이 완료"
-    : "담당자 지정 전";
+    ? "담당자 없음"
+    : "담당자 필요";
 }
 
 function getSlaLabel(ticket: TicketDetail) {
   if (ticket.status === "resolved" || ticket.status === "closed") {
-    return "SLA 충족";
+    return "응답 완료";
   }
 
   const createdAt = new Date(ticket.created_at).getTime();
@@ -229,10 +254,13 @@ function getSlaLabel(ticket: TicketDetail) {
 }
 
 function getTicketTags(ticket: TicketDetail) {
-  return [
+  const tags = [
     categoryLabels[ticket.category] ?? ticket.category,
-    ...(ticket.latest_ai_analysis?.tags ?? []),
-  ].slice(0, 6);
+    ...(ticket.latest_ai_analysis?.tags.map((tag) => tagLabels[tag] ?? tag) ??
+      []),
+  ];
+
+  return Array.from(new Set(tags)).slice(0, 6);
 }
 
 function StatusBadge({ status }: { status: TicketStatus }) {
@@ -494,8 +522,8 @@ function TicketOperationsPanel({
   function getAgentLabel(agentId: string | null) {
     if (!agentId) {
       return ticket.status === "resolved" || ticket.status === "closed"
-        ? "배정 없이 완료"
-        : "담당자 지정 전";
+        ? "담당자 없음"
+        : "담당자 필요";
     }
 
     const agent = agentsQuery.data?.find((item) => item.id === agentId);
@@ -600,7 +628,7 @@ function TicketOperationsPanel({
                     })
                   }
                 >
-                  <option value="unassigned">담당자 지정 전</option>
+                  <option value="unassigned">담당자 필요</option>
                   {(agentsQuery.data ?? []).map((agent: AgentOption) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.name} ({agent.email})
@@ -657,7 +685,7 @@ function TicketDetailContent({
             className={buttonVariants({ className: "w-full sm:w-auto" })}
             href="/tickets"
           >
-            문의 목록으로 이동
+            문의함으로 이동
           </Link>
         }
       />
@@ -677,7 +705,7 @@ function TicketDetailContent({
           href="/tickets"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          문의 목록
+          문의함
         </Link>
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -784,7 +812,7 @@ function TicketDetailContent({
 
           <Card className="rounded-lg">
             <CardHeader>
-              <CardTitle>고객 Context</CardTitle>
+              <CardTitle>고객 정보</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               {canViewOperations ? (
@@ -846,10 +874,10 @@ function TicketDetailContent({
                   <div>
                     <p className="text-muted-foreground">태그</p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      {getTicketTags(ticket).map((tag) => (
+                      {getTicketTags(ticket).map((tag, index) => (
                         <Badge
                           className="border-border bg-background text-muted-foreground"
-                          key={tag}
+                          key={`${tag}-${index}`}
                           variant="outline"
                         >
                           {tag}

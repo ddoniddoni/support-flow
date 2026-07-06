@@ -32,7 +32,7 @@ export function AIReplyDraftBox({
     <div className="grid gap-3 rounded-lg border border-border bg-background p-3">
       <div>
         <p className="text-xs font-medium uppercase tracking-[0.015625rem] text-muted-foreground">
-          Reply draft
+          답변 초안
         </p>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
           {draft}

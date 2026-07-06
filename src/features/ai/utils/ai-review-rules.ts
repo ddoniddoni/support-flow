@@ -30,11 +30,14 @@ const riskTerms = [
   "환급",
   "취소",
   "해지",
+  "탈퇴",
   "결제 취소",
   "청구",
   "이중 결제",
   "두 번 결제",
   "두번 결제",
+  "돈 돌려",
+  "결제 실패",
   "결제 분쟁",
   "고소",
   "법적",
@@ -47,10 +50,14 @@ const riskTerms = [
   "사기",
   "화가",
   "짜증",
+  "열받",
   "불만",
   "최악",
   "또",
+  "반복",
   "계속 안",
+  "업무 중단",
+  "사용 불가",
 ] as const;
 
 export function getAIConfidenceReviewThreshold() {
@@ -86,13 +93,17 @@ export function applyAIReviewRules({
   const riskSignals = getTicketRiskSignals(`${ticket.title} ${ticket.content}`);
   const reviewReasons = [
     analysis.confidence < threshold
-      ? `Confidence ${analysis.confidence.toFixed(2)} is below ${threshold.toFixed(2)}.`
+      ? `신뢰도 ${analysis.confidence.toFixed(2)}가 기준값 ${threshold.toFixed(2)}보다 낮습니다.`
       : null,
-    analysis.urgency === "critical" ? "Critical urgency requires review." : null,
-    riskSignals.length ? `Risk signals: ${riskSignals.join(", ")}.` : null,
-    validationFailed ? "AI output validation failed and fallback values were used." : null,
+    analysis.urgency === "critical"
+      ? "긴급 검토 수준의 문의라 상담원 확인이 필요합니다."
+      : null,
+    riskSignals.length ? `위험 신호 감지: ${riskSignals.join(", ")}.` : null,
+    validationFailed
+      ? "AI 응답 검증에 실패해 기본 분석값을 사용했습니다."
+      : null,
     analysis.sentiment === "negative" && analysis.suggestedPriority === "urgent"
-      ? "Negative urgent ticket needs human confirmation."
+      ? "부정 감정과 긴급 우선순위가 함께 감지되어 상담원 확인이 필요합니다."
       : null,
   ].filter((reason): reason is string => Boolean(reason));
 
@@ -101,7 +112,7 @@ export function applyAIReviewRules({
       ...analysis,
       needsReview: analysis.needsReview,
       escalationReason: analysis.needsReview
-        ? (analysis.escalationReason ?? "AI provider requested review.")
+        ? (analysis.escalationReason ?? "AI 제공자가 검토 필요로 표시했습니다.")
         : analysis.escalationReason,
     };
   }

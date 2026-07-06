@@ -29,14 +29,21 @@ export function AIReviewTableSkeleton() {
       </div>
 
       <div className="hidden rounded-lg border border-border bg-card shadow-sm md:block">
-        <Table>
+        <Table className="min-w-[1040px] table-fixed">
+          <colgroup>
+            <col className="w-[280px]" />
+            <col className="w-[176px]" />
+            <col className="w-auto" />
+            <col className="w-[132px]" />
+            <col className="w-[112px]" />
+          </colgroup>
           <TableHeader>
             <TableRow>
               <TableHead>티켓</TableHead>
               <TableHead>AI 상태</TableHead>
-              <TableHead>요약</TableHead>
-              <TableHead>생성일</TableHead>
-              <TableHead>상세</TableHead>
+              <TableHead>상세 요약</TableHead>
+              <TableHead className="text-right">생성일</TableHead>
+              <TableHead className="text-right">상세</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -54,11 +61,11 @@ export function AIReviewTableSkeleton() {
                   <Skeleton className="h-4 w-72" />
                   <Skeleton className="mt-2 h-3 w-48" />
                 </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
+                <TableCell className="text-right">
+                  <Skeleton className="ml-auto h-4 w-24" />
                 </TableCell>
-                <TableCell>
-                  <Skeleton className="h-9 w-32" />
+                <TableCell className="text-right">
+                  <Skeleton className="ml-auto h-8 w-24" />
                 </TableCell>
               </TableRow>
             ))}

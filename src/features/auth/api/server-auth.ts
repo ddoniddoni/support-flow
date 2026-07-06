@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Role } from "@/types/domain";
@@ -9,11 +10,11 @@ export function getDefaultAuthenticatedPath(role: Role) {
   return role === "customer" ? "/tickets" : "/dashboard";
 }
 
-export async function getServerProfile() {
+export const getServerProfile = cache(async () => {
   const supabase = await createSupabaseServerClient();
 
   return getCurrentProfile(supabase);
-}
+});
 
 export async function requireServerProfile() {
   const profile = await getServerProfile();

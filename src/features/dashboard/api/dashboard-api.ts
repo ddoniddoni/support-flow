@@ -58,6 +58,11 @@ export type DashboardStats = {
   closedTickets: number;
   urgentTickets: number;
   createdToday: number;
+  activeTickets: number;
+  highUrgencyTickets: number;
+  negativeSentimentTickets: number;
+  reviewRequiredTickets: number;
+  unassignedActiveTickets: number;
   statusDistribution: DistributionItem[];
   categoryDistribution: DistributionItem[];
   assigneeWorkload: AssigneeWorkloadItem[];
@@ -134,7 +139,7 @@ function buildAssigneeWorkload(tickets: DashboardTicket[]) {
     const current = workload.get(key) ?? {
       key,
       assigneeId,
-      label: ticket.assignee?.name ?? "담당자 지정 전",
+      label: ticket.assignee?.name ?? "담당자 필요",
       email: ticket.assignee?.email ?? null,
       answerPendingCount: 0,
       urgentCount: 0,
@@ -231,6 +236,20 @@ export async function getDashboardStats(
       .length,
     createdToday: tickets.filter(
       (ticket) => new Date(ticket.created_at) >= todayStart,
+    ).length,
+    activeTickets: activeTickets.length,
+    highUrgencyTickets: activeTickets.filter(
+      (ticket) =>
+        ticket.ai_urgency === "high" || ticket.ai_urgency === "critical",
+    ).length,
+    negativeSentimentTickets: activeTickets.filter(
+      (ticket) => ticket.ai_sentiment === "negative",
+    ).length,
+    reviewRequiredTickets: activeTickets.filter(
+      (ticket) => ticket.ai_needs_review,
+    ).length,
+    unassignedActiveTickets: activeTickets.filter(
+      (ticket) => !ticket.assignee,
     ).length,
     statusDistribution: buildDistribution(
       tickets,

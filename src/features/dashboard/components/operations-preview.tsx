@@ -1,8 +1,12 @@
 import {
   Archive,
+  AlertTriangle,
+  ArrowUpRight,
+  Bot,
   CheckCircle2,
   Inbox,
   TicketCheck,
+  UserRoundPlus,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -47,18 +51,11 @@ const categoryLabels: Record<string, string> = {
   other: "기타",
 };
 
-const statusTones: Record<TicketStatus, ToneBadgeProps["tone"]> = {
-  open: "blue",
-  in_progress: "blue",
-  resolved: "emerald",
-  closed: "muted",
-};
-
-const priorityTones: Record<TicketPriority, ToneBadgeProps["tone"]> = {
-  low: "muted",
-  medium: "sky",
-  high: "orange",
-  urgent: "red",
+const priorityBorderClassNames: Record<TicketPriority, string> = {
+  low: "border-l-muted-foreground/30",
+  medium: "border-l-sky-400",
+  high: "border-l-orange-400",
+  urgent: "border-l-red-500",
 };
 
 const sentimentLabels: Record<AISentiment, string> = {
@@ -104,7 +101,7 @@ type ToneBadgeProps = {
 
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
-    return "접수번호 미지정";
+    return "접수번호 없음";
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
@@ -144,7 +141,7 @@ function getAssigneeLabel(ticket: DashboardTicket) {
     return ticket.assignee.name;
   }
 
-  return isCompletedTicket(ticket) ? "배정 없이 완료" : "담당자 지정 전";
+  return isCompletedTicket(ticket) ? "담당자 없음" : "담당자 필요";
 }
 
 function ToneBadge({ children, tone }: ToneBadgeProps) {
@@ -169,22 +166,19 @@ function ToneBadge({ children, tone }: ToneBadgeProps) {
 
 function AIStatusBadges({ ticket }: { ticket: DashboardTicket }) {
   if (!ticket.ai_sentiment && !ticket.ai_urgency) {
-    return <ToneBadge tone="muted">분류 대기</ToneBadge>;
+    return <ToneBadge tone="muted">AI 대기</ToneBadge>;
   }
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {ticket.ai_needs_review ? (
-        <ToneBadge tone="red">주의 필요</ToneBadge>
-      ) : null}
       {ticket.ai_sentiment ? (
         <ToneBadge tone={sentimentTones[ticket.ai_sentiment]}>
-          {sentimentLabels[ticket.ai_sentiment]}
+          감정 {sentimentLabels[ticket.ai_sentiment]}
         </ToneBadge>
       ) : null}
       {ticket.ai_urgency ? (
         <ToneBadge tone={urgencyTones[ticket.ai_urgency]}>
-          {urgencyLabels[ticket.ai_urgency]}
+          긴급도 {urgencyLabels[ticket.ai_urgency]}
         </ToneBadge>
       ) : null}
     </div>
@@ -201,21 +195,15 @@ function PriorityQueueItem({
   return (
     <Link
       className={cn(
-        "grid gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/50",
+        "grid gap-3 border-b border-l-2 border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/50",
+        priorityBorderClassNames[ticket.priority],
         "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30",
-        "lg:grid-cols-[minmax(0,1fr)_220px_150px] lg:items-center",
+        "lg:grid-cols-[minmax(0,1fr)_112px_132px] lg:items-center",
       )}
       href={href}
     >
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="min-w-0 truncate font-medium text-foreground">
-            {ticket.title}
-          </p>
-          <ToneBadge tone={statusTones[ticket.status]}>
-            {statusLabels[ticket.status]}
-          </ToneBadge>
-        </div>
+        <p className="truncate font-medium text-foreground">{ticket.title}</p>
         <p className="mt-1 truncate text-xs text-muted-foreground">
           {formatTicketNumber(ticket.ticket_number)} ·{" "}
           {categoryLabels[ticket.category] ?? ticket.category} ·{" "}
@@ -223,41 +211,77 @@ function PriorityQueueItem({
         </p>
       </div>
 
-      <AIStatusBadges ticket={ticket} />
+      <div className="min-w-0">
+        <AIStatusBadges ticket={ticket} />
+      </div>
 
-      <div className="flex items-center justify-between gap-2 lg:justify-end">
+      <div className="flex items-center justify-end gap-2">
         <span className="truncate text-xs text-muted-foreground">
           {getAssigneeLabel(ticket)}
         </span>
-        <ToneBadge tone={priorityTones[ticket.priority]}>
-          {priorityLabels[ticket.priority]}
-        </ToneBadge>
+        <span className="sr-only">
+          우선순위 {priorityLabels[ticket.priority]}
+        </span>
       </div>
     </Link>
   );
 }
 
 function MetricCard({
+  accentClassName,
   detail,
   icon: Icon,
   label,
+  progress,
+  progressLabel,
   tone,
   value,
 }: {
+  accentClassName: string;
   detail: string;
   icon: LucideIcon;
   label: string;
+  progress: number;
+  progressLabel: string;
   tone: string;
   value: string;
 }) {
+  const progressWidth = `${Math.min(Math.max(progress, 0), 100)}%`;
+
   return (
-    <div className="min-h-28 rounded-lg border border-border bg-background p-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <Icon className={cn("size-4", tone)} aria-hidden="true" />
+    <div className="group relative min-h-36 overflow-hidden rounded-lg border border-border bg-card p-4 shadow-xs transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-1 bg-primary",
+          accentClassName,
+        )}
+        aria-hidden="true"
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-2 truncate text-3xl font-semibold tabular-nums text-foreground">
+            {value}
+          </p>
+        </div>
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/45 shadow-xs">
+          <Icon className={cn("size-4", tone)} aria-hidden="true" />
+        </span>
       </div>
-      <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+      <div className="mt-4">
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="truncate text-muted-foreground">{detail}</span>
+          <span className="shrink-0 font-medium text-foreground">
+            {progressLabel}
+          </span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn("h-full rounded-full bg-primary", accentClassName)}
+            style={{ width: progressWidth }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -272,7 +296,7 @@ function DistributionPanel({
   title: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-background p-4">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
       <p className="text-sm font-semibold text-foreground">{title}</p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
         {description}
@@ -299,6 +323,142 @@ function DistributionPanel({
   );
 }
 
+function SignalPanel({
+  actionHref,
+  actionLabel,
+  description,
+  icon: Icon,
+  items,
+  title,
+}: {
+  actionHref: string;
+  actionLabel: string;
+  description: string;
+  icon: LucideIcon;
+  items: Array<{
+    label: string;
+    tone?: ToneBadgeProps["tone"];
+    value: number | string;
+  }>;
+  title: string;
+}) {
+  return (
+    <div className="flex h-full min-h-44 flex-col rounded-lg border border-border bg-card p-4 shadow-xs">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/45">
+              <Icon
+                className="size-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+            </span>
+            <p className="truncate text-sm font-semibold text-foreground">
+              {title}
+            </p>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        <Link
+          className="shrink-0 text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/30"
+          href={actionHref}
+        >
+          {actionLabel}
+        </Link>
+      </div>
+
+      <div className="mt-4 grid flex-1 content-end gap-2">
+        {items.map((item) => (
+          <div
+            className="flex items-center justify-between gap-3 rounded-md bg-muted/35 px-2.5 py-2"
+            key={item.label}
+          >
+            <span className="min-w-0 truncate text-xs text-muted-foreground">
+              {item.label}
+            </span>
+            {item.tone ? (
+              <ToneBadge tone={item.tone}>{item.value}</ToneBadge>
+            ) : (
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                {item.value}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OperationsSignalGrid({
+  isAdmin,
+  stats,
+}: {
+  isAdmin: boolean;
+  stats: DashboardStats;
+}) {
+  const answerPendingCount = stats.openTickets + stats.inProgressTickets;
+
+  return (
+    <div className="grid items-stretch gap-3 xl:grid-cols-3">
+      <SignalPanel
+        actionHref="/tickets"
+        actionLabel="문의함"
+        description="오늘 먼저 확인해야 할 운영량입니다."
+        icon={AlertTriangle}
+        items={[
+          { label: "응답 필요", value: answerPendingCount },
+          { label: "긴급 우선순위", tone: "red", value: stats.urgentTickets },
+          { label: "오늘 접수", value: stats.createdToday },
+        ]}
+        title="처리 압력"
+      />
+      <SignalPanel
+        actionHref="/tickets/ai-review"
+        actionLabel="AI 검토"
+        description="AI가 상담원 확인을 권장한 신호입니다."
+        icon={Bot}
+        items={[
+          {
+            label: "검토 필요",
+            tone: "red",
+            value: stats.reviewRequiredTickets,
+          },
+          {
+            label: "부정 감정",
+            tone: "orange",
+            value: stats.negativeSentimentTickets,
+          },
+          {
+            label: "높은 긴급도",
+            tone: "orange",
+            value: stats.highUrgencyTickets,
+          },
+        ]}
+        title="AI 운영 신호"
+      />
+      <SignalPanel
+        actionHref={isAdmin ? "/admin/agents" : "/tickets"}
+        actionLabel={isAdmin ? "담당자" : "문의함"}
+        description="배정 공백과 담당자 부하를 확인합니다."
+        icon={UserRoundPlus}
+        items={[
+          { label: "활성 문의", value: stats.activeTickets },
+          {
+            label: "미배정",
+            tone: "orange",
+            value: stats.unassignedActiveTickets,
+          },
+          { label: "담당자 그룹", value: stats.assigneeWorkload.length },
+        ]}
+        title="배정 현황"
+      />
+    </div>
+  );
+}
+
 function AssigneeManagementPanel({
   isAdmin,
   items,
@@ -312,7 +472,7 @@ function AssigneeManagementPanel({
   );
 
   return (
-    <div className="rounded-lg border border-border bg-background p-4">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">
@@ -387,6 +547,78 @@ function AssigneeManagementPanel({
   );
 }
 
+function FocusTicketPanel({
+  href,
+  ticket,
+}: {
+  href: string | null;
+  ticket: DashboardTicket | null;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-border bg-card p-4 shadow-xs">
+      <div
+        className="absolute inset-x-0 top-0 h-1 bg-primary"
+        aria-hidden="true"
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">
+            현재 포커스
+          </p>
+          <h2 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">
+            {ticket?.title ?? "응답할 문의가 없습니다"}
+          </h2>
+        </div>
+        {href ? (
+          <Link
+            className={cn(
+              buttonVariants({ size: "icon-sm", variant: "outline" }),
+              "shrink-0",
+            )}
+            href={href}
+            aria-label="현재 포커스 문의 상세 열기"
+          >
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </Link>
+        ) : null}
+      </div>
+
+      {ticket ? (
+        <>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <AIStatusBadges ticket={ticket} />
+            <span className="sr-only">
+              우선순위 {priorityLabels[ticket.priority]}
+            </span>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-md border border-border bg-muted/35 p-3">
+              <p className="text-xs text-muted-foreground">답변 상태</p>
+              <p className="mt-1 truncate text-sm font-medium text-foreground">
+                {statusLabels[ticket.status]}
+              </p>
+            </div>
+            <div className="rounded-md border border-border bg-muted/35 p-3">
+              <p className="text-xs text-muted-foreground">담당자</p>
+              <p className="mt-1 truncate text-sm font-medium text-foreground">
+                {getAssigneeLabel(ticket)}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-border bg-muted/40 p-3 text-xs leading-5 text-muted-foreground">
+            {formatTicketNumber(ticket.ticket_number)} · 최근{" "}
+            {formatDateTime(ticket.updated_at)} 업데이트
+          </div>
+        </>
+      ) : (
+        <div className="mt-4 rounded-md border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">
+          새 문의가 들어오면 가장 먼저 응답해야 할 항목이 표시됩니다.
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmptyQueue({
   emptyHref,
   emptyLabel,
@@ -399,10 +631,10 @@ function EmptyQueue({
       <div>
         <Inbox className="mx-auto size-8 text-muted-foreground" />
         <p className="mt-3 text-sm font-medium text-foreground">
-          확인할 문의가 없습니다
+          응답할 문의가 없습니다
         </p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          신규 문의가 접수되면 운영자가 먼저 확인할 항목을 보여줍니다.
+          새 문의가 접수되면 SLA와 AI 검토 기준에 따라 표시됩니다.
         </p>
         {emptyHref && emptyLabel ? (
           <Link
@@ -421,6 +653,36 @@ function EmptyQueue({
   );
 }
 
+function QueueSummaryFooter({ stats }: { stats: DashboardStats }) {
+  const answerPendingCount = stats.openTickets + stats.inProgressTickets;
+  const reviewRate = answerPendingCount
+    ? Math.round((stats.reviewRequiredTickets / answerPendingCount) * 100)
+    : 0;
+
+  return (
+    <div className="mt-auto grid gap-2 border-t border-border bg-muted/20 px-4 py-3 sm:grid-cols-3">
+      <div>
+        <p className="text-xs text-muted-foreground">큐 범위</p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          상위 {stats.recentTickets.length}건 표시
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">AI 확인 비율</p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {reviewRate}%
+        </p>
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground">남은 응답</p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {Math.max(answerPendingCount - stats.recentTickets.length, 0)}건
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function OperationsPreview({
   ctaHref,
   ctaLabel = "전체 보기",
@@ -434,32 +696,51 @@ export function OperationsPreview({
   const selectedTicket = getSelectedTicket(stats);
   const isAdmin = profileRole === "admin";
   const answerPendingCount = stats.openTickets + stats.inProgressTickets;
+  const resolvedRate = getResolvedRate(stats);
+  const answerPendingRate = stats.totalTickets
+    ? Math.round((answerPendingCount / stats.totalTickets) * 100)
+    : 0;
+  const closedRate = stats.totalTickets
+    ? Math.round((stats.closedTickets / stats.totalTickets) * 100)
+    : 0;
   const metrics = [
     {
+      accentClassName: "bg-sky-500",
       detail: `오늘 접수 ${stats.createdToday}건`,
       icon: TicketCheck,
       label: "전체 문의",
+      progress: stats.totalTickets ? 100 : 0,
+      progressLabel: `${stats.createdToday} 신규`,
       tone: "text-sky-600",
       value: String(stats.totalTickets),
     },
     {
+      accentClassName: "bg-blue-600",
       detail: "아직 답변 전인 문의",
       icon: Inbox,
-      label: "답변 대기",
+      label: "응답 필요",
+      progress: answerPendingRate,
+      progressLabel: `${answerPendingRate}%`,
       tone: "text-blue-600",
       value: String(answerPendingCount),
     },
     {
-      detail: `해결률 ${getResolvedRate(stats)}%`,
+      accentClassName: "bg-emerald-500",
+      detail: `해결률 ${resolvedRate}%`,
       icon: CheckCircle2,
       label: "답변 완료",
+      progress: resolvedRate,
+      progressLabel: `${resolvedRate}%`,
       tone: "text-emerald-600",
       value: String(stats.resolvedTickets),
     },
     {
+      accentClassName: "bg-slate-400",
       detail: "후속 추적 종료",
       icon: Archive,
       label: "종료",
+      progress: closedRate,
+      progressLabel: `${closedRate}%`,
       tone: "text-muted-foreground",
       value: String(stats.closedTickets),
     },
@@ -469,22 +750,22 @@ export function OperationsPreview({
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="grid items-start gap-4 p-4 lg:grid-cols-[1fr_320px]">
-        <div className="grid content-start gap-4">
+      <div className="grid items-stretch gap-4 p-4 lg:grid-cols-[1fr_320px]">
+        <div className="grid min-h-full gap-4 lg:grid-rows-[auto_minmax(0,1fr)_auto]">
           <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {metrics.map((metric) => (
               <MetricCard key={metric.label} {...metric} />
             ))}
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
+          <div className="flex min-h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xs">
             <div className="flex flex-col gap-2 border-b border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">
-                  확인할 문의
+                  응답할 문의
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  주의 신호와 답변 대기 상태를 기준으로 먼저 볼 문의입니다.
+                  SLA, 우선순위, AI 검토 필요 여부를 기준으로 정렬됩니다.
                 </p>
               </div>
               {ctaHref ? (
@@ -510,59 +791,17 @@ export function OperationsPreview({
                 ))}
               </div>
             )}
+            {hasTickets ? <QueueSummaryFooter stats={stats} /> : null}
           </div>
+
+          <OperationsSignalGrid isAdmin={isAdmin} stats={stats} />
         </div>
 
-        <aside className="grid content-start gap-4">
-          <div className="rounded-lg border border-border bg-background p-4">
-            <div className="grid gap-3">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">
-                  먼저 확인할 문의
-                </p>
-                <h2 className="mt-2 text-base font-semibold text-foreground">
-                  {selectedTicket?.title ?? "확인할 문의가 없습니다"}
-                </h2>
-              </div>
-              {selectedTicket ? (
-                <div className="flex flex-wrap gap-1.5">
-                  <ToneBadge tone={priorityTones[selectedTicket.priority]}>
-                    {priorityLabels[selectedTicket.priority]}
-                  </ToneBadge>
-                  <AIStatusBadges ticket={selectedTicket} />
-                </div>
-              ) : null}
-            </div>
-            <div className="mt-4 grid gap-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">답변 상태</p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {selectedTicket
-                      ? statusLabels[selectedTicket.status]
-                      : "대기 없음"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">담당자</p>
-                  <p className="mt-1 font-medium text-foreground">
-                    {selectedTicket
-                      ? getAssigneeLabel(selectedTicket)
-                      : "대기 없음"}
-                  </p>
-                </div>
-              </div>
-              <div className="rounded-md bg-muted p-3 text-xs leading-5 text-muted-foreground">
-                {selectedTicket
-                  ? `${formatTicketNumber(
-                      selectedTicket.ticket_number,
-                    )} 문의는 최근 ${formatDateTime(
-                      selectedTicket.updated_at,
-                    )}에 업데이트되었습니다.`
-                  : "새 문의가 들어오면 이 영역에서 먼저 확인할 항목을 보여줍니다."}
-              </div>
-            </div>
-          </div>
+        <aside className="grid h-full content-start gap-4">
+          <FocusTicketPanel
+            href={selectedTicket ? getTicketHref(selectedTicket.id) : null}
+            ticket={selectedTicket}
+          />
 
           <AssigneeManagementPanel
             isAdmin={isAdmin}

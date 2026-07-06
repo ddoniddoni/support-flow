@@ -46,9 +46,25 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+function formatReviewDate(value: string) {
+  const date = new Date(value);
+
+  return {
+    date: new Intl.DateTimeFormat("ko-KR", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date),
+    time: new Intl.DateTimeFormat("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date),
+  };
+}
+
 function formatTicketNumber(ticketNumber: number | null | undefined) {
   if (!ticketNumber) {
-    return "접수번호 미지정";
+    return "접수번호 없음";
   }
 
   return `SF-${String(ticketNumber).padStart(4, "0")}`;
@@ -60,8 +76,8 @@ function getAssigneeLabel(ticket: NonNullable<AIReviewQueueItem["ticket"]>) {
   }
 
   return ticket.status === "resolved" || ticket.status === "closed"
-    ? "배정 없이 완료"
-    : "담당자 지정 전";
+    ? "담당자 없음"
+    : "담당자 필요";
 }
 
 function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
@@ -127,9 +143,10 @@ function TicketSummary({ item }: { item: AIReviewQueueItem }) {
 
 function ReviewActions({ item }: { item: AIReviewQueueItem }) {
   return (
-    <div className="grid gap-2 sm:flex">
+    <div className="grid gap-2 sm:flex sm:justify-end">
       <Button
         nativeButton={false}
+        className="h-8 px-2.5"
         size="sm"
         variant="outline"
         render={<Link href={`/tickets/${item.ticket_id}`} />}
@@ -175,53 +192,60 @@ export function AIReviewTable({ items }: AIReviewTableProps) {
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block">
+      <div className="hidden rounded-lg border border-border bg-card shadow-sm md:block">
         <Table className="min-w-[1040px] table-fixed">
           <colgroup>
-            <col className="w-[260px]" />
-            <col className="w-[190px]" />
+            <col className="w-[280px]" />
+            <col className="w-[176px]" />
             <col className="w-auto" />
-            <col className="w-[150px]" />
-            <col className="w-[220px]" />
+            <col className="w-[132px]" />
+            <col className="w-[112px]" />
           </colgroup>
           <TableHeader>
             <TableRow>
               <TableHead>티켓</TableHead>
               <TableHead>AI 상태</TableHead>
-              <TableHead>요약</TableHead>
-              <TableHead>생성일</TableHead>
-              <TableHead>상세</TableHead>
+              <TableHead>상세 요약</TableHead>
+              <TableHead className="text-right">생성일</TableHead>
+              <TableHead className="text-right">상세</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="min-w-0">
-                  <TicketSummary item={item} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1.5">
-                    <SentimentBadge sentiment={item.sentiment} />
-                    <UrgencyBadge urgency={item.urgency} />
-                    <AIConfidenceBadge confidence={item.confidence} />
-                  </div>
-                </TableCell>
-                <TableCell className="min-w-0">
-                  <p className="truncate text-sm text-foreground">
-                    {item.summary}
-                  </p>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {item.escalation_reason ?? item.reason}
-                  </p>
-                </TableCell>
-                <TableCell className="tabular-nums text-muted-foreground">
-                  {formatDateTime(item.created_at)}
-                </TableCell>
-                <TableCell>
-                  <ReviewActions item={item} />
-                </TableCell>
-              </TableRow>
-            ))}
+            {items.map((item) => {
+              const createdAt = formatReviewDate(item.created_at);
+
+              return (
+                <TableRow key={item.id}>
+                  <TableCell className="min-w-0">
+                    <TicketSummary item={item} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1.5">
+                      <SentimentBadge sentiment={item.sentiment} />
+                      <UrgencyBadge urgency={item.urgency} />
+                      <AIConfidenceBadge confidence={item.confidence} />
+                    </div>
+                  </TableCell>
+                  <TableCell className="min-w-0 whitespace-normal">
+                    <p className="truncate text-sm text-foreground">
+                      {item.summary}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {item.escalation_reason ?? item.reason}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
+                    <time dateTime={item.created_at} className="grid gap-0.5">
+                      <span className="text-foreground">{createdAt.date}</span>
+                      <span>{createdAt.time}</span>
+                    </time>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <ReviewActions item={item} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
