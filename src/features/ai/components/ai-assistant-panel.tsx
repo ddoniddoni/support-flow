@@ -93,7 +93,7 @@ function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
         variant="outline"
         className="border-red-200 bg-red-50 text-red-700"
       >
-        주의 신호
+        검토 필요
       </Badge>
     );
   }
@@ -143,7 +143,7 @@ function CorrectAnalysisForm({
         ticketId: analysis.ticket_id,
         profile,
         decision: "corrected",
-        note: input.note || "AI analysis corrected from ticket detail.",
+        note: input.note || "티켓 상세에서 AI 분석을 수정했습니다.",
         correction: {
           summary: input.summary,
           reason: input.reason,
@@ -168,7 +168,7 @@ function CorrectAnalysisForm({
       onSubmit={form.handleSubmit(submitCorrection)}
     >
       <div className="grid gap-2">
-        <Label htmlFor="ai-summary">Summary</Label>
+        <Label htmlFor="ai-summary">요약</Label>
         <Textarea
           id="ai-summary"
           className="min-h-24"
@@ -184,7 +184,7 @@ function CorrectAnalysisForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="ai-reason">Reason</Label>
+        <Label htmlFor="ai-reason">판단 근거</Label>
         <Textarea
           id="ai-reason"
           className="min-h-28"
@@ -200,7 +200,7 @@ function CorrectAnalysisForm({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="ai-reply-draft">Reply draft</Label>
+        <Label htmlFor="ai-reply-draft">답변 초안</Label>
         <Textarea
           id="ai-reply-draft"
           className="min-h-32"
@@ -211,7 +211,7 @@ function CorrectAnalysisForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="ai-priority">Suggested priority</Label>
+          <Label htmlFor="ai-priority">제안 우선순위</Label>
           <select
             id="ai-priority"
             className="h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
@@ -227,7 +227,7 @@ function CorrectAnalysisForm({
           </select>
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="ai-status">Suggested status</Label>
+          <Label htmlFor="ai-status">제안 답변 상태</Label>
           <select
             id="ai-status"
             className="h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
@@ -323,7 +323,7 @@ export function AIAssistantPanel({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Bot className="size-4 text-primary" aria-hidden="true" />
-              AI Assistant
+              AI 어시스턴트
             </CardTitle>
             <CardDescription>
               티켓 분류, 요약, 응답 초안을 상담원 검토용으로 제안합니다.
@@ -360,7 +360,7 @@ export function AIAssistantPanel({
                 <div className="flex gap-2">
                   <ShieldAlert className="mt-0.5 size-4" aria-hidden="true" />
                   <div>
-                    <p className="font-medium">AI 주의 신호가 감지됐습니다.</p>
+                    <p className="font-medium">AI 검토가 필요합니다.</p>
                     {analysis.escalation_reason ? (
                       <p className="mt-1 text-red-600">
                         {analysis.escalation_reason}

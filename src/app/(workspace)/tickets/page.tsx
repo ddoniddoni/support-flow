@@ -1,4 +1,3 @@
-import { WorkspaceHeader } from "@/components/layout/workspace-header";
 import { requireServerProfile } from "@/features/auth/api/server-auth";
 import { TicketListView } from "@/features/tickets/components/ticket-list-view";
 
@@ -12,10 +11,5 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const profile = await requireServerProfile();
   const params = await searchParams;
 
-  return (
-    <main className="min-h-screen bg-background sf-workspace-main">
-      <WorkspaceHeader profile={profile} />
-      <TicketListView profile={profile} createdTicketId={params.created} />
-    </main>
-  );
+  return <TicketListView profile={profile} createdTicketId={params.created} />;
 }

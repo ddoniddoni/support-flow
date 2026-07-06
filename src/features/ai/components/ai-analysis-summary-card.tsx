@@ -32,6 +32,70 @@ const statusLabels: Record<TicketStatus, string> = {
   closed: "종료",
 };
 
+const categoryLabels: Record<string, string> = {
+  technical: "기술 지원",
+  billing: "결제",
+  account: "계정",
+  product: "제품",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
+  other: "기타",
+};
+
+const intentLabels: Record<string, string> = {
+  question: "문의",
+  complaint: "불만",
+  refund_request: "환불 요청",
+  "refund-request": "환불 요청",
+  bug_report: "오류 신고",
+  "bug-report": "오류 신고",
+  account_help: "계정 지원",
+  "account-help": "계정 지원",
+  billing_issue: "결제 문제",
+  "billing-issue": "결제 문제",
+  cancellation_request: "해지 요청",
+  "cancellation-request": "해지 요청",
+  feature_request: "기능 요청",
+  "feature-request": "기능 요청",
+  praise: "긍정 피드백",
+  other: "기타",
+};
+
+const tagLabels: Record<string, string> = {
+  technical: "기술 지원",
+  billing: "결제",
+  account: "계정",
+  product: "제품",
+  shipping: "배송",
+  refund: "환불",
+  complaint: "불만",
+  other: "기타",
+  question: "문의",
+  "refund-request": "환불 요청",
+  "bug-report": "오류 신고",
+  "account-help": "계정 지원",
+  "billing-issue": "결제 문제",
+  "cancellation-request": "해지 요청",
+  "feature-request": "기능 요청",
+  "priority-review": "검토 필요",
+  "repeat-contact": "반복 문의",
+  "needs-human-review": "검토 필요",
+  vip: "VIP",
+};
+
+function formatCategory(value: string) {
+  return categoryLabels[value] ?? value;
+}
+
+function formatIntent(value: string) {
+  return intentLabels[value] ?? value;
+}
+
+function formatTag(value: string) {
+  return tagLabels[value] ?? value;
+}
+
 function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
   return (
     <Badge
@@ -79,14 +143,14 @@ export function AIAnalysisSummaryCard({
 
       <div className="grid gap-2">
         <p className="text-xs font-medium uppercase tracking-[0.015625rem] text-muted-foreground">
-          Summary
+          요약
         </p>
         <p className="text-sm leading-6 text-foreground">{analysis.summary}</p>
       </div>
 
       <div className="grid gap-2">
         <p className="text-xs font-medium uppercase tracking-[0.015625rem] text-muted-foreground">
-          Reason
+          판단 근거
         </p>
         <p className="text-sm leading-6 text-muted-foreground">
           {analysis.reason}
@@ -95,18 +159,20 @@ export function AIAnalysisSummaryCard({
 
       <div className="grid gap-2 text-sm">
         <div className="flex justify-between gap-3">
-          <span className="text-muted-foreground">Category</span>
+          <span className="text-muted-foreground">분류</span>
           <span className="font-medium text-foreground">
-            {analysis.category}
+            {formatCategory(analysis.category)}
           </span>
         </div>
         <div className="flex justify-between gap-3">
-          <span className="text-muted-foreground">Intent</span>
-          <span className="font-medium text-foreground">{analysis.intent}</span>
+          <span className="text-muted-foreground">의도</span>
+          <span className="font-medium text-foreground">
+            {formatIntent(analysis.intent)}
+          </span>
         </div>
         {analysis.suggested_priority ? (
           <div className="flex justify-between gap-3">
-            <span className="text-muted-foreground">Suggested priority</span>
+            <span className="text-muted-foreground">제안 우선순위</span>
             <span className="font-medium text-foreground">
               {priorityLabels[analysis.suggested_priority]}
             </span>
@@ -114,7 +180,7 @@ export function AIAnalysisSummaryCard({
         ) : null}
         {analysis.suggested_status ? (
           <div className="flex justify-between gap-3">
-            <span className="text-muted-foreground">Suggested status</span>
+            <span className="text-muted-foreground">제안 답변 상태</span>
             <span className="font-medium text-foreground">
               {statusLabels[analysis.suggested_status]}
             </span>
@@ -124,9 +190,9 @@ export function AIAnalysisSummaryCard({
 
       {analysis.tags.length ? (
         <div className="flex flex-wrap gap-1.5">
-          {analysis.tags.map((tag) => (
-            <Badge key={tag} variant="secondary">
-              {tag}
+          {analysis.tags.map((tag, index) => (
+            <Badge key={`${tag}-${index}`} variant="secondary">
+              {formatTag(tag)}
             </Badge>
           ))}
         </div>

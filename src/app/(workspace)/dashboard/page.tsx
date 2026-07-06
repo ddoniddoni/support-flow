@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { WorkspaceHeader } from "@/components/layout/workspace-header";
 import { requireServerProfile } from "@/features/auth/api/server-auth";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 
@@ -11,10 +10,5 @@ export default async function DashboardPage() {
     redirect("/tickets");
   }
 
-  return (
-    <main className="min-h-screen bg-background sf-workspace-main">
-      <WorkspaceHeader profile={profile} />
-      <DashboardView profile={profile} />
-    </main>
-  );
+  return <DashboardView profile={profile} />;
 }

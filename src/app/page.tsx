@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
 import {
   getDefaultAuthenticatedPath,
   getServerProfile,
@@ -21,12 +19,14 @@ async function getLandingProfile() {
 
 export default async function Home() {
   const profile = await getLandingProfile();
-
-  if (profile) {
-    redirect(getDefaultAuthenticatedPath(profile.role));
-  }
+  const workspaceHref = profile
+    ? getDefaultAuthenticatedPath(profile.role)
+    : "/login";
 
   return (
-    <PublicOperationsHome workspaceHref="/login" workspaceLabel="Demo 열기" />
+    <PublicOperationsHome
+      workspaceHref={workspaceHref}
+      workspaceLabel={profile ? "운영 화면 열기" : "Demo 열기"}
+    />
   );
 }

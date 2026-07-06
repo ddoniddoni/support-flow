@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { WorkspaceHeader } from "@/components/layout/workspace-header";
 import { requireServerProfile } from "@/features/auth/api/server-auth";
 import { AutomationRulesView } from "@/features/operations/components/operations-mock-views";
 
@@ -11,10 +10,5 @@ export default async function AutomationsPage() {
     redirect("/tickets");
   }
 
-  return (
-    <main className="min-h-screen bg-background sf-workspace-main">
-      <WorkspaceHeader profile={profile} />
-      <AutomationRulesView profile={profile} />
-    </main>
-  );
+  return <AutomationRulesView profile={profile} />;
 }

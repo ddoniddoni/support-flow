@@ -20,10 +20,10 @@ function getRoleLabel(role: Tables<"profiles">["role"]) {
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
   if (role === "agent") {
-    return "오늘 확인할 문의와 AI 주의 신호를 확인합니다.";
+    return "내가 맡은 문의의 응답 필요 항목과 AI 검토 대상을 확인합니다.";
   }
 
-  return "지원팀의 답변 상태와 위험 신호를 한눈에 확인합니다.";
+  return "지원팀 전체의 응답 현황, SLA 위험, 담당자 부하를 확인합니다.";
 }
 
 export function DashboardView({ profile }: DashboardViewProps) {
@@ -40,7 +40,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
             </span>
           </div>
           <h1 className="mt-2 text-xl font-semibold text-foreground">
-            {profile.name}님의 운영 대시보드
+            오늘의 지원 운영
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
@@ -68,9 +68,9 @@ export function DashboardView({ profile }: DashboardViewProps) {
       {!statsQuery.isLoading && !statsQuery.isError && statsQuery.data ? (
         <OperationsPreview
           ctaHref="/tickets"
-          ctaLabel="문의 목록"
+          ctaLabel="문의함"
           emptyHref={profile.role === "customer" ? "/tickets/new" : "/tickets"}
-          emptyLabel={profile.role === "customer" ? "문의 등록" : "문의 목록"}
+          emptyLabel={profile.role === "customer" ? "문의 등록" : "문의함"}
           profileRole={profile.role}
           stats={statsQuery.data}
         />

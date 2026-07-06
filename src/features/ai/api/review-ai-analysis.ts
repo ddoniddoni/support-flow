@@ -35,7 +35,7 @@ function toJson(value: unknown): Json {
     return JSON.parse(JSON.stringify(value ?? null)) as Json;
   } catch {
     return {
-      error: "Unable to serialize review payload.",
+      error: "AI 검토 내용을 JSON으로 저장하지 못했습니다.",
     };
   }
 }
@@ -65,7 +65,7 @@ async function getCurrentAnalysis(analysisId: string) {
   }
 
   if (!data) {
-    throw new Error("AI analysis not found or access denied.");
+    throw new Error("AI 분석을 찾을 수 없거나 접근 권한이 없습니다.");
   }
 
   return data;
@@ -120,7 +120,7 @@ export async function reviewAIAnalysis(
   input: ReviewAIAnalysisInput,
 ): Promise<TicketAIAnalysis> {
   if (input.profile.role === "customer") {
-    throw new Error("Customers cannot review AI analysis.");
+    throw new Error("고객 계정은 AI 분석을 검토할 수 없습니다.");
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -141,7 +141,7 @@ export async function reviewAIAnalysis(
           needs_review: false,
           escalation_reason:
             input.decision === "rejected"
-              ? (input.note ?? "AI analysis was rejected.")
+              ? (input.note ?? "AI 분석이 제외되었습니다.")
               : null,
         };
 
@@ -189,7 +189,7 @@ export async function sendAIAnalysisToReview(
   input: SendAIAnalysisToReviewInput,
 ): Promise<TicketAIAnalysis> {
   if (input.profile.role === "customer") {
-    throw new Error("Customers cannot send AI analysis to review.");
+    throw new Error("고객 계정은 AI 분석을 검토 대상으로 보낼 수 없습니다.");
   }
 
   const supabase = createSupabaseBrowserClient();
@@ -198,7 +198,7 @@ export async function sendAIAnalysisToReview(
     .from("ticket_ai_analyses")
     .update({
       needs_review: true,
-      escalation_reason: input.note ?? "Sent to human review from ticket detail.",
+      escalation_reason: input.note ?? "티켓 상세에서 상담원 검토 대상으로 표시했습니다.",
     })
     .eq("id", input.analysisId)
     .eq("ticket_id", input.ticketId)

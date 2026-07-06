@@ -10,6 +10,11 @@ export const demoDashboardStats: DashboardStats = {
   closedTickets: 3,
   urgentTickets: 7,
   createdToday: 6,
+  activeTickets: 26,
+  highUrgencyTickets: 8,
+  negativeSentimentTickets: 5,
+  reviewRequiredTickets: 9,
+  unassignedActiveTickets: 4,
   statusDistribution: [
     { key: "answer_pending", label: "답변 대기", count: 26, percentage: 68 },
     { key: "resolved", label: "답변 완료", count: 9, percentage: 24 },
@@ -26,7 +31,7 @@ export const demoDashboardStats: DashboardStats = {
     {
       key: "unassigned",
       assigneeId: null,
-      label: "담당자 지정 전",
+      label: "담당자 필요",
       email: null,
       answerPendingCount: 1,
       urgentCount: 0,
