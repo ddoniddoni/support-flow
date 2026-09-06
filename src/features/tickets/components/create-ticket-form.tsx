@@ -31,7 +31,7 @@ function getCreateTicketErrorMessage(message: string) {
   const normalizedMessage = message.toLowerCase();
 
   if (normalizedMessage.includes("row-level security")) {
-    return "문의를 등록할 권한이 없습니다. Supabase RLS 정책을 확인해 주세요.";
+    return "문의를 등록할 권한이 없습니다. 다시 로그인하거나 관리자에게 문의해 주세요.";
   }
 
   if (

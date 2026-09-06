@@ -6,6 +6,7 @@ export type TicketLatestAnalysis = Pick<
   "intent" | "summary" | "tags"
 >;
 export type TicketListItem = Tables<"tickets"> & {
+  ai_review_decision?: Tables<"ticket_ai_analyses">["review_decision"];
   customer: TicketPerson | null;
   assignee: TicketPerson | null;
   latest_ai_analysis: TicketLatestAnalysis | null;

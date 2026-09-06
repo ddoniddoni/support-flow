@@ -478,8 +478,7 @@ export function TicketListView({
           <div>
             <p className="font-medium">문의 목록을 불러오지 못했습니다.</p>
             <p className="mt-1 text-red-600">
-              Supabase 권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해
-              주세요.
+              잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
             </p>
           </div>
         </div>

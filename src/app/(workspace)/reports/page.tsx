@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireServerProfile } from "@/features/auth/api/server-auth";
-import { ReportsView } from "@/features/operations/components/operations-mock-views";
+import { ReportsView } from "@/features/operations/components/reports-view";
 
 export default async function ReportsPage() {
   const profile = await requireServerProfile();

@@ -17,6 +17,7 @@ export function useCreateTicketReply() {
         }),
         queryClient.invalidateQueries({ queryKey: ["tickets"] }),
         queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent-management"] }),
       ]);
       await queryClient.refetchQueries({
         queryKey: ["ticket", input.ticketId],

@@ -1,3 +1,4 @@
+import { collectPages } from "@/lib/data/pagination";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 import {
@@ -99,17 +100,15 @@ export async function getAIDashboardStats(
   }
 
   const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase
-    .from("ticket_ai_analyses")
-    .select("category,sentiment,urgency,confidence,needs_review,created_at")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    throw error;
-  }
-
-  const analyses = (data ?? []) as AIStatsAnalysis[];
   const weekStart = getWeekStart();
+  const [tickets, countResult] = await Promise.all([
+    collectPages((from, to) => supabase.from("ticket_workspace").select("ai_analysis")
+      .order("id", { ascending: true }).range(from, to)),
+    supabase.from("ticket_ai_analyses").select("id", { count: "exact", head: true })
+      .gte("created_at", weekStart.toISOString()),
+  ]);
+  if (countResult.error) throw countResult.error;
+  const analyses: AIStatsAnalysis[] = tickets.flatMap(ticket => ticket.ai_analysis && ticket.ai_analysis.review_decision !== "rejected" ? [ticket.ai_analysis] : []);
   const highUrgencies: AIUrgency[] = ["high", "critical"];
   const negativeSentiment: AISentiment = "negative";
 
@@ -124,9 +123,7 @@ export async function getAIDashboardStats(
       highUrgencies.includes(analysis.urgency),
     ).length,
     averageConfidence: getAverageConfidence(analyses),
-    analysesThisWeek: analyses.filter(
-      (analysis) => new Date(analysis.created_at) >= weekStart,
-    ).length,
+    analysesThisWeek: countResult.count ?? 0,
     topCategories: buildCategoryDistribution(analyses),
   };
 }

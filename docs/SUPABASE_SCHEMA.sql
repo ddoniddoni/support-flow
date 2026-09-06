@@ -93,7 +93,7 @@ begin
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data ->> 'name', split_part(new.email, '@', 1)),
-    coalesce((new.raw_user_meta_data ->> 'role')::public.user_role, 'customer')
+    'customer'
   )
   on conflict (id) do nothing;
 
@@ -271,6 +271,10 @@ for update
 to authenticated
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+-- End users can edit display names, never their authorization role.
+revoke insert, update, delete on public.profiles from authenticated;
+grant update (name) on public.profiles to authenticated;
 
 create policy "Customers can create their own tickets"
 on public.tickets

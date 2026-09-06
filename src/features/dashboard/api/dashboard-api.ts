@@ -1,3 +1,4 @@
+import { collectPages } from "@/lib/data/pagination";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Database } from "@/types/database";
 import type { Tables } from "@/types/database";
@@ -170,7 +171,7 @@ export async function getDashboardStats(
   supabase: DashboardSupabaseClient = createSupabaseBrowserClient(),
 ): Promise<DashboardStats> {
   let query = supabase
-    .from("tickets")
+    .from("ticket_workspace")
     .select(
       `
         id,
@@ -185,8 +186,8 @@ export async function getDashboardStats(
         ai_confidence,
         created_at,
         updated_at,
-        customer:profiles!tickets_customer_id_fkey(id,email,name),
-        assignee:profiles!tickets_assignee_id_fkey(id,email,name)
+        customer,
+        assignee
       `,
     );
 
@@ -205,18 +206,16 @@ export async function getDashboardStats(
   } else {
     query = query
       .order("ai_needs_review", { ascending: false })
-      .order("ai_urgency", { ascending: true, nullsFirst: false })
+      .order("ai_urgency_rank", { ascending: false })
+      .order("priority_rank", { ascending: false })
       .order("ai_confidence", { ascending: true, nullsFirst: false })
       .order("updated_at", { ascending: true });
   }
 
-  const { data, error } = await query;
-
-  if (error) {
-    throw error;
-  }
-
-  const tickets = (data ?? []) as DashboardTicket[];
+  query = query.order("id", { ascending: false });
+  const tickets = await collectPages<DashboardTicket>((from, to) =>
+    query.range(from, to),
+  );
   const activeTickets = tickets.filter(
     (ticket) => ticket.status !== "resolved" && ticket.status !== "closed",
   );

@@ -247,10 +247,10 @@ function getSlaLabel(ticket: TicketDetail) {
   const targetHours = slaTargetsByPriority[ticket.priority];
 
   if (elapsedHours >= targetHours) {
-    return "SLA 초과";
+    return "응답 목표 초과";
   }
 
-  return `SLA ${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`;
+  return `응답 목표 ${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`;
 }
 
 function getTicketTags(ticket: TicketDetail) {
@@ -866,7 +866,7 @@ function TicketDetailContent({
               {canViewOperations ? (
                 <>
                   <div>
-                    <p className="text-muted-foreground">SLA</p>
+                    <p className="text-muted-foreground">기본 응답 목표</p>
                     <p className="font-medium text-foreground">
                       {getSlaLabel(ticket)}
                     </p>

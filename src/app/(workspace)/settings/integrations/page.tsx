@@ -1,14 +1,11 @@
-import { redirect } from "next/navigation";
-
-import { requireServerProfile } from "@/features/auth/api/server-auth";
-import { IntegrationsSettingsView } from "@/features/operations/components/operations-mock-views";
+import { requireServerRole } from "@/features/auth/api/server-auth";
+import { IntegrationStatusView } from "@/features/operations/components/integration-status-view";
+import { hasSupabaseEnv } from "@/lib/env";
+import { hasSupabaseServiceRoleKey } from "@/lib/supabase/service-role";
 
 export default async function IntegrationsPage() {
-  const profile = await requireServerProfile();
-
-  if (profile.role === "customer") {
-    redirect("/tickets");
-  }
-
-  return <IntegrationsSettingsView profile={profile} />;
+  await requireServerRole(["admin"]);
+  const provider = process.env.AI_PROVIDER?.trim() || "mock";
+  return <IntegrationStatusView databaseConfigured={hasSupabaseEnv()}
+    autoAnalysisEnabled={hasSupabaseServiceRoleKey() && provider === "mock"} provider={provider} />;
 }

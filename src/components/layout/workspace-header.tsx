@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 import type { Tables } from "@/types/database";
 import { ThemeToggle } from "./theme-toggle";
 import {
-  isSidebarMode,
   sidebarCookieName,
   sidebarStorageKey,
   sidebarWidths,
@@ -105,14 +104,15 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
     match: (pathname) => pathname === "/reports",
   });
 
+
+
+  if (role === "admin") {
   items.push({
     href: "/settings/integrations",
     icon: Plug,
-    label: "연동 설정",
+    label: "연동 상태",
     match: (pathname) => pathname.startsWith("/settings"),
   });
-
-  if (role === "admin") {
     items.push({
       href: "/admin/agents",
       icon: UsersRound,
@@ -292,7 +292,11 @@ function SidebarToggleIcon({ mode }: { mode: SidebarMode }) {
 }
 
 function persistSidebarMode(mode: SidebarMode) {
-  window.localStorage.setItem(sidebarStorageKey, mode);
+  try {
+    window.localStorage.setItem(sidebarStorageKey, mode);
+  } catch {
+    // Storage can be blocked; the server-readable cookie remains authoritative.
+  }
   document.cookie = `${sidebarCookieName}=${mode}; path=/; max-age=31536000; samesite=lax`;
 }
 
@@ -315,15 +319,8 @@ export function WorkspaceHeader({
   const pathname = usePathname();
   const navItems = getNavItems(profile.role);
   const workspaceHomeHref = getWorkspaceHomeHref(profile.role);
-  const [sidebarMode, setSidebarMode] = useState<SidebarMode>(() => {
-    if (typeof window === "undefined") {
-      return initialSidebarMode;
-    }
-
-    const savedMode = window.localStorage.getItem(sidebarStorageKey);
-
-    return isSidebarMode(savedMode) ? savedMode : initialSidebarMode;
-  });
+  // Match the server-rendered layout on the first client render.
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>(initialSidebarMode);
   const isCompact = sidebarMode === "compact";
   const isHidden = sidebarMode === "hidden";
   const sidebarToggleLabel = getSidebarToggleLabel(sidebarMode);

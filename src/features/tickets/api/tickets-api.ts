@@ -1,3 +1,4 @@
+import { normalizePagination } from "@/lib/data/pagination";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 import type {
@@ -13,12 +14,7 @@ import type {
 } from "../schemas/ticket-schema";
 import type { TicketDetailData, TicketSortOption } from "../types";
 
-const ticketSelectQuery = `
-  *,
-  customer:profiles!tickets_customer_id_fkey(email,name),
-  assignee:profiles!tickets_assignee_id_fkey(email,name),
-  latest_ai_analysis:ticket_ai_analyses!tickets_latest_ai_analysis_id_fkey(intent,summary,tags)
-`;
+const ticketSelectQuery = "*";
 
 export async function createTicket(input: CreateTicketInput) {
   const response = await fetch("/api/tickets", {
@@ -85,12 +81,11 @@ const defaultPageSize = 10;
 
 export async function listTickets({ profile, filters }: ListTicketsParams) {
   const supabase = createSupabaseBrowserClient();
-  const page = Math.max(filters.page ?? 1, 1);
-  const pageSize = filters.pageSize ?? defaultPageSize;
+  const { page, pageSize } = normalizePagination(filters.page, filters.pageSize ?? defaultPageSize);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase.from("tickets").select(ticketSelectQuery, {
+  let query = supabase.from("ticket_workspace").select(ticketSelectQuery, {
     count: "exact",
   });
 
@@ -142,7 +137,8 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
   if (filters.sort === "priority_first") {
     query = query
       .order("ai_needs_review", { ascending: false })
-      .order("ai_urgency", { ascending: true, nullsFirst: false })
+      .order("ai_urgency_rank", { ascending: false })
+      .order("priority_rank", { ascending: false })
       .order("ai_confidence", { ascending: true, nullsFirst: false })
       .order("updated_at", { ascending: true });
   } else if (filters.sort === "created_asc") {
@@ -155,7 +151,7 @@ export async function listTickets({ profile, filters }: ListTicketsParams) {
     query = query.order("created_at", { ascending: false });
   }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, error, count } = await query.order("id", { ascending: false }).range(from, to);
 
   if (error) {
     throw error;
@@ -180,7 +176,7 @@ export async function getTicketDetail({
   const supabase = createSupabaseBrowserClient();
 
   let ticketQuery = supabase
-    .from("tickets")
+    .from("ticket_workspace")
     .select(ticketSelectQuery)
     .eq("id", ticketId);
 
@@ -263,190 +259,32 @@ export async function listAssignableAgents(): Promise<AgentOption[]> {
   return data ?? [];
 }
 
-function getActionEntries(input: TicketActionInput) {
-  return [
-    {
-      key: "status",
-      value: input.status,
-      label: "status",
-    },
-    {
-      key: "priority",
-      value: input.priority,
-      label: "priority",
-    },
-    {
-      key: "assignee_id",
-      value: input.assigneeId,
-      label: "assignee",
-    },
-  ] as const;
-}
-
 export async function updateTicketAction(input: TicketActionInput) {
   const supabase = createSupabaseBrowserClient();
-
-  if (input.profile.role === "customer") {
-    throw new Error("Customers cannot update ticket operations.");
-  }
-
-  if (
-    input.profile.role === "agent" &&
-    (input.priority || input.assigneeId !== undefined)
-  ) {
-    throw new Error("Agents can only update ticket status.");
-  }
-
-  const { data: currentTicket, error: currentTicketError } = await supabase
-    .from("tickets")
-    .select("*")
-    .eq("id", input.ticketId)
-    .maybeSingle();
-
-  if (currentTicketError) {
-    throw currentTicketError;
-  }
-
-  if (!currentTicket) {
-    throw new Error("Ticket not found or access denied.");
-  }
-
-  const updates: {
-    status?: TicketStatus;
-    priority?: TicketPriority;
-    assignee_id?: string | null;
-  } = {};
-
-  if (input.status && input.status !== currentTicket.status) {
-    updates.status = input.status;
-  }
-
-  if (input.priority && input.priority !== currentTicket.priority) {
-    updates.priority = input.priority;
-  }
-
-  if (
-    input.assigneeId !== undefined &&
-    input.assigneeId !== currentTicket.assignee_id
-  ) {
-    updates.assignee_id = input.assigneeId;
-  }
-
-  if (!Object.keys(updates).length) {
-    return currentTicket;
-  }
-
-  const { data: updatedTicket, error: updateError } = await supabase
-    .from("tickets")
-    .update(updates)
-    .eq("id", input.ticketId)
-    .select("*")
-    .single();
-
-  if (updateError) {
-    throw updateError;
-  }
-
-  const changedLogs = getActionEntries(input)
-    .filter(({ key, value }) => key in updates && value !== undefined)
-    .map(({ key, value, label }) => ({
-      ticket_id: input.ticketId,
-      actor_id: input.profile.id,
-      action: `${label}_changed`,
-      before_value:
-        currentTicket[key] === null ? null : String(currentTicket[key]),
-      after_value: value === null ? null : String(value),
-    }));
-
-  if (changedLogs.length) {
-    const { error: logError } = await supabase
-      .from("ticket_logs")
-      .insert(changedLogs);
-
-    if (logError) {
-      throw logError;
-    }
-  }
-
-  return updatedTicket;
+  const { data, error } = await supabase.rpc("support_ticket_command", {
+    p_ticket_id: input.ticketId,
+    p_action: "update",
+    p_payload: {
+      ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.priority !== undefined ? { priority: input.priority } : {}),
+      ...(input.assigneeId !== undefined ? { assigneeId: input.assigneeId } : {}),
+    },
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function createTicketReply(input: CreateTicketReplyInput) {
   const supabase = createSupabaseBrowserClient();
-
-  if (input.profile.role === "customer") {
-    throw new Error("Customers cannot create support replies.");
-  }
-
-  const { data: currentTicket, error: currentTicketError } = input.isInternal
-    ? { data: null, error: null }
-    : await supabase
-        .from("tickets")
-        .select("status")
-        .eq("id", input.ticketId)
-        .maybeSingle();
-
-  if (currentTicketError) {
-    throw currentTicketError;
-  }
-
-  const { data, error } = await supabase.rpc("create_ticket_reply", {
+  const { data, error } = await supabase.rpc("support_ticket_command", {
     p_ticket_id: input.ticketId,
-    p_content: input.content,
-    p_is_internal: input.isInternal,
+    p_action: "reply",
+    p_payload: {
+      content: input.content,
+      isInternal: input.isInternal,
+      source: input.source ?? "manual",
+    },
   });
-
-  if (error) {
-    throw error;
-  }
-
-  if (input.source === "ai_draft" && !input.isInternal) {
-    const { error: logError } = await supabase.from("ticket_logs").insert({
-      ticket_id: input.ticketId,
-      actor_id: input.profile.id,
-      action: "ai_draft_used_as_customer_reply",
-      before_value: null,
-      after_value: data?.id ?? null,
-    });
-
-    if (logError) {
-      throw logError;
-    }
-  }
-
-  if (
-    !input.isInternal &&
-    currentTicket &&
-    (currentTicket.status === "open" || currentTicket.status === "in_progress")
-  ) {
-    const { data: updatedTicket, error: updateError } = await supabase
-      .from("tickets")
-      .update({ status: "resolved" })
-      .eq("id", input.ticketId)
-      .in("status", ["open", "in_progress"])
-      .select("id")
-      .maybeSingle();
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    if (updatedTicket) {
-      const { error: statusLogError } = await supabase
-        .from("ticket_logs")
-        .insert({
-          ticket_id: input.ticketId,
-          actor_id: input.profile.id,
-          action: "status_changed",
-          before_value: currentTicket.status,
-          after_value: "resolved",
-        });
-
-      if (statusLogError) {
-        throw statusLogError;
-      }
-    }
-  }
-
+  if (error) throw error;
   return data;
 }

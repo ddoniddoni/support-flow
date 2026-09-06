@@ -634,7 +634,7 @@ function EmptyQueue({
           응답할 문의가 없습니다
         </p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          새 문의가 접수되면 SLA와 AI 검토 기준에 따라 표시됩니다.
+          새 문의가 접수되면 우선순위와 AI 검토 기준에 따라 표시됩니다.
         </p>
         {emptyHref && emptyLabel ? (
           <Link
@@ -765,7 +765,7 @@ export function OperationsPreview({
                   응답할 문의
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  SLA, 우선순위, AI 검토 필요 여부를 기준으로 정렬됩니다.
+                  AI 검토 필요 여부, 긴급도, 우선순위를 기준으로 정렬됩니다.
                 </p>
               </div>
               {ctaHref ? (
