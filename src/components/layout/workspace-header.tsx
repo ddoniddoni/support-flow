@@ -14,6 +14,7 @@ import {
   Workflow,
   type LucideIcon,
 } from "lucide-react";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useState } from "react";
@@ -33,7 +34,7 @@ import {
 
 type WorkspaceHeaderProps = {
   initialSidebarMode?: SidebarMode;
-  profile: Pick<Tables<"profiles">, "email" | "name" | "role">;
+  profile: Pick<Tables<"profiles">, "id" | "email" | "name" | "role">;
 };
 
 type NavItem = {
@@ -57,7 +58,7 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
     {
       href: "/tickets",
       icon: Inbox,
-      label: "문의함",
+      label: role === "agent" ? "내 배정 문의" : "문의함",
       match: (pathname) =>
         pathname === "/tickets" ||
         (pathname.startsWith("/tickets/") &&
@@ -79,7 +80,7 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
   items.unshift({
     href: "/dashboard",
     icon: LayoutDashboard,
-    label: "운영 현황",
+    label: role === "agent" ? "내 처리 현황" : "운영 현황",
     match: (pathname) => pathname === "/dashboard",
   });
 
@@ -131,7 +132,7 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
 }
 
 function getWorkspaceHomeHref(role: Tables<"profiles">["role"]) {
-  return role === "customer" ? "/tickets/new" : "/dashboard";
+  return role === "customer" ? "/tickets/new" : role === "agent" ? "/tickets" : "/dashboard";
 }
 
 function WorkspaceLogo({
@@ -229,7 +230,7 @@ function ProfileBlock({
   profile,
 }: {
   mode: SidebarMode;
-  profile: Pick<Tables<"profiles">, "email" | "name" | "role">;
+  profile: Pick<Tables<"profiles">, "id" | "email" | "name" | "role">;
 }) {
   if (mode === "compact") {
     return (
@@ -405,6 +406,7 @@ export function WorkspaceHeader({
             isCompact && "justify-items-center",
           )}
         >
+          <NotificationBell profileId={profile.id} compact={isCompact} />
           <ProfileBlock mode={sidebarMode} profile={profile} />
           <div
             className={cn(
@@ -438,8 +440,9 @@ export function WorkspaceHeader({
         <div className="flex items-center justify-between gap-3">
           <WorkspaceLogo href={workspaceHomeHref} mode="expanded" />
           <div className="flex shrink-0 items-center gap-2">
+            <NotificationBell profileId={profile.id} compact />
             <ThemeToggle className={sidebarActionButtonClass} />
-            <LogoutButton className={sidebarActionButtonClass} />
+            <LogoutButton className={sidebarActionButtonClass} showLabel={false} size="icon" />
           </div>
         </div>
         <nav

@@ -207,7 +207,7 @@ export async function getTicketDetail({
     .from("ticket_replies")
     .select("*, author:profiles!ticket_replies_author_id_fkey(email,name,role)")
     .eq("ticket_id", ticketId)
-    .order("created_at", { ascending: true });
+    .order("reply_order", { ascending: true });
 
   if (profile.role === "customer") {
     repliesQuery = repliesQuery.eq("is_internal", false);

@@ -328,10 +328,12 @@ function MobileTicketCard({
   href,
   ticket,
   role,
+  unreadCounts,
 }: {
   href: string;
   ticket: TicketListItem;
   role: Tables<"profiles">["role"];
+  unreadCounts?: Map<string, number>;
 }) {
   const isCustomer = role === "customer";
 
@@ -341,6 +343,7 @@ function MobileTicketCard({
       className="grid gap-3 rounded-lg border border-border bg-card p-3 shadow-xs"
     >
       <div>
+        {(unreadCounts?.get(ticket.id) ?? 0)>0 ? <Badge className="mb-2">새 알림 {unreadCounts?.get(ticket.id)}</Badge> : null}
         <p className="font-medium text-foreground">{ticket.title}</p>
         {isCustomer ? null : (
           <p className="mt-1 text-xs text-muted-foreground">
@@ -375,17 +378,20 @@ export function TicketListTable({
   selection,
   tickets,
   role,
+  unreadCounts,
 }: {
   getTicketHref?: (ticketId: string) => string;
   selectedTicketId?: string | null;
   selection?: { ids: string[]; disabled: boolean; onToggle: (id: string) => void; onToggleAll: () => void };
   tickets: TicketListItem[];
   role: Tables<"profiles">["role"];
+  unreadCounts?: Map<string, number>;
 }) {
   const isCustomer = role === "customer";
   const canSelect = role === "admin" && selection !== undefined;
   const allSelected = tickets.length > 0 && tickets.every(ticket => selection?.ids.includes(ticket.id));
-  const columnWidths = isCustomer ? customerColumnWidths : adminColumnWidths;
+  const isAgent = role === "agent";
+  const columnWidths = isCustomer ? customerColumnWidths : isAgent ? ["w-auto", "w-[104px]", "w-[88px]", "w-[104px]", "w-[104px]", "w-[112px]"] : adminColumnWidths;
   const resolveTicketHref =
     getTicketHref ?? ((ticketId: string) => `/tickets/${ticketId}`);
 
@@ -395,13 +401,13 @@ export function TicketListTable({
         {tickets.map((ticket) => (
           <div key={ticket.id} className={cn(canSelect && "rounded-lg border border-border bg-card", selection?.ids.includes(ticket.id) && "ring-2 ring-primary/40")}>
             {canSelect ? <div className="flex items-center gap-1 px-2 pt-1"><SelectionCheckbox label={`${formatTicketNumber(ticket.ticket_number)} 선택`} checked={selection.ids.includes(ticket.id)} disabled={selection.disabled} onChange={() => selection.onToggle(ticket.id)} /><span className="text-xs text-muted-foreground">문의 선택</span></div> : null}
-            <MobileTicketCard href={resolveTicketHref(ticket.id)} ticket={ticket} role={role} />
+            <MobileTicketCard href={resolveTicketHref(ticket.id)} ticket={ticket} role={role} unreadCounts={unreadCounts} />
           </div>
         ))}
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-xs md:block">
-        <Table className="min-w-[960px] table-fixed">
+        <Table className={cn("table-fixed", isAgent ? "min-w-[820px]" : "min-w-[960px]")}>
           <colgroup>
             {canSelect ? <col className="w-12" /> : null}
             {columnWidths.map((width, index) => (
@@ -415,8 +421,8 @@ export function TicketListTable({
               <TableHead>답변 상태</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
               {isCustomer ? null : <TableHead title="접수 시각과 우선순위 기준의 기본 응답 목표입니다. 영업시간은 반영하지 않습니다.">응답 목표</TableHead>}
-              {isCustomer ? null : <TableHead>담당자</TableHead>}
-              {isCustomer ? null : <TableHead>태그</TableHead>}
+              {role === "admin" ? <TableHead>담당자</TableHead> : null}
+              {role === "admin" ? <TableHead>태그</TableHead> : null}
               {isCustomer ? null : <TableHead>AI</TableHead>}
               {isCustomer ? <TableHead>카테고리</TableHead> : null}
               <TableHead className={dateHeaderClassName}>업데이트</TableHead>
@@ -431,10 +437,11 @@ export function TicketListTable({
                 key={ticket.id}
               >
                 {canSelect ? <TableCell><SelectionCheckbox label={`${formatTicketNumber(ticket.ticket_number)} 선택`} checked={selection.ids.includes(ticket.id)} disabled={selection.disabled} onChange={() => selection.onToggle(ticket.id)} /></TableCell> : null}
-                <TableCell className="min-w-0">
+                <TableCell className={cn("min-w-0", isAgent && "py-5 pr-5")}>
+                  {(unreadCounts?.get(ticket.id) ?? 0)>0 ? <Badge className="mb-2">새 알림 {unreadCounts?.get(ticket.id)}</Badge> : null}
                   <Link
                     href={resolveTicketHref(ticket.id)}
-                    className="block truncate font-medium text-foreground hover:text-primary"
+                    className={cn("font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", isAgent ? "line-clamp-2 whitespace-normal break-words text-sm leading-6" : "block truncate")}
                   >
                     {ticket.title}
                   </Link>
@@ -442,6 +449,7 @@ export function TicketListTable({
                     <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">
                       {formatTicketNumber(ticket.ticket_number)} ·{" "}
                       {ticket.customer?.name ?? "고객 정보 없음"}
+                      {isAgent ? ` · ${categoryLabels[ticket.category] ?? ticket.category}` : null}
                     </p>
                   )}
                 </TableCell>
@@ -462,12 +470,12 @@ export function TicketListTable({
                     <SLABadge ticket={ticket} />
                   </TableCell>
                 )}
-                {isCustomer ? null : (
+                {role !== "admin" ? null : (
                   <TableCell className="truncate">
                     {getAssigneeLabel(ticket)}
                   </TableCell>
                 )}
-                {isCustomer ? null : (
+                {role !== "admin" ? null : (
                   <TableCell>
                     <TicketTagList ticket={ticket} />
                   </TableCell>

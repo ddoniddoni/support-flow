@@ -376,7 +376,7 @@ export function AIAssistantPanel({
             <AIReplyDraftBox
               draft={analysis.reply_draft}
               canUseDraft={canUseReplyDraft && !pending && analysis.review_decision !== "rejected"}
-              disabledReason={!canUseReplyDraft ? "이미 고객 답변이 등록된 문의입니다." : analysis.review_decision === "rejected" ? "제외된 분석의 초안은 사용할 수 없습니다." : isEditing ? "AI 분석 수정을 마친 뒤 초안을 사용할 수 있습니다." : pending ? "AI 작업을 처리 중입니다. 완료 후 다시 시도해 주세요." : undefined}
+              disabledReason={!canUseReplyDraft ? "고객 추가 메시지가 있습니다. 최초 문의 기준 초안을 그대로 사용하지 말고 대화 내용을 확인해 직접 답변해 주세요." : analysis.review_decision === "rejected" ? "제외된 분석의 초안은 사용할 수 없습니다." : isEditing ? "AI 분석 수정을 마친 뒤 초안을 사용할 수 있습니다." : pending ? "AI 작업을 처리 중입니다. 완료 후 다시 시도해 주세요." : undefined}
               onUseDraft={(draft) => {
                 onUseReplyDraft(draft, analysis.id);
                 setMessage(null);

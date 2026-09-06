@@ -25,6 +25,7 @@ export type DashboardTicket = Pick<
   | "created_at"
   | "updated_at"
 > & {
+  content?: string;
   customer: DashboardTicketPerson | null;
   assignee: DashboardTicketPerson | null;
   ai_needs_review: boolean;
@@ -219,6 +220,11 @@ export async function getDashboardStats(
   const activeTickets = tickets.filter(
     (ticket) => ticket.status !== "resolved" && ticket.status !== "closed",
   );
+  const recent = activeTickets.slice(0, 5);
+  // Fetch message previews only for the visible queue, not for every aggregated ticket.
+  const previews = recent.length ? await supabase.from("ticket_workspace").select("id,content").in("id", recent.map(ticket => ticket.id)) : {data: [], error: null};
+  if (previews.error) throw previews.error;
+  const contents = new Map((previews.data ?? []).map(ticket => [ticket.id, ticket.content]));
   const todayStart = getTodayStart();
 
   return {
@@ -264,6 +270,6 @@ export async function getDashboardStats(
       (key) => categoryLabels[key] ?? key,
     ),
     assigneeWorkload: buildAssigneeWorkload(activeTickets),
-    recentTickets: activeTickets.slice(0, 5),
+    recentTickets: recent.map(ticket => ({...ticket, content: contents.get(ticket.id)?.slice(0, 180)})),
   };
 }

@@ -7,7 +7,7 @@ import type { Role } from "@/types/domain";
 import { getCurrentProfile } from "./auth-api";
 
 export function getDefaultAuthenticatedPath(role: Role) {
-  return role === "customer" ? "/tickets/new" : "/dashboard";
+  return role === "customer" ? "/tickets/new" : role === "agent" ? "/tickets" : "/dashboard";
 }
 
 export const getServerProfile = cache(async () => {

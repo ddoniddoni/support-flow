@@ -108,24 +108,25 @@ export function TicketReplyForm({
       reset({ content: "" });
       source.current = "manual";
       setSuccessMessage(
-        isInternal ? "내부 메모를 추가했습니다." : "고객 답변을 등록했습니다.",
+        isInternal ? "내부 메모를 추가했습니다." : profile.role === "customer" ? "메시지를 보냈습니다. 담당자의 답변을 기다려 주세요." : "고객 답변을 등록했습니다.",
       );
     } catch (error) {
       setFormError(getReplyErrorMessage(error));
     }
   }
 
+  const isCustomer = profile.role === "customer";
   const pending = isSubmitting || createReply.isPending;
 
   return (
     <form className="grid gap-3" onSubmit={(event) => void handleSubmit(onSubmit)(event)}>
       <p id={`${formId}-visibility`} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
         {isInternal ? <LockKeyhole className="size-4" aria-hidden="true" /> : <Send className="size-4" aria-hidden="true" />}
-        {isInternal ? "팀 내부 전용 · 고객에게 보이지 않습니다" : "고객에게 공개 · 등록 시 답변 완료로 처리됩니다"}
+        {isInternal ? "팀 내부 전용 · 고객에게 보이지 않습니다" : isCustomer ? "지원팀에 전달 · 전송하면 답변 대기로 변경됩니다" : "고객에게 공개 · 등록 시 답변 완료로 처리됩니다"}
       </p>
       <div className="grid gap-2">
         <Label htmlFor={formId}>
-          {isInternal ? "내부 메모 작성" : "고객 답변 작성"}
+          {isInternal ? "내부 메모 작성" : isCustomer ? "추가 메시지 작성" : "고객 답변 작성"}
         </Label>
         <Textarea
           id={formId}
@@ -133,7 +134,7 @@ export function TicketReplyForm({
           placeholder={
             isInternal
               ? "지원팀끼리 공유할 응대 맥락을 남겨 주세요."
-              : "고객에게 전달할 답변을 입력해 주세요."
+              : isCustomer ? "아직 해결되지 않은 점이나 추가로 확인할 내용을 남겨 주세요." : "고객에게 전달할 답변을 입력해 주세요."
           }
           disabled={pending}
           aria-invalid={Boolean(errors.content)}
@@ -158,7 +159,7 @@ export function TicketReplyForm({
         ) : (
           <Send className="size-4" aria-hidden="true" />
         )}
-        {pending ? "저장 중…" : isInternal ? "내부 메모 저장" : "고객에게 답변 등록"}
+        {pending ? "저장 중…" : isInternal ? "내부 메모 저장" : isCustomer ? "메시지 보내기" : "고객에게 답변 등록"}
       </Button>
       <ActionDialog
         open={pendingDraft !== null}

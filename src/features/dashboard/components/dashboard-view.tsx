@@ -15,7 +15,7 @@ type DashboardViewProps = {
 };
 
 function getRoleLabel(role: Tables<"profiles">["role"]) {
-  return role === "agent" ? "Agent" : "Admin";
+  return role === "agent" ? "상담원" : "관리자";
 }
 
 function getRoleDescription(role: Tables<"profiles">["role"]) {
@@ -30,17 +30,17 @@ export function DashboardView({ profile }: DashboardViewProps) {
   const statsQuery = useDashboardStats({ profile });
 
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
+    <div className="mx-auto grid max-w-[1360px] gap-6 px-4 py-6 sm:px-6 lg:px-8 dark:[--muted-foreground:#a8b5c8]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{getRoleLabel(profile.role)}</Badge>
             <span className="text-sm text-muted-foreground">
-              {profile.email}
+              {profile.name}님
             </span>
           </div>
           <h1 className="mt-2 text-xl font-semibold text-foreground">
-            오늘의 지원 운영
+            {profile.role === "agent" ? "내 문의 처리 현황" : "오늘의 지원 운영"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {getRoleDescription(profile.role)}
@@ -66,8 +66,8 @@ export function DashboardView({ profile }: DashboardViewProps) {
 
       {!statsQuery.isLoading && !statsQuery.isError && statsQuery.data ? (
         <OperationsPreview
-          ctaHref="/tickets"
-          ctaLabel="문의함"
+          ctaHref="/tickets?status=answer_pending"
+          ctaLabel={profile.role === "agent" ? "내 배정 문의" : "문의함"}
           emptyHref={profile.role === "customer" ? "/tickets/new" : "/tickets"}
           emptyLabel={profile.role === "customer" ? "문의 등록" : "문의함"}
           profileRole={profile.role}
@@ -75,7 +75,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
         />
       ) : null}
 
-      <AIDashboardInsights profile={profile} />
+      <details className="rounded-xl border border-border bg-card"><summary className="cursor-pointer rounded-xl p-5 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">AI 분석 통계 <span className="ml-2 text-xs font-normal text-muted-foreground">감정 · 긴급도 · 신뢰도</span></summary><div className="border-t border-border p-4"><AIDashboardInsights profile={profile} /></div></details>
 
       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
         <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />

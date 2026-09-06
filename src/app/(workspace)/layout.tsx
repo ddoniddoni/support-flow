@@ -26,7 +26,7 @@ export default async function WorkspaceLayout({
 }>) {
   const profile = await requireServerProfile();
   if (profile.role === "customer") {
-    return <div className="min-h-screen bg-background dark:[--muted-foreground:#b0bed1]"><CustomerHeader name={profile.name} /><main>{children}</main></div>;
+    return <div className="min-h-screen bg-background dark:[--muted-foreground:#b0bed1]"><CustomerHeader name={profile.name} profileId={profile.id} /><main>{children}</main></div>;
   }
   const cookieStore = await cookies();
   const initialSidebarMode = getInitialSidebarMode(

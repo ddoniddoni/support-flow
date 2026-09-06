@@ -71,5 +71,17 @@ await check('customer can update their display name', () => asUser(customer, asy
   const { runBulkAssignmentTests } = await import('../tests/database/bulk-assignment.mjs');
   await runBulkAssignmentTests({ db, check, asUser, customer, agent, admin });
 }
+{
+  const { runAgentVisibilityTests } = await import('../tests/database/agent-visibility.mjs');
+  await runAgentVisibilityTests({ db, check, asUser, customer, agent, admin });
+}
+{
+  const { runCustomerFollowupTests } = await import('../tests/database/customer-followups.mjs');
+  await runCustomerFollowupTests({ db, check, asUser, customer, agent, other });
+}
+{
+  const { runNotificationTests } = await import('../tests/database/notifications.mjs');
+  await runNotificationTests({ db, check, asUser, customer, agent, admin, other });
+}
 await db.close();
 assert.equal(failures, 0, `${failures} database regression(s)`);

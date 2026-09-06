@@ -88,9 +88,10 @@ export async function runWorkflowTests({ db, check, asUser, customer, agent, adm
     const logs = await db.query('select action from ticket_logs where ticket_id=$1',[ticket]);
     assert.deepEqual(logs.rows.map(r=>r.action).sort(), ['ai_draft_used_as_customer_reply','reply_added','status_changed']);
   }));
-  await check('duplicate public replies are rejected', () => asUser(agent, async () => {
+  await check('staff can continue a public conversation', () => asUser(agent, async () => {
     await command('reply',{content:'First reply'});
-    await assert.rejects(command('reply',{content:'Second reply'}), /이미 고객 답변/);
+    await command('reply',{content:'Second reply'});
+    assert.equal((await db.query('select id from ticket_replies where ticket_id=$1',[ticket])).rows.length,2);
   }));
   await check('internal notes do not resolve a ticket', () => asUser(agent, async () => {
     await command('reply',{content:'Internal investigation',isInternal:true});

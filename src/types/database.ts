@@ -21,6 +21,13 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      support_notifications: {
+        Row: {id:number;recipient_id:string;ticket_id:string;reply_id:string|null;kind:string;created_at:string;read_at:string|null};
+        Insert: never;
+        Update: {read_at?:string|null};
+        Relationships: [{foreignKeyName:"support_notifications_ticket_id_fkey";columns:["ticket_id"];isOneToOne:false;referencedRelation:"tickets";referencedColumns:["id"]}];
+      };
+
       user_management_events: {
         Row: { id: string; actor_id: string | null; target_id: string | null; target_email: string; action: string; previous_role: Role | null; next_role: Role; created_at: string };
         Insert: { actor_id?: string | null; target_id?: string | null; target_email: string; action: string; previous_role?: Role | null; next_role: Role };
@@ -130,6 +137,8 @@ export type Database = {
       ticket_replies: {
         Row: {
           id: string;
+          author_role: Role;
+          reply_order: number;
           ticket_id: string;
           author_id: string;
           content: string;
@@ -414,6 +423,9 @@ export type Database = {
       };
     };
     Functions: {
+      unread_ticket_notifications: {Args:{p_ticket_ids:string[]};Returns:{ticket_id:string;unread_count:number}[]};
+      read_ticket_notifications: {Args:{p_ticket_id:string;p_reply_order:number};Returns:number};
+
       bulk_assign_tickets: { Args: { p_ticket_ids: string[]; p_assignee_id: string }; Returns: Json };
       admin_change_user_role: { Args: { p_target: string; p_role: Role }; Returns: Json };
       admin_finalize_user: { Args: { p_actor: string; p_target: string; p_role: Role }; Returns: Json };

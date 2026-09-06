@@ -12,6 +12,7 @@ export function useCreateTicketReply() {
     mutationFn: createTicketReply,
     onSuccess: async (_data, input: CreateTicketReplyInput) => {
       await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["notifications"] }),
         queryClient.invalidateQueries({
           queryKey: ["ticket", input.ticketId],
         }),

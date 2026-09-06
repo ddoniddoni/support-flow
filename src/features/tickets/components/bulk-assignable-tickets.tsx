@@ -11,7 +11,7 @@ import { useBulkAssignTickets } from "../hooks/use-bulk-assign-tickets";
 import type { TicketListItem } from "../types";
 import { TicketListTable } from "./ticket-list-table";
 
-export function BulkAssignableTickets({ tickets }: { tickets: TicketListItem[] }) {
+export function BulkAssignableTickets({ tickets, unreadCounts }: { tickets: TicketListItem[]; unreadCounts?: Map<string, number> }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [assigneeId, setAssigneeId] = useState("");
@@ -47,7 +47,7 @@ export function BulkAssignableTickets({ tickets }: { tickets: TicketListItem[] }
         </div>
       </div>
       {notice ? <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{notice}</p> : null}
-      <TicketListTable role="admin" tickets={tickets} selection={{ ids, disabled: mutation.isPending, onToggleAll: toggleAll, onToggle: id => { setNotice(""); setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); } }} />
+      <TicketListTable unreadCounts={unreadCounts} role="admin" tickets={tickets} selection={{ ids, disabled: mutation.isPending, onToggleAll: toggleAll, onToggle: id => { setNotice(""); setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]); } }} />
       <ActionDialog open={open} pending={mutation.isPending} finalFocus={triggerRef} onClose={() => setOpen(false)} title={`선택한 문의 ${ids.length}건을 배정할까요?`} description="기존 담당자가 있는 문의는 선택한 상담원에게 재배정됩니다. 문의 상태와 답변은 유지됩니다." body={
         <div className="grid gap-4">
           <div className="max-h-36 overflow-y-auto rounded-lg bg-muted/40 p-3"><ul className="space-y-2 text-sm">{selectedTickets.map(ticket => <li key={ticket.id} className="break-words">{ticket.title}</li>)}</ul></div>

@@ -11,6 +11,8 @@ type UseTicketsParams = {
 
 export function useTickets({ profile, filters }: UseTicketsParams) {
   return useQuery({
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
     queryKey: ["tickets", profile.id, profile.role, filters],
     queryFn: () => listTickets({ profile, filters }),
   });

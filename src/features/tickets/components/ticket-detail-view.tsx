@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRef, useState, type Ref } from "react";
 
 import { SignalCard } from "@/components/common/signal-card";
+import { TicketReadReceipt } from "@/features/notifications/ticket-read-receipt";
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -117,7 +118,8 @@ const actionLabels: Record<string, string> = {
   status_changed: "상태 변경",
   priority_changed: "우선순위 변경",
   assignee_changed: "담당자 변경",
-  reply_added: "고객 답변 등록",
+  reply_added: "지원팀 답변 등록",
+  customer_message_added: "고객 추가 메시지",
   internal_note_added: "내부 메모 추가",
   ai_analysis_generated: "AI 분석 생성",
   ai_analysis_regenerated: "AI 분석 재생성",
@@ -231,14 +233,14 @@ function formatLogValue(value: string | null) {
 
 function formatReplyAuthor(reply: TicketReplyItem, isCustomerView: boolean) {
   if (isCustomerView) {
-    return "SupportFlow 지원팀";
+    return reply.author_role === "customer" ? "나 · 고객" : "SupportFlow 지원팀";
   }
 
   if (!reply.author) {
     return "지원팀";
   }
 
-  return `${authorRoleLabels[reply.author.role]} ${reply.author.name} (${reply.author.email})`;
+  return `${authorRoleLabels[reply.author_role]} ${reply.author.name} (${reply.author.email})`;
 }
 
 function getTicketAssigneeLabel(ticket: TicketDetail) {
@@ -275,7 +277,7 @@ function TicketAttentionSummary({ ticket, hasPublicReply }: { ticket: TicketDeta
     <section aria-label="문의 처리 요약" className="grid gap-3 sm:grid-cols-3">
       <SignalCard label="기본 응답 목표" value={finished ? "처리 종료" : slaLabel} tone={finished ? "neutral" : overdue ? "danger" : "info"} icon={Clock3} description={finished ? "현재 종료 또는 답변 완료 상태입니다" : `접수 후 ${slaTargetsByPriority[ticket.priority]}시간 기준 · 영업시간 미반영`} />
       <SignalCard label="담당 상담원" value={getTicketAssigneeLabel(ticket)} tone={!ticket.assignee_id && !finished ? "warning" : "neutral"} icon={UserRound} description={ticket.assignee_id ? "배정된 상담원이 문의를 처리합니다" : finished ? "배정된 상담원이 없습니다" : "처리 속성에서 상담원을 배정해 주세요"} />
-      <SignalCard label="고객 공개 답변" value={hasPublicReply ? "답변 등록됨" : "아직 미등록"} tone={hasPublicReply ? "success" : "info"} icon={MessageSquareText} description={hasPublicReply ? "고객이 답변을 확인할 수 있습니다" : "아래 작성란에서 공식 답변을 등록해 주세요"} />
+      <SignalCard label="최신 대화 응답" value={hasPublicReply ? "답변 완료" : "답변 대기"} tone={hasPublicReply ? "success" : "info"} icon={MessageSquareText} description={hasPublicReply ? "지원팀의 공개 답변이 마지막 메시지입니다" : "고객 메시지를 확인하고 답변해 주세요"} />
     </section>
   );
 }
@@ -368,7 +370,7 @@ function ReplyList({
               {group.items.map((reply) => (
                 <div
                   key={reply.id}
-                  className="rounded-lg border border-border bg-muted/40 p-3"
+                  className={cn("rounded-lg border p-3", reply.author_role === "customer" ? "border-blue-200 bg-blue-50/40 dark:border-blue-900/60 dark:bg-blue-950/20" : "border-border bg-muted/40")}
                 >
                   <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">
                     {reply.content}
@@ -405,12 +407,12 @@ function ReplyComposerCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {isInternal ? <LockKeyhole className="size-5 text-amber-600 dark:text-amber-300" aria-hidden="true" /> : <Send className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />}
-          {isInternal ? "내부 메모 추가" : "고객 답변 등록"}
+          {isInternal ? "내부 메모 추가" : profile.role === "customer" ? "메시지 이어 보내기" : "고객 답변 등록"}
         </CardTitle>
         <CardDescription>
           {isInternal
             ? "고객에게 보이지 않는 응대 맥락과 인수인계 내용을 남깁니다."
-            : "고객에게 표시되는 공식 답변을 남깁니다."}
+            : profile.role === "customer" ? "추가 메시지를 보내면 완료·종료된 문의도 다시 열립니다. 기존 담당자를 유지하며 대화를 이어갑니다." : "고객에게 표시되는 공식 답변을 남깁니다."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -421,19 +423,6 @@ function ReplyComposerCard({
           composerRef={composerRef}
         />
       </CardContent>
-    </Card>
-  );
-}
-
-function PublicReplyCompletedCard() {
-  return (
-    <Card className="rounded-lg border-emerald-200 bg-emerald-50 text-emerald-950 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-100">
-      <CardHeader>
-        <CardTitle>고객 답변 등록 완료</CardTitle>
-        <CardDescription className="text-emerald-800 dark:text-emerald-200">
-          이미 고객에게 표시되는 공식 답변이 등록되었습니다.
-        </CardDescription>
-      </CardHeader>
     </Card>
   );
 }
@@ -569,7 +558,7 @@ function TicketOperationsPanel({
           id="status"
           label="답변 상태"
           value={visibleStatusValue}
-          options={visibleStatusOptions.map((status) => ({ value: status, label: statusLabels[status], color: statusColors[status], disabled: status === "resolved" && !hasPublicReply, description: status === "resolved" && !hasPublicReply ? "고객 공개 답변 등록 후 선택 가능" : undefined }))}
+          options={visibleStatusOptions.map((status) => ({ value: status, label: statusLabels[status], color: statusColors[status], disabled: status === "resolved" && !hasPublicReply, description: status === "resolved" && !hasPublicReply ? "최신 고객 메시지에 답변 후 선택 가능" : undefined }))}
           disabled={isPending}
           pending={pendingField === "status"}
           onValueChange={(status) => { if (status !== "resolved" || hasPublicReply) runAction("status", { status: status as TicketStatus }); }}
@@ -668,10 +657,11 @@ function TicketDetailContent({
   const ticket = data.ticket;
   const canViewOperations = profile.role !== "customer";
   const isCustomer = profile.role === "customer";
-  const hasPublicReply = data.replies.length > 0;
+  const canResolve = data.replies.length > 0 && data.replies[data.replies.length - 1].author_role !== "customer";
 
   return (
     <div className="mx-auto grid max-w-[1360px] gap-6 px-4 py-6 sm:px-6 lg:px-8 dark:[--muted-foreground:#a8b5c8] [&_[data-slot=card]]:[--card-spacing:1.25rem] [&_[data-slot=card-title]]:text-lg [&_[data-slot=card-title]]:font-semibold">
+      <TicketReadReceipt key={profile.id} ticketId={ticket.id} replyOrder={Math.max(0,...data.replies.map(reply=>reply.reply_order))} />
       <div className="flex flex-col gap-3">
         <Link
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -705,7 +695,7 @@ function TicketDetailContent({
         </div>
       </div>
 
-      {canViewOperations ? <TicketAttentionSummary ticket={ticket} hasPublicReply={hasPublicReply} /> : null}
+      {canViewOperations ? <TicketAttentionSummary ticket={ticket} hasPublicReply={canResolve} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid min-w-0 content-start gap-4">
@@ -723,11 +713,11 @@ function TicketDetailContent({
             </CardContent>
           </Card>
 
-          {hasPublicReply || isCustomer ? <ReplyList
-            title="고객 공개 답변"
-            description="고객에게 표시되는 상담 답변입니다."
+          {data.replies.length > 0 || isCustomer ? <ReplyList
+            title="고객과의 대화"
+            description="고객 메시지와 지원팀의 공개 답변을 시간순으로 확인합니다."
             replies={data.replies}
-            emptyText="아직 등록된 공개 답변이 없습니다."
+            emptyText="아직 대화가 없습니다. 추가로 전달할 내용이 있으면 아래에 남겨 주세요."
             isCustomerView={isCustomer}
           /> : null}
 
@@ -735,23 +725,19 @@ function TicketDetailContent({
             <TicketAIAssistant
               ticket={ticket}
               profile={profile}
-              canUseReplyDraft={!hasPublicReply}
+              canUseReplyDraft={!data.replies.some(reply => reply.author_role === "customer")}
               onUseReplyDraft={(draft) => replyComposerRef.current?.useDraft(draft)}
             />
           ) : null}
 
-          {canViewOperations && !hasPublicReply ? (
+          {(
             <ReplyComposerCard
               ticketId={ticket.id}
               profile={profile}
               isInternal={false}
               composerRef={replyComposerRef}
             />
-          ) : null}
-
-          {canViewOperations && hasPublicReply ? (
-            <PublicReplyCompletedCard />
-          ) : null}
+          )}
 
           {canViewOperations ? (
             <>
@@ -771,7 +757,7 @@ function TicketDetailContent({
         </div>
 
         <div className="grid min-w-0 content-start gap-4">
-          {canViewOperations ? <TicketOperationsPanel ticket={ticket} profile={profile} hasPublicReply={data.replies.some((reply) => !reply.is_internal)} /> : null}
+          {canViewOperations ? <TicketOperationsPanel ticket={ticket} profile={profile} hasPublicReply={canResolve} /> : null}
 
           <Card className="rounded-xl">
             <CardHeader><CardTitle>{isCustomer ? "문의 정보" : "고객 정보"}</CardTitle></CardHeader>
