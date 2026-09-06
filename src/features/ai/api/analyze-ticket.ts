@@ -2,7 +2,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 
 import type { TicketAIAnalysis } from "../types";
-import { generateTicketAIAnalysis } from "./generate-ticket-ai-analysis";
 
 type SupportProfile = Pick<Tables<"profiles">, "id" | "role">;
 
@@ -21,13 +20,14 @@ export async function analyzeTicket({
     throw new Error("고객 계정은 AI 분석을 실행할 수 없습니다.");
   }
 
-  const supabase = createSupabaseBrowserClient();
-  return generateTicketAIAnalysis({
-    actorId: profile.id,
-    regenerate,
-    supabase,
-    ticketId,
+  const response = await fetch(`/api/tickets/${ticketId}/analysis`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ regenerate }),
   });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.message ?? "AI 분석에 실패했습니다.");
+  return payload.analysis as TicketAIAnalysis;
 }
 
 export async function getLatestTicketAIAnalysis({

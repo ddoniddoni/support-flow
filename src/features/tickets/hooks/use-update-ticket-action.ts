@@ -54,6 +54,10 @@ export function useUpdateTicketAction() {
       });
       void queryClient.invalidateQueries({ queryKey: ["tickets"] });
       void queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      void queryClient.invalidateQueries({ queryKey: ["ai-review-queue"] });
+      void queryClient.invalidateQueries({ queryKey: ["ai-dashboard-stats"] });
+      void queryClient.invalidateQueries({ queryKey: ["agent-management"] });
+      void queryClient.invalidateQueries({ queryKey: ["ticket-ai-analysis", input.ticketId] });
     },
   });
 }

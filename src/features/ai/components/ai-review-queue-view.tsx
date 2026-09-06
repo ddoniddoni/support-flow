@@ -155,7 +155,8 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
             <Input
               className="pl-8"
               value={searchInput}
-              placeholder="AI 요약, 근거, 카테고리 검색"
+              placeholder="문의 제목 검색"
+              aria-label="검토할 문의 제목 검색"
               onChange={(event) => setSearchInput(event.target.value)}
             />
           </div>
@@ -167,6 +168,7 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
         <div className="grid gap-2 md:grid-cols-2">
           <select
             className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+            aria-label="감정 필터"
             value={filters.sentiment ?? "all"}
             onChange={(event) =>
               updateParams({ sentiment: event.target.value, page: "1" })
@@ -182,6 +184,7 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
 
           <select
             className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+            aria-label="긴급도 필터"
             value={filters.urgency ?? "all"}
             onChange={(event) =>
               updateParams({ urgency: event.target.value, page: "1" })
@@ -205,7 +208,7 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
           <div>
             <p className="font-medium">AI 검토 항목을 불러오지 못했습니다.</p>
             <p className="mt-1 text-red-600">
-              AI schema migration, RLS 정책, 네트워크 상태를 확인해 주세요.
+              잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
             </p>
           </div>
         </div>

@@ -16,7 +16,7 @@ export function AIConfidenceBadge({ confidence }: { confidence: number }) {
           "border-emerald-200 bg-emerald-50 text-emerald-700",
       )}
     >
-      {percentage}% confidence
+      신뢰도 {percentage}%
     </Badge>
   );
 }

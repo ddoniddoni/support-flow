@@ -1,3 +1,4 @@
+import { collectPages } from "@/lib/data/pagination";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 
@@ -59,28 +60,12 @@ export async function getAgentManagement({
   const supabase = createSupabaseBrowserClient();
   const weekStart = getWeekStart();
 
-  const [{ data: agents, error: agentsError }, { data: tickets, error: ticketsError }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id,email,name")
-        .eq("role", "agent")
-        .order("name", { ascending: true }),
-      supabase
-        .from("tickets")
-        .select("assignee_id,status,priority,ai_needs_review,updated_at"),
-    ]);
-
-  if (agentsError) {
-    throw agentsError;
-  }
-
-  if (ticketsError) {
-    throw ticketsError;
-  }
-
-  const ticketRows = (tickets ?? []) as AgentTicket[];
-  const agentRows = (agents ?? []) as AgentProfile[];
+  const [agentRows, ticketRows] = await Promise.all([
+    collectPages<AgentProfile>((from, to) => supabase.from("profiles")
+      .select("id,email,name").eq("role", "agent").order("id").range(from, to)),
+    collectPages<AgentTicket>((from, to) => supabase.from("ticket_workspace")
+      .select("assignee_id,status,priority,ai_needs_review,updated_at").order("id").range(from, to)),
+  ]);
   const rows = agentRows.map<AgentManagementRow>((agent) => {
     const assignedTickets = ticketRows.filter(
       (ticket) => ticket.assignee_id === agent.id,

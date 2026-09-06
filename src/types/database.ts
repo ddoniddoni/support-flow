@@ -258,6 +258,7 @@ export type Database = {
           confidence: number;
           needs_review: boolean;
           escalation_reason: string | null;
+          review_decision: AIReviewDecision | null;
           raw_response: Json;
           validation_status: AIValidationStatus;
           created_by: string;
@@ -283,6 +284,7 @@ export type Database = {
           confidence: number;
           needs_review?: boolean;
           escalation_reason?: string | null;
+          review_decision?: AIReviewDecision | null;
           raw_response?: Json;
           validation_status?: AIValidationStatus;
           created_by: string;
@@ -308,6 +310,7 @@ export type Database = {
           confidence?: number;
           needs_review?: boolean;
           escalation_reason?: string | null;
+          review_decision?: AIReviewDecision | null;
           raw_response?: Json;
           validation_status?: AIValidationStatus;
           created_by?: string;
@@ -390,8 +393,25 @@ export type Database = {
         ];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      ticket_workspace: {
+        Row: Database["public"]["Tables"]["tickets"]["Row"] & {
+          ai_review_decision: AIReviewDecision | null;
+          ai_urgency_rank: number;
+          priority_rank: number;
+          customer: { id: string; email: string; name: string } | null;
+          assignee: { id: string; email: string; name: string } | null;
+          latest_ai_analysis: Pick<Database["public"]["Tables"]["ticket_ai_analyses"]["Row"], "intent" | "summary" | "tags"> | null;
+          ai_analysis: Omit<Database["public"]["Tables"]["ticket_ai_analyses"]["Row"], "raw_response"> | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
+      support_ticket_command: {
+        Args: { p_ticket_id: string; p_action: string; p_payload?: Json };
+        Returns: Json;
+      };
       create_ticket_reply: {
         Args: {
           p_ticket_id: string;

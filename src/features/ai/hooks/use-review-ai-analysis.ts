@@ -20,6 +20,7 @@ function useInvalidateAIAnalysisQueries() {
       queryClient.invalidateQueries({ queryKey: ["ai-review-queue"] }),
       queryClient.invalidateQueries({ queryKey: ["ai-dashboard-stats"] }),
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent-management"] }),
     ]);
   };
 }

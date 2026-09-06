@@ -36,7 +36,7 @@ import type { TicketAIAnalysis } from "../types";
 import { formatAIVisibleText } from "../utils/ai-display-text";
 import { useAIAnalysis } from "../hooks/use-ai-analysis";
 import { useAnalyzeTicket } from "../hooks/use-analyze-ticket";
-import { useReviewAIAnalysis } from "../hooks/use-review-ai-analysis";
+import { useReviewAIAnalysis, useSendAIAnalysisToReview } from "../hooks/use-review-ai-analysis";
 import { AIAnalysisSummaryCard } from "./ai-analysis-summary-card";
 import { AIReplyDraftBox } from "./ai-reply-draft-box";
 
@@ -88,6 +88,10 @@ function AIPanelSkeleton() {
 }
 
 function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
+  if (analysis.review_decision === "rejected") return <Badge variant="secondary">검토 제외</Badge>;
+  if (analysis.review_decision === "approved" || analysis.review_decision === "corrected") {
+    return <Badge variant="outline">검토 완료</Badge>;
+  }
   if (analysis.needs_review) {
     return (
       <Badge
@@ -292,6 +296,8 @@ export function AIAssistantPanel({
   const [isEditing, setIsEditing] = useState(false);
   const analysisQuery = useAIAnalysis({ ticketId, profile });
   const analyzeTicket = useAnalyzeTicket();
+  const reviewAnalysis = useReviewAIAnalysis();
+  const sendToReview = useSendAIAnalysisToReview();
 
   if (profile.role === "customer") {
     return null;
@@ -315,7 +321,21 @@ export function AIAssistantPanel({
   }
 
   const analysis = analysisQuery.data ?? null;
-  const pending = analyzeTicket.isPending;
+  const pending = analyzeTicket.isPending || reviewAnalysis.isPending || sendToReview.isPending || isEditing;
+
+  async function review(decision: "approved" | "rejected" | "request_review") {
+    if (!analysis) return;
+    setMessage(null);
+    setError(null);
+    const input = { analysisId: analysis.id, ticketId, profile };
+    try {
+      if (decision === "request_review") await sendToReview.mutateAsync(input);
+      else await reviewAnalysis.mutateAsync({ ...input, decision });
+      setMessage(decision === "request_review" ? "검토를 요청했습니다." : decision === "rejected" ? "AI 분석과 답변 초안을 제외했습니다." : "AI 분석을 확인했습니다.");
+    } catch (error) {
+      setError(getErrorMessage(error));
+    }
+  }
 
   return (
     <Card className="rounded-lg">
@@ -341,8 +361,10 @@ export function AIAssistantPanel({
               <div>
                 <p className="font-medium">AI 분석을 불러오지 못했습니다.</p>
                 <p className="mt-1 text-red-600">
-                  AI schema migration 적용 여부와 RLS 정책을 확인해 주세요.
+                  잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
                 </p>
+                <Button type="button" size="sm" variant="outline" className="mt-2"
+                  onClick={() => void analysisQuery.refetch()}>다시 시도</Button>
               </div>
             </div>
           </div>
@@ -376,6 +398,7 @@ export function AIAssistantPanel({
 
             {isEditing ? (
               <CorrectAnalysisForm
+                key={analysis.id}
                 analysis={analysis}
                 profile={profile}
                 onCancel={() => setIsEditing(false)}
@@ -384,7 +407,7 @@ export function AIAssistantPanel({
 
             <AIReplyDraftBox
               draft={analysis.reply_draft}
-              canUseDraft={canUseReplyDraft}
+              canUseDraft={canUseReplyDraft && !pending && analysis.review_decision !== "rejected"}
               onUseDraft={(draft) => {
                 onUseReplyDraft(draft, analysis.id);
                 setMessage("AI 초안을 고객 답변 작성란에 넣었습니다.");
@@ -393,8 +416,8 @@ export function AIAssistantPanel({
           </>
         ) : null}
 
-        {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {message ? <p role="status" className="text-sm text-emerald-700">{message}</p> : null}
+        {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
 
         <div className="grid gap-2">
           <Button
@@ -413,8 +436,16 @@ export function AIAssistantPanel({
             {analysis ? "재분석" : "분석 실행"}
           </Button>
 
-          {analysis ? (
+          {analysis && !isEditing ? (
             <div className="grid gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" size="sm" variant="outline" disabled={pending || analysis.review_decision === "rejected"}
+                  onClick={() => void review("approved")}>확인 완료</Button>
+                <Button type="button" size="sm" variant="outline" disabled={pending || analysis.review_decision === "rejected"}
+                  onClick={() => void review("rejected")}>분석 제외</Button>
+              </div>
+              {!analysis.needs_review ? <Button type="button" size="sm" variant="outline" disabled={pending}
+                onClick={() => void review("request_review")}>검토 요청</Button> : null}
               <Button
                 type="button"
                 size="sm"

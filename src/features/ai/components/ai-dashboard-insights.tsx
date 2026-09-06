@@ -91,7 +91,7 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
         <div>
           <p className="font-medium">AI 인사이트를 불러오지 못했습니다.</p>
           <p className="mt-1 text-red-600">
-            AI schema migration과 RLS 정책을 확인해 주세요.
+            잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@ export function AIDashboardInsights({ profile }: AIDashboardInsightsProps) {
       value: String(stats.highUrgencyCount),
     },
     {
-      detail: `이번 주 분석 ${stats.analysesThisWeek}건`,
+      detail: `최근 7일 분석 ${stats.analysesThisWeek}건`,
       icon: Sparkles,
       label: "평균 신뢰도",
       tone: "size-4 text-sky-600",

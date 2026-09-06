@@ -61,7 +61,9 @@ const riskTerms = [
 ] as const;
 
 export function getAIConfidenceReviewThreshold() {
-  const configuredValue = Number(process.env.AI_CONFIDENCE_REVIEW_THRESHOLD);
+  const rawValue = process.env.AI_CONFIDENCE_REVIEW_THRESHOLD?.trim();
+  if (!rawValue) return defaultReviewThreshold;
+  const configuredValue = Number(rawValue);
 
   if (Number.isFinite(configuredValue) && configuredValue >= 0 && configuredValue <= 1) {
     return configuredValue;
@@ -120,6 +122,6 @@ export function applyAIReviewRules({
   return {
     ...analysis,
     needsReview: true,
-    escalationReason: reviewReasons.join(" "),
+    escalationReason: reviewReasons.join(" ").slice(0, 500),
   };
 }

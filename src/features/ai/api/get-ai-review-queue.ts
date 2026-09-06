@@ -1,3 +1,4 @@
+import { normalizePagination } from "@/lib/data/pagination";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Tables } from "@/types/database";
 import type { AISentiment, AIUrgency } from "@/types/domain";
@@ -20,7 +21,7 @@ export type AIReviewQueueTicket = Pick<
   assignee: Pick<Tables<"profiles">, "name" | "email"> | null;
 };
 
-export type AIReviewQueueItem = Tables<"ticket_ai_analyses"> & {
+export type AIReviewQueueItem = Omit<Tables<"ticket_ai_analyses">, "raw_response"> & {
   ticket: AIReviewQueueTicket | null;
 };
 
@@ -33,20 +34,6 @@ export type AIReviewQueueResult = {
 };
 
 const defaultPageSize = 10;
-
-const reviewQueueSelect = `
-  *,
-  ticket:tickets!ticket_ai_analyses_ticket_id_fkey(
-    id,
-    title,
-    ticket_number,
-    status,
-    priority,
-    assignee_id,
-    customer:profiles!tickets_customer_id_fkey(name,email),
-    assignee:profiles!tickets_assignee_id_fkey(name,email)
-  )
-`;
 
 export async function listAIReviewQueue({
   profile,
@@ -66,31 +53,31 @@ export async function listAIReviewQueue({
   }
 
   const supabase = createSupabaseBrowserClient();
-  const page = Math.max(filters.page ?? 1, 1);
-  const pageSize = filters.pageSize ?? defaultPageSize;
+  const { page, pageSize } = normalizePagination(filters.page, filters.pageSize ?? defaultPageSize);
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from("ticket_ai_analyses")
-    .select(reviewQueueSelect, { count: "exact" })
-    .eq("needs_review", true);
+    .from("ticket_workspace")
+    .select("*", { count: "exact" })
+    .eq("ai_needs_review", true);
 
   if (filters.search) {
-    const search = `%${filters.search}%`;
-    query = query.or(`summary.ilike.${search},reason.ilike.${search}`);
+    query = query.ilike("title", `%${filters.search}%`);
   }
 
   if (filters.sentiment && filters.sentiment !== "all") {
-    query = query.eq("sentiment", filters.sentiment);
+    query = query.eq("ai_sentiment", filters.sentiment);
   }
 
   if (filters.urgency && filters.urgency !== "all") {
-    query = query.eq("urgency", filters.urgency);
+    query = query.eq("ai_urgency", filters.urgency);
   }
 
   const { data, error, count } = await query
+    .order("ai_urgency_rank", { ascending: false })
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .range(from, to);
 
   if (error) {
@@ -98,7 +85,12 @@ export async function listAIReviewQueue({
   }
 
   return {
-    items: (data ?? []) as AIReviewQueueItem[],
+    items: (data ?? []).flatMap((ticket) => ticket.ai_analysis ? [{
+      ...ticket.ai_analysis,
+      ticket: { id: ticket.id, title: ticket.title, ticket_number: ticket.ticket_number,
+        status: ticket.status, priority: ticket.priority, assignee_id: ticket.assignee_id,
+        customer: ticket.customer, assignee: ticket.assignee },
+    }] : []),
     total: count ?? 0,
     page,
     pageSize,

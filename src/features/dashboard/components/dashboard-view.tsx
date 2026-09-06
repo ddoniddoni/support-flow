@@ -23,7 +23,7 @@ function getRoleDescription(role: Tables<"profiles">["role"]) {
     return "내가 맡은 문의의 응답 필요 항목과 AI 검토 대상을 확인합니다.";
   }
 
-  return "지원팀 전체의 응답 현황, SLA 위험, 담당자 부하를 확인합니다.";
+  return "지원팀 전체의 응답 현황, AI 위험 신호, 담당자 부하를 확인합니다.";
 }
 
 export function DashboardView({ profile }: DashboardViewProps) {
@@ -58,8 +58,7 @@ export function DashboardView({ profile }: DashboardViewProps) {
               대시보드 통계를 불러오지 못했습니다.
             </p>
             <p className="mt-1 text-red-600">
-              Supabase 권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해
-              주세요.
+              잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
             </p>
           </div>
         </div>

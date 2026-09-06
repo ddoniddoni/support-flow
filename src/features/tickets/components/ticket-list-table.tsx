@@ -243,6 +243,7 @@ function SLABadge({ ticket }: { ticket: TicketListItem }) {
 
   return (
     <Badge
+      title={`기본 응답 목표: 접수 후 ${slaTargetsByPriority[ticket.priority]}시간 (영업시간 미반영)`}
       variant="outline"
       className={cn(
         "whitespace-nowrap",
@@ -260,6 +261,7 @@ function SLABadge({ ticket }: { ticket: TicketListItem }) {
 }
 
 function AIStatusBadges({ ticket }: { ticket: TicketListItem }) {
+  if (ticket.ai_review_decision === "rejected") return <Badge variant="secondary">검토 제외</Badge>;
   if (!ticket.latest_ai_analysis_id) {
     return (
       <Badge
@@ -407,7 +409,7 @@ export function TicketListTable({
               <TableHead>문의</TableHead>
               <TableHead>답변 상태</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
-              {isCustomer ? null : <TableHead>SLA</TableHead>}
+              {isCustomer ? null : <TableHead title="접수 시각과 우선순위 기준의 기본 응답 목표입니다. 영업시간은 반영하지 않습니다.">응답 목표</TableHead>}
               {isCustomer ? null : <TableHead>담당자</TableHead>}
               {isCustomer ? null : <TableHead>태그</TableHead>}
               {isCustomer ? null : <TableHead>AI</TableHead>}

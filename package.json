@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import ./scripts/register-test-loader.mjs --test tests/unit/*.test.ts",
+    "test:db": "npm exec --yes --package=@electric-sql/pglite@0.5.8 -- node scripts/test-database.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
