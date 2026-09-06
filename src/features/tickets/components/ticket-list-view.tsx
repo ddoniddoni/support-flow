@@ -1,5 +1,7 @@
 "use client";
 
+import { AppSelect } from "@/components/ui/app-select";
+
 import {
   AlertCircle,
   ChevronLeft,
@@ -29,6 +31,7 @@ import { useAgents } from "../hooks/use-agents";
 import { useTickets } from "../hooks/use-tickets";
 import { ticketCategories } from "../schemas/ticket-schema";
 import type { TicketSortOption } from "../types";
+import { BulkAssignableTickets } from "./bulk-assignable-tickets";
 import { TicketListTable } from "./ticket-list-table";
 import { TicketTableSkeleton } from "./ticket-table-skeleton";
 
@@ -249,7 +252,7 @@ export function TicketListView({
   }
 
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
+    <div className={cn("mx-auto grid gap-5", profile.role === "customer" ? "max-w-6xl px-5 py-8 sm:px-8" : "max-w-[1600px] px-3 py-4 sm:px-4 lg:px-6")}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">
@@ -334,138 +337,69 @@ export function TicketListView({
         >
           {profile.role === "customer" ? null : (
             <>
-              <select
+              <AppSelect
                 aria-label="답변 상태 필터"
-                className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                 value={filters.status ?? "all"}
-                onChange={(event) =>
-                  updateParams({ status: event.target.value, page: "1" })
-                }
-              >
-                <option value="all">{statusLabels.all}</option>
-                {statusFilterOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {statusLabels[status]}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => updateParams({ status: value, page: "1" })}
+                options={[{ value: "all", label: statusLabels.all }, ...statusFilterOptions.map(value => ({ value, label: statusLabels[value] }))]}
+              />
 
-              <select
+              <AppSelect
                 aria-label="우선순위 필터"
-                className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                 value={filters.priority ?? "all"}
-                onChange={(event) =>
-                  updateParams({ priority: event.target.value, page: "1" })
-                }
-              >
-                <option value="all">{priorityLabels.all}</option>
-                {ticketPriorities.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priorityLabels[priority]}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(value) => updateParams({ priority: value, page: "1" })}
+                options={[{ value: "all", label: priorityLabels.all }, ...ticketPriorities.map(value => ({ value, label: priorityLabels[value] }))]}
+              />
 
               {profile.role === "admin" ? (
-                <select
+                <AppSelect
                   aria-label="담당자 필터"
-                  className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
                   value={filters.assignee ?? "all"}
                   disabled={agentsQuery.isLoading}
-                  onChange={(event) =>
-                    updateParams({ assignee: event.target.value, page: "1" })
-                  }
-                >
-                  <option value="all">전체 담당자</option>
-                  <option value="unassigned">담당자 필요</option>
-                  {(agentsQuery.data ?? []).map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(value) => updateParams({ assignee: value, page: "1" })}
+                  options={[{ value: "all", label: "전체 담당자" }, { value: "unassigned", label: "담당자 필요" }, ...(agentsQuery.data ?? []).map(agent => ({ value: agent.id, label: agent.name }))]}
+                />
               ) : null}
             </>
           )}
 
-          <select
+          <AppSelect
             aria-label="카테고리 필터"
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.category ?? "all"}
-            onChange={(event) =>
-              updateParams({ category: event.target.value, page: "1" })
-            }
-          >
-            <option value="all">{categoryLabels.all}</option>
-            {ticketCategories.map((category) => (
-              <option key={category} value={category}>
-                {categoryLabels[category]}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ category: value, page: "1" })}
+            options={[{ value: "all", label: categoryLabels.all }, ...ticketCategories.map(value => ({ value, label: categoryLabels[value] }))]}
+          />
 
-          <select
+          <AppSelect
             aria-label="정렬 기준"
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             value={filters.sort ?? "created_desc"}
-            onChange={(event) =>
-              updateParams({ sort: event.target.value, page: "1" })
-            }
-          >
-            {sortOptions.map((sort) => (
-              <option key={sort} value={sort}>
-                {sortLabels[sort]}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ sort: value, page: "1" })}
+            options={sortOptions.map(value => ({ value, label: sortLabels[value] }))}
+          />
         </div>
 
         {profile.role === "customer" ? null : (
           <div className="grid gap-2 md:grid-cols-3">
-            <select
+            <AppSelect
               aria-label="AI 검토 신호 필터"
-              className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               value={filters.aiNeedsReview ?? "all"}
-              onChange={(event) =>
-                updateParams({ ai_review: event.target.value, page: "1" })
-              }
-            >
-              <option value="all">{aiReviewLabels.all}</option>
-              <option value="yes">{aiReviewLabels.yes}</option>
-              <option value="no">{aiReviewLabels.no}</option>
-            </select>
+              onValueChange={(value) => updateParams({ ai_review: value, page: "1" })}
+              options={Object.entries(aiReviewLabels).map(([value, label]) => ({ value, label }))}
+            />
 
-            <select
+            <AppSelect
               aria-label="AI 감정 필터"
-              className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               value={filters.aiSentiment ?? "all"}
-              onChange={(event) =>
-                updateParams({ ai_sentiment: event.target.value, page: "1" })
-              }
-            >
-              <option value="all">{aiSentimentLabels.all}</option>
-              {aiSentiments.map((sentiment) => (
-                <option key={sentiment} value={sentiment}>
-                  {aiSentimentLabels[sentiment]}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => updateParams({ ai_sentiment: value, page: "1" })}
+              options={[{ value: "all", label: aiSentimentLabels.all }, ...aiSentiments.map(value => ({ value, label: aiSentimentLabels[value] }))]}
+            />
 
-            <select
+            <AppSelect
               aria-label="AI 긴급도 필터"
-              className="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
               value={filters.aiUrgency ?? "all"}
-              onChange={(event) =>
-                updateParams({ ai_urgency: event.target.value, page: "1" })
-              }
-            >
-              <option value="all">{aiUrgencyLabels.all}</option>
-              {aiUrgencies.map((urgency) => (
-                <option key={urgency} value={urgency}>
-                  {aiUrgencyLabels[urgency]}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => updateParams({ ai_urgency: value, page: "1" })}
+              options={[{ value: "all", label: aiUrgencyLabels.all }, ...aiUrgencies.map(value => ({ value, label: aiUrgencyLabels[value] }))]}
+            />
           </div>
         )}
       </div>
@@ -498,7 +432,7 @@ export function TicketListView({
 
       {!ticketsQuery.isLoading && !ticketsQuery.isError && data ? (
         <div className={cn(!hasTickets && "hidden")}>
-          <TicketListTable tickets={data.tickets} role={profile.role} />
+          {profile.role === "admin" ? <BulkAssignableTickets key={searchParams.toString()} tickets={data.tickets} /> : <TicketListTable tickets={data.tickets} role={profile.role} />}
           <div className="mt-4 grid justify-items-center gap-2 text-sm text-muted-foreground">
             <p>
               총 {data.total}건 중 {data.tickets.length}건 표시

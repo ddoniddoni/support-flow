@@ -3,14 +3,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function TicketDetailSkeleton() {
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
+    <div className="mx-auto grid max-w-[1360px] gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="grid gap-2">
         <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-8 w-80" />
-        <Skeleton className="h-4 w-96" />
+        <Skeleton className="h-8 w-80 max-w-full" />
+        <Skeleton className="h-4 w-96 max-w-full" />
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Card className="rounded-lg">
           <CardHeader>
             <Skeleton className="h-5 w-40" />

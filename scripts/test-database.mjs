@@ -63,5 +63,13 @@ await check('customer can update their display name', () => asUser(customer, asy
   const { runWorkflowTests } = await import('../tests/database/workflow.mjs');
   await runWorkflowTests({ db, check, asUser, customer, agent, admin, other });
 }
+{
+  const { runUserManagementTests } = await import('../tests/database/user-management.mjs');
+  await runUserManagementTests({ db, check, asUser, customer, agent, admin, other });
+}
+{
+  const { runBulkAssignmentTests } = await import('../tests/database/bulk-assignment.mjs');
+  await runBulkAssignmentTests({ db, check, asUser, customer, agent, admin });
+}
 await db.close();
 assert.equal(failures, 0, `${failures} database regression(s)`);

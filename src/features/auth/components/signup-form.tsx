@@ -74,10 +74,6 @@ export function SignupForm() {
     });
 
     if (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("Supabase signup error:", error.message);
-      }
-
       setFormError(getSignupErrorMessage(error.message));
       return;
     }
@@ -87,7 +83,7 @@ export function SignupForm() {
       return;
     }
 
-    router.replace("/tickets");
+    router.replace("/tickets/new");
     router.refresh();
   }
 
@@ -133,8 +129,8 @@ export function SignupForm() {
         ) : null}
       </div>
 
-      {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
-      {notice ? <p className="text-sm text-emerald-700">{notice}</p> : null}
+      {formError ? <p role="alert" className="text-sm text-red-600">{formError}</p> : null}
+      {notice ? <p role="status" className="text-sm text-emerald-700">{notice}</p> : null}
 
       <Button className="w-full" disabled={isSubmitting} type="submit">
         {isSubmitting ? (

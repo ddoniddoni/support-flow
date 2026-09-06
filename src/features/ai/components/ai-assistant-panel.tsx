@@ -1,5 +1,7 @@
 "use client";
 
+import { AppSelect } from "@/components/ui/app-select";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
@@ -11,16 +13,15 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
+import { ActionDialog } from "@/components/common/action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,7 +97,7 @@ function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
     return (
       <Badge
         variant="outline"
-        className="border-red-200 bg-red-50 text-red-700"
+        className="border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
       >
         검토 필요
       </Badge>
@@ -106,7 +107,7 @@ function AIReviewStateBadge({ analysis }: { analysis: TicketAIAnalysis }) {
   return (
     <Badge
       variant="outline"
-      className="border-emerald-200 bg-emerald-50 text-emerald-700"
+      className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
     >
       자동 분류 완료
     </Badge>
@@ -182,7 +183,7 @@ function CorrectAnalysisForm({
           {...form.register("summary")}
         />
         {form.formState.errors.summary ? (
-          <p className="text-xs text-red-600">
+          <p className="text-xs text-red-600 dark:text-red-400">
             {form.formState.errors.summary.message}
           </p>
         ) : null}
@@ -198,7 +199,7 @@ function CorrectAnalysisForm({
           {...form.register("reason")}
         />
         {form.formState.errors.reason ? (
-          <p className="text-xs text-red-600">
+          <p className="text-xs text-red-600 dark:text-red-400">
             {form.formState.errors.reason.message}
           </p>
         ) : null}
@@ -217,35 +218,11 @@ function CorrectAnalysisForm({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="ai-priority">제안 우선순위</Label>
-          <select
-            id="ai-priority"
-            className="h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-            disabled={pending}
-            {...form.register("suggestedPriority")}
-          >
-            <option value="none">없음</option>
-            {ticketPriorities.map((priority) => (
-              <option key={priority} value={priority}>
-                {priorityLabels[priority]}
-              </option>
-            ))}
-          </select>
+          <Controller control={form.control} name="suggestedPriority" render={({ field }) => <AppSelect id="ai-priority" name={field.name} ref={field.ref} onBlur={field.onBlur} value={field.value} onValueChange={field.onChange} disabled={pending} options={[{ value: "none", label: "없음" }, ...ticketPriorities.map(value => ({ value, label: priorityLabels[value] }))]} />} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="ai-status">제안 답변 상태</Label>
-          <select
-            id="ai-status"
-            className="h-9 rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-            disabled={pending}
-            {...form.register("suggestedStatus")}
-          >
-            <option value="none">없음</option>
-            {visibleStatusOptions.map((status) => (
-              <option key={status} value={status}>
-                {statusLabels[status]}
-              </option>
-            ))}
-          </select>
+          <Controller control={form.control} name="suggestedStatus" render={({ field }) => <AppSelect id="ai-status" name={field.name} ref={field.ref} onBlur={field.onBlur} value={field.value} onValueChange={field.onChange} disabled={pending} options={[{ value: "none", label: "없음" }, ...visibleStatusOptions.map(value => ({ value, label: statusLabels[value] }))]} />} />
         </div>
       </div>
 
@@ -260,7 +237,7 @@ function CorrectAnalysisForm({
         />
       </div>
 
-      {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
+      {formError ? <p className="text-sm text-red-600 dark:text-red-400">{formError}</p> : null}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <Button type="submit" size="sm" disabled={pending}>
@@ -294,6 +271,7 @@ export function AIAssistantPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [confirmExclude, setConfirmExclude] = useState(false);
   const analysisQuery = useAIAnalysis({ ticketId, profile });
   const analyzeTicket = useAnalyzeTicket();
   const reviewAnalysis = useReviewAIAnalysis();
@@ -338,29 +316,19 @@ export function AIAssistantPanel({
   }
 
   return (
-    <Card className="rounded-lg">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bot className="size-4 text-primary" aria-hidden="true" />
-              AI 어시스턴트
-            </CardTitle>
-            <CardDescription>
-              티켓 분류, 요약, 응답 초안을 상담원 검토용으로 제안합니다.
-            </CardDescription>
-          </div>
-          {analysis ? <AIReviewStateBadge analysis={analysis} /> : null}
-        </div>
-      </CardHeader>
-      <CardContent className="grid gap-4">
+    <Card className="gap-4 rounded-none bg-transparent py-0 shadow-none ring-0">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+        <p className="text-[13px] leading-5 text-muted-foreground">AI 제안 · 고객에게 공개되지 않습니다</p>
+        {analysis ? <AIReviewStateBadge analysis={analysis} /> : null}
+      </div>
+      <CardContent className="grid gap-5 px-0">
         {analysisQuery.isError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
             <div className="flex gap-2">
               <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
               <div>
                 <p className="font-medium">AI 분석을 불러오지 못했습니다.</p>
-                <p className="mt-1 text-red-600">
+                <p className="mt-1 text-red-600 dark:text-red-400">
                   잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.
                 </p>
                 <Button type="button" size="sm" variant="outline" className="mt-2"
@@ -379,13 +347,13 @@ export function AIAssistantPanel({
         {analysis ? (
           <>
             {analysis.needs_review ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <div className="rounded-xl border border-amber-200 border-l-[3px] border-l-amber-500 bg-amber-50/60 px-4 py-4 text-sm leading-6 text-amber-900 dark:border-[#51442f] dark:border-l-[#cfaa65] dark:bg-[#29252a] dark:text-[#e2c68f]">
                 <div className="flex gap-2">
                   <ShieldAlert className="mt-0.5 size-4" aria-hidden="true" />
                   <div>
                     <p className="font-medium">AI 검토가 필요합니다.</p>
                     {analysis.escalation_reason ? (
-                      <p className="mt-1 text-red-600">
+                      <p className="mt-1 text-amber-800 dark:text-[#c6bca9]">
                         {formatAIVisibleText(analysis.escalation_reason)}
                       </p>
                     ) : null}
@@ -408,57 +376,51 @@ export function AIAssistantPanel({
             <AIReplyDraftBox
               draft={analysis.reply_draft}
               canUseDraft={canUseReplyDraft && !pending && analysis.review_decision !== "rejected"}
+              disabledReason={!canUseReplyDraft ? "이미 고객 답변이 등록된 문의입니다." : analysis.review_decision === "rejected" ? "제외된 분석의 초안은 사용할 수 없습니다." : isEditing ? "AI 분석 수정을 마친 뒤 초안을 사용할 수 있습니다." : pending ? "AI 작업을 처리 중입니다. 완료 후 다시 시도해 주세요." : undefined}
               onUseDraft={(draft) => {
                 onUseReplyDraft(draft, analysis.id);
-                setMessage("AI 초안을 고객 답변 작성란에 넣었습니다.");
+                setMessage(null);
               }}
             />
           </>
         ) : null}
 
-        {message ? <p role="status" className="text-sm text-emerald-700">{message}</p> : null}
-        {error ? <p role="alert" className="text-sm text-red-600">{error}</p> : null}
+        {message ? <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{message}</p> : null}
+        {error ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
 
-        <div className="grid gap-2">
-          <Button
-            type="button"
-            size="sm"
-            disabled={pending}
-            onClick={() => void runAnalysis(Boolean(analysis))}
-          >
-            {pending && analyzeTicket.isPending ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : analysis ? (
-              <RefreshCw className="size-4" aria-hidden="true" />
-            ) : (
-              <Bot className="size-4" aria-hidden="true" />
-            )}
-            {analysis ? "재분석" : "분석 실행"}
-          </Button>
-
-          {analysis && !isEditing ? (
-            <div className="grid gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" size="sm" variant="outline" disabled={pending || analysis.review_decision === "rejected"}
-                  onClick={() => void review("approved")}>확인 완료</Button>
-                <Button type="button" size="sm" variant="outline" disabled={pending || analysis.review_decision === "rejected"}
-                  onClick={() => void review("rejected")}>분석 제외</Button>
-              </div>
-              {!analysis.needs_review ? <Button type="button" size="sm" variant="outline" disabled={pending}
-                onClick={() => void review("request_review")}>검토 요청</Button> : null}
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={() => setIsEditing((current) => !current)}
-              >
-                <Edit3 className="size-4" aria-hidden="true" />
-                수정
-              </Button>
-            </div>
+        <div className="grid gap-3">
+          {!analysis ? (
+            <Button type="button" size="sm" variant="secondary" disabled={pending || analysisQuery.isError} onClick={() => void runAnalysis(false)}>
+              {analyzeTicket.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Bot className="size-4" aria-hidden="true" />}
+              {analyzeTicket.isPending ? "분석 중…" : "AI 분석 실행"}
+            </Button>
+          ) : !isEditing ? (
+            <>
+              {analysis.review_decision === "approved" || analysis.review_decision === "corrected" ? (
+                <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"><Check className="size-4" aria-hidden="true" />상담원 검토 완료</p>
+              ) : analysis.review_decision !== "rejected" ? (
+                <Button type="button" size="sm" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-[#414b63] dark:text-[#c4cde6] dark:hover:bg-[#252e43]" disabled={pending} onClick={() => void review("approved")}>
+                  <Check className="size-4" aria-hidden="true" />{reviewAnalysis.isPending ? "처리 중…" : "AI 분석 검토 완료"}
+                </Button>
+              ) : null}
+              <details className="rounded-md border border-border">
+                <summary className="cursor-pointer rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">추가 작업</summary>
+                <div className="grid gap-2 p-3 pt-1 sm:grid-cols-2">
+                  <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => void runAnalysis(true)}>
+                    {analyzeTicket.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="size-4" aria-hidden="true" />}
+                    {analyzeTicket.isPending ? "재분석 중…" : "재분석"}
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => setIsEditing(true)}><Edit3 className="size-4" aria-hidden="true" />분석 수정</Button>
+                  {!analysis.needs_review && analysis.review_decision !== "rejected" ? <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => void review("request_review")}>검토 요청</Button> : null}
+                  <Button type="button" size="sm" variant="destructive" disabled={pending || analysis.review_decision === "rejected"} onClick={() => setConfirmExclude(true)}>분석 제외</Button>
+                </div>
+              </details>
+            </>
           ) : null}
         </div>
+        <ActionDialog open={confirmExclude} onClose={() => setConfirmExclude(false)} title="이 AI 분석을 제외할까요?" description="이 분석의 답변 초안과 상태·우선순위 제안이 제거되고 운영 통계에서 제외됩니다. 이미 작성란에 넣은 내용과 등록된 고객 답변은 유지됩니다. 다시 사용하려면 재분석해 주세요.">
+          <Button type="button" variant="destructive" disabled={pending} onClick={() => { setConfirmExclude(false); void review("rejected"); }}>분석 제외하기</Button>
+        </ActionDialog>
       </CardContent>
     </Card>
   );

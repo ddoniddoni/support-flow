@@ -1,16 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
+import { FormActions } from "@/components/common/form-actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 import { useCreateTicket } from "../hooks/use-create-ticket";
 import {
@@ -84,88 +83,71 @@ export function CreateTicketForm() {
   }
 
   const isPending = createTicketMutation.isPending;
-  const selectClassName = cn(
-    "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs",
-    "outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30",
-    "disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50",
-  );
 
   return (
-    <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
+    <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
       <div className="grid gap-2">
         <Label htmlFor="title">제목</Label>
         <Input
           id="title"
+          className="h-12 text-base md:text-base"
+          maxLength={120}
+          aria-describedby={errors.title ? "ticket-title-error" : undefined}
           placeholder="예: 결제 영수증을 다시 받을 수 있나요?"
           aria-invalid={Boolean(errors.title)}
           disabled={isPending}
           {...register("title")}
         />
         {errors.title ? (
-          <p className="text-sm text-red-600">{errors.title.message}</p>
+          <p id="ticket-title-error" role="alert" className="text-sm text-red-600">{errors.title.message}</p>
         ) : null}
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="category">카테고리</Label>
-        <select
-          id="category"
-          className={selectClassName}
-          aria-invalid={Boolean(errors.category)}
-          disabled={isPending}
-          {...register("category")}
-        >
+      <fieldset disabled={isPending} className="grid gap-3">
+        <legend className="mb-3 text-sm font-medium">문의 유형</legend>
+        <div className="flex flex-wrap gap-2">
           {ticketCategories.map((category) => (
-            <option key={category} value={category}>
-              {categoryLabels[category]}
-            </option>
+            <label key={category} className="cursor-pointer">
+              <input type="radio" value={category} className="peer sr-only" {...register("category")} />
+              <span className="inline-flex min-h-11 items-center justify-center rounded-lg border border-input px-4 text-sm text-muted-foreground transition-colors peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:font-medium peer-checked:text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring peer-disabled:cursor-not-allowed peer-disabled:opacity-50">{categoryLabels[category]}</span>
+            </label>
           ))}
-        </select>
-        {errors.category ? (
-          <p className="text-sm text-red-600">{errors.category.message}</p>
-        ) : null}
-      </div>
+        </div>
+        {errors.category ? <p role="alert" className="text-sm text-red-600">{errors.category.message}</p> : null}
+      </fieldset>
 
       <div className="grid gap-2">
         <Label htmlFor="content">문의 내용</Label>
         <Textarea
           id="content"
-          className="min-h-40 resize-y"
+          className="min-h-60 resize-y text-base leading-7 md:text-base"
+          maxLength={4000}
+          aria-describedby={errors.content ? "ticket-content-error" : "ticket-content-hint"}
           placeholder="문의가 필요한 상황, 기대한 결과, 실제 결과를 함께 적어 주세요. 지원팀이 접수 후 확인합니다."
           aria-invalid={Boolean(errors.content)}
           disabled={isPending}
           {...register("content")}
         />
+        <p id="ticket-content-hint" className="text-xs leading-5 text-muted-foreground">20자 이상, 최대 4,000자까지 입력할 수 있습니다.</p>
         {errors.content ? (
-          <p className="text-sm text-red-600">{errors.content.message}</p>
+          <p id="ticket-content-error" role="alert" className="text-sm text-red-600">{errors.content.message}</p>
         ) : null}
       </div>
 
       {formError ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {formError}
         </p>
       ) : null}
 
-      <div className="grid gap-2 sm:flex sm:justify-end">
-        <Button
-          className="w-full sm:w-auto"
-          type="button"
-          variant="outline"
-          disabled={isPending}
-          onClick={() => router.back()}
-        >
-          취소
-        </Button>
-        <Button className="w-full sm:w-auto" type="submit" disabled={isPending}>
-          {isPending ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Send className="size-4" aria-hidden="true" />
-          )}
-          문의 등록
-        </Button>
-      </div>
+      <FormActions
+        secondaryLabel="내 문의로 돌아가기"
+        onSecondary={() => router.push("/tickets")}
+        submitLabel="문의 접수하기"
+        pendingLabel="접수 중…"
+        pending={isPending}
+        submitIcon={<Send className="size-4" aria-hidden="true" />}
+      />
     </form>
   );
 }

@@ -114,9 +114,15 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
     match: (pathname) => pathname.startsWith("/settings"),
   });
     items.push({
+      href: "/admin/users",
+      icon: UsersRound,
+      label: "사용자 관리",
+      match: (pathname) => pathname.startsWith("/admin/users"),
+    });
+    items.push({
       href: "/admin/agents",
       icon: UsersRound,
-      label: "담당자",
+      label: "상담원 현황",
       match: (pathname) => pathname.startsWith("/admin/agents"),
     });
   }
@@ -125,7 +131,7 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
 }
 
 function getWorkspaceHomeHref(role: Tables<"profiles">["role"]) {
-  return role === "customer" ? "/tickets" : "/dashboard";
+  return role === "customer" ? "/tickets/new" : "/dashboard";
 }
 
 function WorkspaceLogo({

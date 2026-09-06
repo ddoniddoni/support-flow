@@ -24,8 +24,8 @@ const adminAreas = [
     icon: BarChart3,
   },
   {
-    title: "담당자 관리",
-    description: "상담원별 응답 필요 문의와 AI 검토 항목을 확인합니다.",
+    title: "상담원 현황",
+    description: "상담원별 배정 문의와 처리 현황을 확인합니다.",
     icon: UsersRound,
   },
   {
@@ -53,7 +53,8 @@ export default async function AdminPage() {
               변경을 관리합니다.
             </p>
           </div>
-          <div className="grid gap-2 sm:flex">
+          <div className="flex flex-wrap gap-2">
+            <Link className={buttonVariants({ variant: "outline" })} href="/admin/users">사용자 관리</Link>
             <Link className={buttonVariants()} href="/tickets">
               문의함
             </Link>
@@ -67,7 +68,7 @@ export default async function AdminPage() {
               className={buttonVariants({ variant: "outline" })}
               href="/admin/agents"
             >
-              담당자 관리
+              상담원 현황
             </Link>
           </div>
         </div>

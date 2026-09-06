@@ -1,13 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader2, LockKeyhole, Send } from "lucide-react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ActionDialog } from "@/components/common/action-dialog";
 import type { Tables } from "@/types/database";
 
 import { useCreateTicketReply } from "../hooks/use-create-ticket-reply";
@@ -16,14 +17,13 @@ import {
   type TicketReplyInput,
 } from "../schemas/ticket-schema";
 
+export type ReplyComposerHandle = { useDraft: (draft: string) => void };
+
 type TicketReplyFormProps = {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
-  initialContent?: string;
-  initialContentKey?: string | null;
-  source?: "manual" | "ai_draft";
-  onSubmitted?: () => void;
+  composerRef?: Ref<ReplyComposerHandle>;
 };
 
 function getReplyErrorMessage(error: unknown) {
@@ -47,13 +47,12 @@ export function TicketReplyForm({
   ticketId,
   profile,
   isInternal,
-  initialContent = "",
-  initialContentKey = null,
-  source = "manual",
-  onSubmitted,
+  composerRef,
 }: TicketReplyFormProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<string | null>(null);
+  const source = useRef<"manual" | "ai_draft">("manual");
   const createReply = useCreateTicketReply();
   const formId = isInternal ? "internal-note-content" : "reply-content";
 
@@ -61,19 +60,38 @@ export function TicketReplyForm({
     register,
     handleSubmit,
     reset,
+    getValues,
+    setValue,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<TicketReplyInput>({
     resolver: zodResolver(ticketReplySchema),
     defaultValues: {
-      content: initialContent,
+      content: "",
     },
   });
 
-  useEffect(() => {
-    if (initialContent) {
-      reset({ content: initialContent });
-    }
-  }, [initialContent, initialContentKey, reset]);
+  function focusComposer() {
+    setFocus("content");
+    document.getElementById(formId)?.scrollIntoView({ block: "center", behavior: "instant" });
+  }
+
+  function applyDraft(draft: string, append = false) {
+    const current = getValues("content");
+    setValue("content", append ? `${current}\n\n${draft}` : draft, { shouldDirty: true, shouldValidate: true });
+    source.current = "ai_draft";
+    setPendingDraft(null);
+    setSuccessMessage("AI 초안을 작성란에 넣었습니다. 내용을 검토한 뒤 고객에게 등록해 주세요.");
+    focusComposer();
+  }
+
+  useImperativeHandle(composerRef, () => ({
+    useDraft(draft) {
+      if (isSubmitting || createReply.isPending) return;
+      if (getValues("content").trim()) setPendingDraft(draft);
+      else applyDraft(draft);
+    },
+  }));
 
   async function onSubmit(input: TicketReplyInput) {
     setFormError(null);
@@ -85,10 +103,10 @@ export function TicketReplyForm({
         profile,
         isInternal,
         content: input.content,
-        source,
+        source: source.current,
       });
-      reset();
-      onSubmitted?.();
+      reset({ content: "" });
+      source.current = "manual";
       setSuccessMessage(
         isInternal ? "내부 메모를 추가했습니다." : "고객 답변을 등록했습니다.",
       );
@@ -100,14 +118,18 @@ export function TicketReplyForm({
   const pending = isSubmitting || createReply.isPending;
 
   return (
-    <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
+    <form className="grid gap-3" onSubmit={(event) => void handleSubmit(onSubmit)(event)}>
+      <p id={`${formId}-visibility`} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+        {isInternal ? <LockKeyhole className="size-4" aria-hidden="true" /> : <Send className="size-4" aria-hidden="true" />}
+        {isInternal ? "팀 내부 전용 · 고객에게 보이지 않습니다" : "고객에게 공개 · 등록 시 답변 완료로 처리됩니다"}
+      </p>
       <div className="grid gap-2">
         <Label htmlFor={formId}>
           {isInternal ? "내부 메모 작성" : "고객 답변 작성"}
         </Label>
         <Textarea
           id={formId}
-          className="min-h-28 resize-y"
+          className="min-h-36 resize-y text-base leading-7 font-normal md:text-base"
           placeholder={
             isInternal
               ? "지원팀끼리 공유할 응대 맥락을 남겨 주세요."
@@ -115,26 +137,39 @@ export function TicketReplyForm({
           }
           disabled={pending}
           aria-invalid={Boolean(errors.content)}
+          aria-describedby={`${formId}-visibility${errors.content ? ` ${formId}-error` : ""}`}
           {...register("content")}
         />
         {errors.content ? (
-          <p className="text-sm text-red-600">{errors.content.message}</p>
+          <p id={`${formId}-error`} role="alert" className="text-sm text-red-600 dark:text-red-400">{errors.content.message}</p>
         ) : null}
       </div>
 
-      {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
+      {formError ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{formError}</p> : null}
       {successMessage ? (
-        <p className="text-sm text-emerald-700">{successMessage}</p>
+        <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{successMessage}</p>
       ) : null}
 
-      <Button className="w-full sm:w-fit" disabled={pending} type="submit">
+      <Button className="w-full sm:w-fit" variant={isInternal ? "secondary" : "default"} disabled={pending || pendingDraft !== null} type="submit">
         {pending ? (
           <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        ) : isInternal ? (
+          <LockKeyhole className="size-4" aria-hidden="true" />
         ) : (
           <Send className="size-4" aria-hidden="true" />
         )}
-        {isInternal ? "메모 추가" : "답변 등록"}
+        {pending ? "저장 중…" : isInternal ? "내부 메모 저장" : "고객에게 답변 등록"}
       </Button>
+      <ActionDialog
+        open={pendingDraft !== null}
+        onClose={() => setPendingDraft(null)}
+        title="작성 중인 답변이 있습니다"
+        description="기존 내용을 AI 초안으로 교체하거나, 작성한 내용 뒤에 초안을 이어 붙일 수 있습니다. 취소하면 기존 내용이 유지됩니다."
+        finalFocus={() => document.getElementById(formId)}
+      >
+        <Button type="button" variant="outline" onClick={() => { if (pendingDraft !== null) applyDraft(pendingDraft); }}>초안으로 교체</Button>
+        <Button type="button" onClick={() => { if (pendingDraft !== null) applyDraft(pendingDraft, true); }}>뒤에 이어 붙이기</Button>
+      </ActionDialog>
     </form>
   );
 }

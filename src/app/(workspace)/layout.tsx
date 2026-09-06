@@ -1,3 +1,4 @@
+import { CustomerHeader } from "@/components/layout/customer-header";
 import { cookies } from "next/headers";
 import type { CSSProperties } from "react";
 
@@ -24,6 +25,9 @@ export default async function WorkspaceLayout({
   children: React.ReactNode;
 }>) {
   const profile = await requireServerProfile();
+  if (profile.role === "customer") {
+    return <div className="min-h-screen bg-background dark:[--muted-foreground:#b0bed1]"><CustomerHeader name={profile.name} /><main>{children}</main></div>;
+  }
   const cookieStore = await cookies();
   const initialSidebarMode = getInitialSidebarMode(
     cookieStore.get(sidebarCookieName)?.value,

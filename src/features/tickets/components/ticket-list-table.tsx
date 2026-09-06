@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { SelectionCheckbox } from "@/components/ui/selection-checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -371,15 +372,19 @@ function MobileTicketCard({
 export function TicketListTable({
   getTicketHref,
   selectedTicketId,
+  selection,
   tickets,
   role,
 }: {
   getTicketHref?: (ticketId: string) => string;
   selectedTicketId?: string | null;
+  selection?: { ids: string[]; disabled: boolean; onToggle: (id: string) => void; onToggleAll: () => void };
   tickets: TicketListItem[];
   role: Tables<"profiles">["role"];
 }) {
   const isCustomer = role === "customer";
+  const canSelect = role === "admin" && selection !== undefined;
+  const allSelected = tickets.length > 0 && tickets.every(ticket => selection?.ids.includes(ticket.id));
   const columnWidths = isCustomer ? customerColumnWidths : adminColumnWidths;
   const resolveTicketHref =
     getTicketHref ?? ((ticketId: string) => `/tickets/${ticketId}`);
@@ -388,24 +393,24 @@ export function TicketListTable({
     <>
       <div className="grid gap-3 md:hidden">
         {tickets.map((ticket) => (
-          <MobileTicketCard
-            href={resolveTicketHref(ticket.id)}
-            key={ticket.id}
-            ticket={ticket}
-            role={role}
-          />
+          <div key={ticket.id} className={cn(canSelect && "rounded-lg border border-border bg-card", selection?.ids.includes(ticket.id) && "ring-2 ring-primary/40")}>
+            {canSelect ? <div className="flex items-center gap-1 px-2 pt-1"><SelectionCheckbox label={`${formatTicketNumber(ticket.ticket_number)} 선택`} checked={selection.ids.includes(ticket.id)} disabled={selection.disabled} onChange={() => selection.onToggle(ticket.id)} /><span className="text-xs text-muted-foreground">문의 선택</span></div> : null}
+            <MobileTicketCard href={resolveTicketHref(ticket.id)} ticket={ticket} role={role} />
+          </div>
         ))}
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-border bg-card shadow-xs md:block">
         <Table className="min-w-[960px] table-fixed">
           <colgroup>
+            {canSelect ? <col className="w-12" /> : null}
             {columnWidths.map((width, index) => (
               <col key={index} className={width} />
             ))}
           </colgroup>
           <TableHeader>
             <TableRow>
+              {canSelect ? <TableHead><SelectionCheckbox label="현재 페이지 전체 선택" checked={allSelected} indeterminate={!allSelected && selection.ids.length > 0} disabled={selection.disabled} onChange={selection.onToggleAll} /></TableHead> : null}
               <TableHead>문의</TableHead>
               <TableHead>답변 상태</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
@@ -421,10 +426,11 @@ export function TicketListTable({
             {tickets.map((ticket) => (
               <TableRow
                 className={cn(
-                  selectedTicketId === ticket.id && "bg-accent/50 hover:bg-accent/60",
+                  (selectedTicketId === ticket.id || (canSelect && selection.ids.includes(ticket.id))) && "bg-accent/50 hover:bg-accent/60",
                 )}
                 key={ticket.id}
               >
+                {canSelect ? <TableCell><SelectionCheckbox label={`${formatTicketNumber(ticket.ticket_number)} 선택`} checked={selection.ids.includes(ticket.id)} disabled={selection.disabled} onChange={() => selection.onToggle(ticket.id)} /></TableCell> : null}
                 <TableCell className="min-w-0">
                   <Link
                     href={resolveTicketHref(ticket.id)}

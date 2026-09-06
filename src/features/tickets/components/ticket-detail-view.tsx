@@ -1,12 +1,13 @@
 "use client";
 
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Clock3, UserRound, MessageSquareText, Sparkles, LockKeyhole, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState, type Ref } from "react";
 
+import { SignalCard } from "@/components/common/signal-card";
 import { EmptyState } from "@/components/common/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,7 +24,6 @@ import {
   type TicketStatus,
 } from "@/types/domain";
 
-import type { AgentOption } from "../api/tickets-api";
 import { useAgents } from "../hooks/use-agents";
 import { useTicket } from "../hooks/use-ticket";
 import { useUpdateTicketAction } from "../hooks/use-update-ticket-action";
@@ -33,8 +33,9 @@ import type {
   TicketLogItem,
   TicketReplyItem,
 } from "../types";
+import { TicketPropertySelect, type TicketPropertyOption } from "./ticket-property-select";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
-import { TicketReplyForm } from "./ticket-reply-form";
+import { TicketReplyForm, type ReplyComposerHandle } from "./ticket-reply-form";
 
 type TicketDetailViewProps = {
   ticketId: string;
@@ -57,6 +58,18 @@ const priorityLabels: Record<TicketPriority, string> = {
   medium: "보통",
   high: "높음",
   urgent: "긴급",
+};
+
+const statusColors = {
+  open: "bg-blue-500 text-blue-500",
+  resolved: "bg-emerald-500 text-emerald-500",
+  closed: "bg-slate-400 text-slate-400",
+};
+const priorityColors: Record<TicketPriority, string> = {
+  low: "bg-slate-400 text-slate-400",
+  medium: "bg-sky-500 text-sky-500",
+  high: "bg-amber-500 text-amber-500",
+  urgent: "bg-red-500 text-red-500",
 };
 
 const slaTargetsByPriority: Record<TicketPriority, number> = {
@@ -100,6 +113,7 @@ const tagLabels: Record<string, string> = {
 };
 
 const actionLabels: Record<string, string> = {
+  resolution_corrected_without_reply: "시스템: 공개 답변 없는 완료 상태 보정",
   status_changed: "상태 변경",
   priority_changed: "우선순위 변경",
   assignee_changed: "담당자 변경",
@@ -253,6 +267,19 @@ function getSlaLabel(ticket: TicketDetail) {
   return `응답 목표 ${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`;
 }
 
+function TicketAttentionSummary({ ticket, hasPublicReply }: { ticket: TicketDetail; hasPublicReply: boolean }) {
+  const finished = ticket.status === "resolved" || ticket.status === "closed";
+  const slaLabel = getSlaLabel(ticket);
+  const overdue = slaLabel === "응답 목표 초과";
+  return (
+    <section aria-label="문의 처리 요약" className="grid gap-3 sm:grid-cols-3">
+      <SignalCard label="기본 응답 목표" value={finished ? "처리 종료" : slaLabel} tone={finished ? "neutral" : overdue ? "danger" : "info"} icon={Clock3} description={finished ? "현재 종료 또는 답변 완료 상태입니다" : `접수 후 ${slaTargetsByPriority[ticket.priority]}시간 기준 · 영업시간 미반영`} />
+      <SignalCard label="담당 상담원" value={getTicketAssigneeLabel(ticket)} tone={!ticket.assignee_id && !finished ? "warning" : "neutral"} icon={UserRound} description={ticket.assignee_id ? "배정된 상담원이 문의를 처리합니다" : finished ? "배정된 상담원이 없습니다" : "처리 속성에서 상담원을 배정해 주세요"} />
+      <SignalCard label="고객 공개 답변" value={hasPublicReply ? "답변 등록됨" : "아직 미등록"} tone={hasPublicReply ? "success" : "info"} icon={MessageSquareText} description={hasPublicReply ? "고객이 답변을 확인할 수 있습니다" : "아래 작성란에서 공식 답변을 등록해 주세요"} />
+    </section>
+  );
+}
+
 function getTicketTags(ticket: TicketDetail) {
   const tags = [
     categoryLabels[ticket.category] ?? ticket.category,
@@ -268,11 +295,11 @@ function StatusBadge({ status }: { status: TicketStatus }) {
     <Badge
       variant="outline"
       className={cn(
-        status === "open" && "border-blue-200 bg-blue-50 text-blue-700",
+        status === "open" && "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
         status === "in_progress" &&
-          "border-blue-200 bg-blue-50 text-blue-700",
+          "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
         status === "resolved" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-700",
+          "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300",
         status === "closed" &&
           "border-border bg-muted text-muted-foreground",
       )}
@@ -287,9 +314,9 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
     <Badge
       variant="outline"
       className={cn(
-        priority === "urgent" && "border-red-200 bg-red-50 text-red-700",
-        priority === "high" && "border-orange-200 bg-orange-50 text-orange-700",
-        priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
+        priority === "urgent" && "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300",
+        priority === "high" && "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-300",
+        priority === "medium" && "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-300",
         priority === "low" &&
           "border-border bg-muted/60 text-muted-foreground",
       )}
@@ -343,7 +370,7 @@ function ReplyList({
                   key={reply.id}
                   className="rounded-lg border border-border bg-muted/40 p-3"
                 >
-                  <p className="whitespace-pre-wrap text-sm text-foreground">
+                  <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">
                     {reply.content}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
@@ -366,23 +393,18 @@ function ReplyComposerCard({
   ticketId,
   profile,
   isInternal,
-  initialContent,
-  initialContentKey,
-  source,
-  onSubmitted,
+  composerRef,
 }: {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
-  initialContent?: string;
-  initialContentKey?: string | null;
-  source?: "manual" | "ai_draft";
-  onSubmitted?: () => void;
+  composerRef?: Ref<ReplyComposerHandle>;
 }) {
   return (
-    <Card className="rounded-lg">
+    <Card className={cn("rounded-xl", isInternal ? "border border-dashed border-border bg-muted/20 dark:border-slate-700 dark:bg-slate-800/15" : "ring-blue-200/60 dark:ring-slate-700")} >
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {isInternal ? <LockKeyhole className="size-5 text-amber-600 dark:text-amber-300" aria-hidden="true" /> : <Send className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />}
           {isInternal ? "내부 메모 추가" : "고객 답변 등록"}
         </CardTitle>
         <CardDescription>
@@ -396,10 +418,7 @@ function ReplyComposerCard({
           ticketId={ticketId}
           profile={profile}
           isInternal={isInternal}
-          initialContent={initialContent}
-          initialContentKey={initialContentKey}
-          source={source}
-          onSubmitted={onSubmitted}
+          composerRef={composerRef}
         />
       </CardContent>
     </Card>
@@ -469,8 +488,10 @@ function ActivityLogList({ logs }: { logs: TicketLogItem[] }) {
 function TicketOperationsPanel({
   ticket,
   profile,
+  hasPublicReply,
 }: {
   ticket: NonNullable<TicketDetailData["ticket"]>;
+  hasPublicReply: boolean;
   profile: Pick<Tables<"profiles">, "id" | "role">;
 }) {
   const [pendingField, setPendingField] = useState<OperationField | null>(null);
@@ -519,15 +540,20 @@ function TicketOperationsPanel({
     );
   }
 
-  function getAgentLabel(agentId: string | null) {
-    if (!agentId) {
-      return ticket.status === "resolved" || ticket.status === "closed"
-        ? "담당자 없음"
-        : "담당자 필요";
-    }
-
-    const agent = agentsQuery.data?.find((item) => item.id === agentId);
-    return agent ? `${agent.name} (${agent.email})` : "담당자 정보 없음";
+  const agentOptions: TicketPropertyOption[] = [
+    { value: "unassigned", label: "담당자 없음", description: "담당할 상담원을 선택해 주세요" },
+    ...(agentsQuery.data ?? []).map((agent) => ({
+      value: agent.id, label: agent.name, description: agent.email, avatar: agent.name.slice(0, 1),
+    })),
+  ];
+  // Keep the current assignment visible while the option list loads or fails.
+  if (ticket.assignee_id && !agentOptions.some((option) => option.value === ticket.assignee_id)) {
+    agentOptions.push({
+      value: ticket.assignee_id,
+      label: ticket.assignee?.name ?? "현재 담당자",
+      description: ticket.assignee?.email,
+      avatar: ticket.assignee?.name.slice(0, 1),
+    });
   }
 
   return (
@@ -535,130 +561,81 @@ function TicketOperationsPanel({
       <CardHeader>
         <CardTitle>처리 속성</CardTitle>
         <CardDescription>
-          답변 상태, 우선순위, 담당자를 관리합니다.
+          선택하면 바로 저장됩니다.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid gap-1.5">
-          <label className="text-sm font-medium text-foreground" htmlFor="status">
-            답변 상태
-          </label>
-          <div className="relative">
-            <select
-              id="status"
-              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-              value={visibleStatusValue}
-              disabled={isPending}
-              onChange={(event) =>
-                runAction("status", {
-                  status: event.target.value as TicketStatus,
-                })
-              }
-            >
-              {visibleStatusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {statusLabels[status]}
-                </option>
-              ))}
-            </select>
-            {pendingField === "status" ? (
-              <Loader2
-                className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
-                aria-hidden="true"
-              />
-            ) : null}
-          </div>
-        </div>
-
+        <TicketPropertySelect
+          id="status"
+          label="답변 상태"
+          value={visibleStatusValue}
+          options={visibleStatusOptions.map((status) => ({ value: status, label: statusLabels[status], color: statusColors[status], disabled: status === "resolved" && !hasPublicReply, description: status === "resolved" && !hasPublicReply ? "고객 공개 답변 등록 후 선택 가능" : undefined }))}
+          disabled={isPending}
+          pending={pendingField === "status"}
+          onValueChange={(status) => { if (status !== "resolved" || hasPublicReply) runAction("status", { status: status as TicketStatus }); }}
+        />
+        {!hasPublicReply ? <p className="text-sm leading-6 text-muted-foreground">고객 공개 답변을 등록하면 자동으로 답변 완료 처리됩니다. 내부 메모와 AI 초안은 답변으로 간주하지 않습니다.</p> : null}
         {isAdmin ? (
           <>
-            <div className="grid gap-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="priority"
-              >
-                우선순위
-              </label>
-              <div className="relative">
-                <select
-                  id="priority"
-                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-                  value={ticket.priority}
-                  disabled={isPending}
-                  onChange={(event) =>
-                    runAction("priority", {
-                      priority: event.target.value as TicketPriority,
-                    })
-                  }
-                >
-                  {ticketPriorities.map((priority) => (
-                    <option key={priority} value={priority}>
-                      {priorityLabels[priority]}
-                    </option>
-                  ))}
-                </select>
-                {pendingField === "priority" ? (
-                  <Loader2
-                    className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                ) : null}
+            <TicketPropertySelect
+              id="priority"
+              label="우선순위"
+              value={ticket.priority}
+              options={ticketPriorities.map((priority) => ({ value: priority, label: priorityLabels[priority], color: priorityColors[priority] }))}
+              disabled={isPending}
+              pending={pendingField === "priority"}
+              onValueChange={(priority) => runAction("priority", { priority: priority as TicketPriority })}
+            />
+            <TicketPropertySelect
+              id="assignee"
+              label="담당자"
+              value={ticket.assignee_id ?? "unassigned"}
+              options={agentOptions}
+              disabled={isPending || agentsQuery.isLoading || agentsQuery.isError}
+              pending={pendingField === "assignee" || agentsQuery.isLoading}
+              onValueChange={(assigneeId) => runAction("assignee", { assigneeId: assigneeId === "unassigned" ? null : assigneeId })}
+            />
+            {agentsQuery.isError ? (
+              <div role="alert" className="text-xs text-red-600 dark:text-red-400">
+                담당자 목록을 불러오지 못했습니다.
+                <Button type="button" variant="link" size="sm" disabled={agentsQuery.isFetching} onClick={() => void agentsQuery.refetch()}>다시 시도</Button>
               </div>
-            </div>
-
-            <div className="grid gap-1.5">
-              <label
-                className="text-sm font-medium text-foreground"
-                htmlFor="assignee"
-              >
-                담당자
-              </label>
-              <div className="relative">
-                <select
-                  id="assignee"
-                  className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
-                  value={ticket.assignee_id ?? "unassigned"}
-                  disabled={isPending || agentsQuery.isLoading}
-                  onChange={(event) =>
-                    runAction("assignee", {
-                      assigneeId:
-                        event.target.value === "unassigned"
-                          ? null
-                          : event.target.value,
-                    })
-                  }
-                >
-                  <option value="unassigned">담당자 필요</option>
-                  {(agentsQuery.data ?? []).map((agent: AgentOption) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name} ({agent.email})
-                    </option>
-                  ))}
-                </select>
-                {pendingField === "assignee" || agentsQuery.isLoading ? (
-                  <Loader2
-                    className="absolute top-2 right-2 size-4 animate-spin text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </div>
-              {agentsQuery.isError ? (
-                <p className="text-xs text-red-600">
-                  담당자 목록을 불러오지 못했습니다.
-                </p>
-              ) : null}
-            </div>
+            ) : null}
           </>
-        ) : null}
+        ) : (
+          <p className="text-sm text-muted-foreground">담당자: {ticket.assignee?.name ?? "담당자 없음"}</p>
+        )}
 
-        <div className="rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-          현재 담당자: {getAgentLabel(ticket.assignee_id)}
-        </div>
-
-        {message ? <p className="text-sm text-emerald-700">{message}</p> : null}
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {message ? <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{message}</p> : null}
+        {error ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
       </CardContent>
     </Card>
+  );
+}
+
+function TicketAIAssistant({ ticket, profile, canUseReplyDraft, onUseReplyDraft }: {
+  ticket: TicketDetail;
+  profile: Pick<Tables<"profiles">, "id" | "role">;
+  canUseReplyDraft: boolean;
+  onUseReplyDraft: (draft: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(Boolean(ticket.ai_needs_review));
+  return (
+    <details
+      className="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-[#34394f] dark:bg-[#151b2c]"
+      open={expanded}
+      onToggle={(event) => setExpanded(event.currentTarget.open)}
+    >
+      <summary className="cursor-pointer rounded-lg px-5 py-4 text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+        <Sparkles className="mr-2 inline size-5 text-indigo-500 dark:text-[#b0b8de]" aria-hidden="true" />AI 요약과 답변 초안
+        <span className="ml-2 text-xs font-normal text-muted-foreground">
+          {ticket.ai_needs_review ? "검토 필요" : "상담원 전용"}
+        </span>
+      </summary>
+      <div className="px-5 pb-5">
+        <AIAssistantPanel ticketId={ticket.id} profile={profile} canUseReplyDraft={canUseReplyDraft} onUseReplyDraft={onUseReplyDraft} />
+      </div>
+    </details>
   );
 }
 
@@ -669,11 +646,7 @@ function TicketDetailContent({
   data: TicketDetailData;
   profile: Pick<Tables<"profiles">, "id" | "role">;
 }) {
-  const [replyDraft, setReplyDraft] = useState<{
-    content: string;
-    analysisId: string;
-    version: number;
-  } | null>(null);
+  const replyComposerRef = useRef<ReplyComposerHandle>(null);
 
   if (!data.ticket) {
     return (
@@ -698,7 +671,7 @@ function TicketDetailContent({
   const hasPublicReply = data.replies.length > 0;
 
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-4 px-3 py-4 sm:px-4 lg:px-6">
+    <div className="mx-auto grid max-w-[1360px] gap-6 px-4 py-6 sm:px-6 lg:px-8 dark:[--muted-foreground:#a8b5c8] [&_[data-slot=card]]:[--card-spacing:1.25rem] [&_[data-slot=card-title]]:text-lg [&_[data-slot=card-title]]:font-semibold">
       <div className="flex flex-col gap-3">
         <Link
           className="inline-flex w-fit items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -721,52 +694,58 @@ function TicketDetailContent({
               {categoryLabels[ticket.category] ?? ticket.category}
             </Badge>
           </div>
-          <h1 className="mt-3 text-xl font-semibold text-foreground">
+          <h1 className="mt-3 max-w-[40ch] break-words text-2xl leading-snug font-semibold tracking-tight text-foreground sm:text-[1.75rem]">
             {ticket.title}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {formatTicketNumber(ticket.ticket_number)} · 접수{" "}
-            {formatDateTime(ticket.created_at)} · 최근 수정{" "}
-            {formatDateTime(ticket.updated_at)}
-          </p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px] leading-6 text-muted-foreground">
+            <span className="font-mono font-medium text-foreground">{formatTicketNumber(ticket.ticket_number)}</span>
+            <span>접수 {formatDateTime(ticket.created_at)}</span>
+            <span>최근 수정 {formatDateTime(ticket.updated_at)}</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="grid gap-4">
-          <Card className="rounded-lg">
+      {canViewOperations ? <TicketAttentionSummary ticket={ticket} hasPublicReply={hasPublicReply} /> : null}
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid min-w-0 content-start gap-4">
+          <Card className="rounded-xl border-l-[3px] border-l-blue-400 dark:border-l-[#739ac7] dark:bg-[#1a2433]">
             <CardHeader>
-              <CardTitle>문의 내용</CardTitle>
-              <CardDescription>고객이 처음 접수한 요청입니다.</CardDescription>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2"><MessageSquareText className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />문의 내용</CardTitle>
+                <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-200">고객 원문</Badge>
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
+              <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">
                 {ticket.content}
               </p>
             </CardContent>
           </Card>
 
-          <ReplyList
+          {hasPublicReply || isCustomer ? <ReplyList
             title="고객 공개 답변"
             description="고객에게 표시되는 상담 답변입니다."
             replies={data.replies}
             emptyText="아직 등록된 공개 답변이 없습니다."
             isCustomerView={isCustomer}
-          />
+          /> : null}
+
+          {canViewOperations ? (
+            <TicketAIAssistant
+              ticket={ticket}
+              profile={profile}
+              canUseReplyDraft={!hasPublicReply}
+              onUseReplyDraft={(draft) => replyComposerRef.current?.useDraft(draft)}
+            />
+          ) : null}
 
           {canViewOperations && !hasPublicReply ? (
             <ReplyComposerCard
               ticketId={ticket.id}
               profile={profile}
               isInternal={false}
-              initialContent={replyDraft?.content}
-              initialContentKey={
-                replyDraft
-                  ? `${replyDraft.analysisId}:${replyDraft.version}`
-                  : null
-              }
-              source={replyDraft ? "ai_draft" : "manual"}
-              onSubmitted={() => setReplyDraft(null)}
+              composerRef={replyComposerRef}
             />
           ) : null}
 
@@ -776,12 +755,12 @@ function TicketDetailContent({
 
           {canViewOperations ? (
             <>
-              <ReplyList
+              {data.internalNotes.length > 0 ? <ReplyList
                 title="내부 메모"
                 description="지원팀 내부에서만 공유하는 메모입니다."
                 replies={data.internalNotes}
                 emptyText="아직 등록된 내부 메모가 없습니다."
-              />
+              /> : null}
               <ReplyComposerCard
                 ticketId={ticket.id}
                 profile={profile}
@@ -791,106 +770,33 @@ function TicketDetailContent({
           ) : null}
         </div>
 
-        <div className="grid content-start gap-4">
-          {canViewOperations ? (
-            <>
-              <AIAssistantPanel
-                ticketId={ticket.id}
-                profile={profile}
-                canUseReplyDraft={!hasPublicReply}
-                onUseReplyDraft={(draft, analysisId) => {
-                  setReplyDraft((current) => ({
-                    content: draft,
-                    analysisId,
-                    version: (current?.version ?? 0) + 1,
-                  }));
-                }}
-              />
-              <TicketOperationsPanel ticket={ticket} profile={profile} />
-            </>
-          ) : null}
+        <div className="grid min-w-0 content-start gap-4">
+          {canViewOperations ? <TicketOperationsPanel ticket={ticket} profile={profile} hasPublicReply={data.replies.some((reply) => !reply.is_internal)} /> : null}
 
-          <Card className="rounded-lg">
-            <CardHeader>
-              <CardTitle>고객 정보</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 text-sm">
+          <Card className="rounded-xl">
+            <CardHeader><CardTitle>{isCustomer ? "문의 정보" : "고객 정보"}</CardTitle></CardHeader>
+            <CardContent className="grid gap-4 text-sm">
               {canViewOperations ? (
-                <>
-                  <div>
-                    <p className="text-muted-foreground">접수 번호</p>
-                    <p className="font-medium text-foreground">
-                      {formatTicketNumber(ticket.ticket_number)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">고객</p>
-                    <p className="font-medium text-foreground">
-                      {ticket.customer?.name ?? "고객 정보 없음"}
-                    </p>
-                    {ticket.customer?.email ? (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {ticket.customer.email}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">담당자</p>
-                    <p className="font-medium text-foreground">
-                      {getTicketAssigneeLabel(ticket)}
-                    </p>
-                    {ticket.assignee?.email ? (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {ticket.assignee.email}
-                      </p>
-                    ) : null}
-                  </div>
-                </>
-              ) : null}
-              <div>
-                <p className="text-muted-foreground">답변 상태</p>
-                <p className="font-medium text-foreground">
-                  {isCustomer
-                    ? customerStatusLabels[ticket.status]
-                    : statusLabels[ticket.status]}
-                </p>
-              </div>
-              {canViewOperations ? (
-                <div>
-                  <p className="text-muted-foreground">우선순위</p>
-                  <p className="font-medium text-foreground">
-                    {priorityLabels[ticket.priority]}
-                  </p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-800 dark:bg-blue-950 dark:text-blue-200">{ticket.customer?.name?.slice(0, 1) ?? <UserRound className="size-4" />}</span>
+                  <div className="min-w-0"><p className="font-semibold">{ticket.customer?.name ?? "고객 정보 없음"}</p><p className="mt-1 break-all text-xs leading-5 text-muted-foreground">{ticket.customer?.email}</p></div>
                 </div>
-              ) : null}
-              {canViewOperations ? (
-                <>
-                  <div>
-                    <p className="text-muted-foreground">기본 응답 목표</p>
-                    <p className="font-medium text-foreground">
-                      {getSlaLabel(ticket)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">태그</p>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      {getTicketTags(ticket).map((tag, index) => (
-                        <Badge
-                          className="border-border bg-background text-muted-foreground"
-                          key={`${tag}-${index}`}
-                          variant="outline"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : null}
+              ) : <div className="flex items-center justify-between"><span className="text-muted-foreground">답변 상태</span><CustomerStatusBadge status={ticket.status} /></div>}
+              <div className="border-t border-border pt-4">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">{canViewOperations ? "문의 태그" : "문의 유형"}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(canViewOperations ? getTicketTags(ticket) : [categoryLabels[ticket.category] ?? ticket.category]).map((tag) => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          {canViewOperations ? <ActivityLogList logs={data.logs} /> : null}
+          {canViewOperations ? (
+            <details className="rounded-lg border border-border bg-card">
+              <summary className="cursor-pointer rounded-lg p-4 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">활동 로그 · {data.logs.length}건</summary>
+              <ActivityLogList logs={data.logs} />
+            </details>
+          ) : null}
         </div>
       </div>
     </div>
@@ -906,16 +812,17 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
 
   if (ticketQuery.isError) {
     return (
-      <div className="mx-auto max-w-3xl rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div className="mx-auto max-w-3xl rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
         <div className="flex gap-3">
           <AlertCircle className="mt-0.5 size-4" aria-hidden="true" />
           <div>
             <p className="font-medium">
               문의 상세 정보를 불러오지 못했습니다.
             </p>
-            <p className="mt-1 text-red-600">
-              권한 정책과 네트워크 상태를 확인한 뒤 다시 시도해 주세요.
+            <p className="mt-1 text-red-600 dark:text-red-400">
+              정보를 불러오지 못했습니다. 다시 시도해 주세요.
             </p>
+            <Button type="button" variant="outline" className="mt-3" disabled={ticketQuery.isFetching} onClick={() => void ticketQuery.refetch()}>다시 시도</Button>
           </div>
         </div>
       </div>
@@ -924,6 +831,7 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
 
   return (
     <TicketDetailContent
+      key={ticketId}
       data={
         ticketQuery.data ?? {
           ticket: null,

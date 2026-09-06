@@ -1,5 +1,7 @@
 "use client";
 
+import { AppSelect } from "@/components/ui/app-select";
+
 import { AlertCircle, Search, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
@@ -166,37 +168,19 @@ export function AIReviewQueueView({ profile }: AIReviewQueueViewProps) {
         </form>
 
         <div className="grid gap-2 md:grid-cols-2">
-          <select
-            className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          <AppSelect
             aria-label="감정 필터"
             value={filters.sentiment ?? "all"}
-            onChange={(event) =>
-              updateParams({ sentiment: event.target.value, page: "1" })
-            }
-          >
-            <option value="all">{sentimentLabels.all}</option>
-            {aiSentiments.map((sentiment) => (
-              <option key={sentiment} value={sentiment}>
-                {sentimentLabels[sentiment]}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ sentiment: value, page: "1" })}
+            options={[{ value: "all", label: sentimentLabels.all }, ...aiSentiments.map(value => ({ value, label: sentimentLabels[value] }))]}
+          />
 
-          <select
-            className="h-11 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+          <AppSelect
             aria-label="긴급도 필터"
             value={filters.urgency ?? "all"}
-            onChange={(event) =>
-              updateParams({ urgency: event.target.value, page: "1" })
-            }
-          >
-            <option value="all">{urgencyLabels.all}</option>
-            {aiUrgencies.map((urgency) => (
-              <option key={urgency} value={urgency}>
-                {urgencyLabels[urgency]}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => updateParams({ urgency: value, page: "1" })}
+            options={[{ value: "all", label: urgencyLabels.all }, ...aiUrgencies.map(value => ({ value, label: urgencyLabels[value] }))]}
+          />
         </div>
       </div>
 

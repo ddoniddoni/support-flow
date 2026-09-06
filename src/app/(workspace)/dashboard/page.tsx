@@ -7,7 +7,7 @@ export default async function DashboardPage() {
   const profile = await requireServerProfile();
 
   if (profile.role === "customer") {
-    redirect("/tickets");
+    redirect("/tickets/new");
   }
 
   return <DashboardView profile={profile} />;

@@ -476,11 +476,11 @@ function AssigneeManagementPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">
-            {isAdmin ? "담당자 관리" : "내 담당 문의"}
+            {isAdmin ? "상담원 현황" : "내 담당 문의"}
           </p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {isAdmin
-              ? "답변 대기 문의를 담당자별로 확인합니다."
+              ? "상담원별 답변 대기 문의를 확인합니다."
               : "내게 배정된 답변 대기 문의입니다."}
           </p>
         </div>
@@ -489,7 +489,7 @@ function AssigneeManagementPanel({
             className={buttonVariants({ size: "sm", variant: "outline" })}
             href="/admin/agents"
           >
-            관리
+            현황 보기
           </Link>
         ) : null}
       </div>

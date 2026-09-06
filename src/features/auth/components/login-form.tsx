@@ -14,7 +14,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { loginSchema, type LoginInput } from "../schemas/auth-schema";
 
 function getDefaultPath(role?: string) {
-  return role === "customer" ? "/tickets" : "/dashboard";
+  return role === "customer" ? "/tickets/new" : "/dashboard";
 }
 
 export function LoginForm() {

@@ -63,6 +63,24 @@ export async function runWorkflowTests({ db, check, asUser, customer, agent, adm
     const { rows } = await db.query("select * from ticket_logs where ticket_id=$1 and action='status_changed'",[ticket]);
     assert.equal(rows.length,1); assert.equal(rows[0].actor_id,agent);
   }));
+  for (const [name, actor] of [['agent', agent], ['admin', admin]]) {
+    await check(`${name} cannot resolve without a public reply`, () => asUser(actor, async () => {
+      await assert.rejects(command('update', {status:'resolved'}), /고객 공개 답변/);
+    }));
+  }
+  await check('internal note cannot satisfy resolution requirement', () => asUser(agent, async () => {
+    await command('reply',{content:'Internal investigation only',isInternal:true});
+    await assert.rejects(command('update',{status:'resolved'}), /고객 공개 답변/);
+  }));
+  await check('service direct writes cannot bypass resolution requirement', () => asUser('', async () => {
+    await assert.rejects(db.query("update tickets set status='resolved' where id=$1",[ticket]), /고객 공개 답변/);
+  }, 'service_role'));
+  await check('a ticket with a public reply may return to resolved', () => asUser(agent, async () => {
+    await command('reply',{content:'A real customer-facing answer'});
+    await command('update',{status:'open'});
+    const updated=await command('update',{status:'resolved'});
+    assert.equal(updated.status,'resolved');
+  }));
   await check('public reply resolves ticket and logs AI draft usage atomically', () => asUser(agent, async () => {
     await command('reply',{content:'We have resolved your issue.',source:'ai_draft'});
     const { rows } = await db.query('select status from tickets where id=$1',[ticket]);

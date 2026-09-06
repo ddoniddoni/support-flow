@@ -21,6 +21,12 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      user_management_events: {
+        Row: { id: string; actor_id: string | null; target_id: string | null; target_email: string; action: string; previous_role: Role | null; next_role: Role; created_at: string };
+        Insert: { actor_id?: string | null; target_id?: string | null; target_email: string; action: string; previous_role?: Role | null; next_role: Role };
+        Update: never;
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -165,7 +171,7 @@ export type Database = {
         Row: {
           id: string;
           ticket_id: string;
-          actor_id: string;
+          actor_id: string | null;
           action: string;
           before_value: string | null;
           after_value: string | null;
@@ -174,7 +180,7 @@ export type Database = {
         Insert: {
           id?: string;
           ticket_id: string;
-          actor_id: string;
+          actor_id: string | null;
           action: string;
           before_value?: string | null;
           after_value?: string | null;
@@ -183,7 +189,7 @@ export type Database = {
         Update: {
           id?: string;
           ticket_id?: string;
-          actor_id?: string;
+          actor_id?: string | null;
           action?: string;
           before_value?: string | null;
           after_value?: string | null;
@@ -408,6 +414,9 @@ export type Database = {
       };
     };
     Functions: {
+      bulk_assign_tickets: { Args: { p_ticket_ids: string[]; p_assignee_id: string }; Returns: Json };
+      admin_change_user_role: { Args: { p_target: string; p_role: Role }; Returns: Json };
+      admin_finalize_user: { Args: { p_actor: string; p_target: string; p_role: Role }; Returns: Json };
       support_ticket_command: {
         Args: { p_ticket_id: string; p_action: string; p_payload?: Json };
         Returns: Json;

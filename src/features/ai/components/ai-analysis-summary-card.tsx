@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import type { TicketAIAnalysis } from "@/features/ai/types";
-import { cn } from "@/lib/utils";
+import { HeartPulse, Siren, Gauge } from "lucide-react";
+import { SignalCard } from "@/components/common/signal-card";
 import type { AISentiment, AIUrgency, TicketPriority, TicketStatus } from "@/types/domain";
 
-import { AIConfidenceBadge } from "./ai-confidence-badge";
 import { formatAIVisibleText } from "../utils/ai-display-text";
 
 const sentimentLabels: Record<AISentiment, string> = {
@@ -97,63 +97,34 @@ function formatTag(value: string) {
   return tagLabels[value] ?? value;
 }
 
-function SentimentBadge({ sentiment }: { sentiment: AISentiment }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        sentiment === "negative" && "border-red-200 bg-red-50 text-red-700",
-        sentiment === "neutral" && "border-border bg-muted/60 text-foreground",
-        sentiment === "positive" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-700",
-      )}
-    >
-      {sentimentLabels[sentiment]}
-    </Badge>
-  );
-}
-
-function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        urgency === "critical" && "border-red-200 bg-red-50 text-red-700",
-        urgency === "high" && "border-orange-200 bg-orange-50 text-orange-700",
-        urgency === "medium" && "border-sky-200 bg-sky-50 text-sky-700",
-        urgency === "low" && "border-border bg-muted/60 text-muted-foreground",
-      )}
-    >
-      {urgencyLabels[urgency]}
-    </Badge>
-  );
-}
-
 export function AIAnalysisSummaryCard({
   analysis,
 }: {
   analysis: TicketAIAnalysis;
 }) {
   return (
-    <div className="grid gap-4 rounded-lg border border-border bg-muted/30 p-3">
-      <div className="flex flex-wrap gap-2">
-        <SentimentBadge sentiment={analysis.sentiment} />
-        <UrgencyBadge urgency={analysis.urgency} />
-        <AIConfidenceBadge confidence={analysis.confidence} />
+    <div className="grid gap-4">
+      <div className="grid gap-3 sm:grid-cols-3" aria-label="AI 분석 지표">
+        <SignalCard label="고객 감정 · AI 추정" value={sentimentLabels[analysis.sentiment]} icon={HeartPulse} tone={analysis.sentiment === "negative" ? "danger" : analysis.sentiment === "positive" ? "success" : "neutral"} description={analysis.sentiment === "negative" ? "불편한 점을 먼저 확인해 주세요" : "고객 원문과 함께 확인해 주세요"} />
+        <SignalCard label="긴급도 · AI 추정" value={urgencyLabels[analysis.urgency]} icon={Siren} tone={analysis.urgency === "critical" ? "danger" : analysis.urgency === "high" ? "warning" : "neutral"} description="실제 우선순위와는 별도인 제안입니다" />
+        <SignalCard label="분석 신뢰도" value={`${Math.round(analysis.confidence * 100)}%`} icon={Gauge} tone={analysis.needs_review ? "warning" : "neutral"} description={analysis.needs_review ? "상담원의 검토가 필요합니다" : "고객 원문과 대조해 판단해 주세요"} />
       </div>
 
       <div className="grid gap-2">
-        <p className="text-xs font-medium uppercase tracking-[0.015625rem] text-muted-foreground">
-          요약
+        <p className="text-sm font-semibold text-foreground">
+          핵심 요약
         </p>
-        <p className="text-sm leading-6 text-foreground">{analysis.summary}</p>
+        <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">{analysis.summary}</p>
       </div>
 
+      <details className="border-t border-border pt-3">
+        <summary className="cursor-pointer rounded text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">판단 근거와 분류 상세</summary>
+        <div className="mt-3 grid gap-4">
       <div className="grid gap-2">
-        <p className="text-xs font-medium uppercase tracking-[0.015625rem] text-muted-foreground">
+        <p className="text-sm font-semibold text-foreground">
           판단 근거
         </p>
-        <p className="text-sm leading-6 text-muted-foreground">
+        <p className="max-w-[72ch] whitespace-pre-wrap break-words text-[15px] leading-7 text-muted-foreground">
           {formatAIVisibleText(analysis.reason)}
         </p>
       </div>
@@ -198,6 +169,8 @@ export function AIAnalysisSummaryCard({
           ))}
         </div>
       ) : null}
+        </div>
+      </details>
     </div>
   );
 }
