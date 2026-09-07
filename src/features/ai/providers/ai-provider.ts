@@ -9,6 +9,7 @@ export type AnalyzeTicketProviderInput = {
     Tables<"tickets">,
     "id" | "title" | "content" | "category" | "priority" | "status"
   >;
+  conversation?: Array<Pick<Tables<"ticket_replies">, "content" | "author_role" | "reply_order">>;
   promptVersion: Pick<
     Tables<"ai_prompt_versions">,
     "id" | "name" | "version" | "prompt_text"

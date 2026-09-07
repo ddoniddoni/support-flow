@@ -21,6 +21,12 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ticket_attachments: {
+        Row: { id:string; owner_id:string; upload_ticket_id:string|null; ticket_id:string|null; reply_id:string|null; is_internal:boolean; name:string; mime_type:string; size:number; object_path:string; sha256:string; created_at:string };
+        Insert: { id:string; owner_id:string; upload_ticket_id?:string|null; ticket_id?:string|null; reply_id?:string|null; is_internal?:boolean; name:string; mime_type:string; size:number; object_path:string; sha256:string; created_at?:string };
+        Update: {ticket_id?:string|null;reply_id?:string|null};
+        Relationships: [];
+      };
       support_notifications: {
         Row: {id:number;recipient_id:string;ticket_id:string;reply_id:string|null;kind:string;created_at:string;read_at:string|null};
         Insert: never;
@@ -60,6 +66,7 @@ export type Database = {
       };
       tickets: {
         Row: {
+          response_started_at: string | null;
           id: string;
           title: string;
           content: string;
@@ -78,6 +85,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          response_started_at?: string | null;
           id?: string;
           title: string;
           content: string;
@@ -96,6 +104,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          response_started_at?: string | null;
           id?: string;
           title?: string;
           content?: string;
@@ -276,10 +285,12 @@ export type Database = {
           review_decision: AIReviewDecision | null;
           raw_response: Json;
           validation_status: AIValidationStatus;
+          source_reply_order: number;
           created_by: string;
           created_at: string;
         };
         Insert: {
+          source_reply_order?: number;
           id?: string;
           ticket_id: string;
           prompt_version_id?: string | null;
@@ -306,6 +317,7 @@ export type Database = {
           created_at?: string;
         };
         Update: {
+          source_reply_order?: number;
           id?: string;
           ticket_id?: string;
           prompt_version_id?: string | null;
@@ -423,6 +435,7 @@ export type Database = {
       };
     };
     Functions: {
+      submit_support_ticket: { Args: { p_request_id: string; p_title: string; p_content: string; p_category: string; p_attachment_ids?: string[] }; Returns: Json };
       unread_ticket_notifications: {Args:{p_ticket_ids:string[]};Returns:{ticket_id:string;unread_count:number}[]};
       read_ticket_notifications: {Args:{p_ticket_id:string;p_reply_order:number};Returns:number};
 

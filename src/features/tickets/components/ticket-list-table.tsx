@@ -1,5 +1,7 @@
 "use client";
 
+import { useResponseTarget } from "../hooks/use-response-target";
+
 import Link from "next/link";
 
 import { SelectionCheckbox } from "@/components/ui/selection-checkbox";
@@ -85,50 +87,6 @@ const urgencyLabels: Record<AIUrgency, string> = {
   high: "높음",
   critical: "긴급 검토",
 };
-
-const slaTargetsByPriority: Record<TicketPriority, number> = {
-  low: 48,
-  medium: 24,
-  high: 8,
-  urgent: 4,
-};
-
-type SLATone = "breached" | "done" | "normal" | "risk";
-
-function getSLAState(ticket: TicketListItem): {
-  label: string;
-  tone: SLATone;
-} {
-  if (ticket.status === "resolved" || ticket.status === "closed") {
-    return {
-      label: "응답 완료",
-      tone: "done",
-    };
-  }
-
-  const createdAt = new Date(ticket.created_at).getTime();
-  const elapsedHours = (Date.now() - createdAt) / (1000 * 60 * 60);
-  const targetHours = slaTargetsByPriority[ticket.priority];
-
-  if (elapsedHours >= targetHours) {
-    return {
-      label: "초과",
-      tone: "breached",
-    };
-  }
-
-  if (elapsedHours >= targetHours * 0.75) {
-    return {
-      label: `${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`,
-      tone: "risk",
-    };
-  }
-
-  return {
-    label: `${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`,
-    tone: "normal",
-  };
-}
 
 const dateHeaderClassName = "text-right";
 const dateCellClassName = "text-right tabular-nums";
@@ -240,11 +198,11 @@ function UrgencyBadge({ urgency }: { urgency: AIUrgency }) {
 }
 
 function SLABadge({ ticket }: { ticket: TicketListItem }) {
-  const state = getSLAState(ticket);
+  const state = useResponseTarget(ticket);
 
   return (
     <Badge
-      title={`기본 응답 목표: 접수 후 ${slaTargetsByPriority[ticket.priority]}시간 (영업시간 미반영)`}
+      title={state.description}
       variant="outline"
       className={cn(
         "whitespace-nowrap",
@@ -420,7 +378,7 @@ export function TicketListTable({
               <TableHead>문의</TableHead>
               <TableHead>답변 상태</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
-              {isCustomer ? null : <TableHead title="접수 시각과 우선순위 기준의 기본 응답 목표입니다. 영업시간은 반영하지 않습니다.">응답 목표</TableHead>}
+              {isCustomer ? null : <TableHead title="이번 응답 대기의 시작 시각과 우선순위 기준입니다. 영업시간은 반영하지 않습니다.">응답 목표</TableHead>}
               {role === "admin" ? <TableHead>담당자</TableHead> : null}
               {role === "admin" ? <TableHead>태그</TableHead> : null}
               {isCustomer ? null : <TableHead>AI</TableHead>}

@@ -36,6 +36,11 @@ import type {
 } from "../types";
 import { TicketPropertySelect, type TicketPropertyOption } from "./ticket-property-select";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
+import { AttachmentList } from "@/features/attachments/attachment-list";
+import type { Attachment } from "@/features/attachments/validation";
+import { useResponseTarget } from "../hooks/use-response-target";
+import { useAIAnalysis } from "@/features/ai/hooks/use-ai-analysis";
+import { isAnalysisOutdated } from "@/features/ai/utils/conversation-context";
 import { TicketReplyForm, type ReplyComposerHandle } from "./ticket-reply-form";
 
 type TicketDetailViewProps = {
@@ -71,13 +76,6 @@ const priorityColors: Record<TicketPriority, string> = {
   medium: "bg-sky-500 text-sky-500",
   high: "bg-amber-500 text-amber-500",
   urgent: "bg-red-500 text-red-500",
-};
-
-const slaTargetsByPriority: Record<TicketPriority, number> = {
-  low: 48,
-  medium: 24,
-  high: 8,
-  urgent: 4,
 };
 
 const categoryLabels: Record<string, string> = {
@@ -253,29 +251,12 @@ function getTicketAssigneeLabel(ticket: TicketDetail) {
     : "담당자 필요";
 }
 
-function getSlaLabel(ticket: TicketDetail) {
-  if (ticket.status === "resolved" || ticket.status === "closed") {
-    return "응답 완료";
-  }
-
-  const createdAt = new Date(ticket.created_at).getTime();
-  const elapsedHours = (Date.now() - createdAt) / (1000 * 60 * 60);
-  const targetHours = slaTargetsByPriority[ticket.priority];
-
-  if (elapsedHours >= targetHours) {
-    return "응답 목표 초과";
-  }
-
-  return `응답 목표 ${Math.max(Math.ceil(targetHours - elapsedHours), 1)}h 남음`;
-}
-
 function TicketAttentionSummary({ ticket, hasPublicReply }: { ticket: TicketDetail; hasPublicReply: boolean }) {
   const finished = ticket.status === "resolved" || ticket.status === "closed";
-  const slaLabel = getSlaLabel(ticket);
-  const overdue = slaLabel === "응답 목표 초과";
+  const responseTarget = useResponseTarget(ticket);
   return (
     <section aria-label="문의 처리 요약" className="grid gap-3 sm:grid-cols-3">
-      <SignalCard label="기본 응답 목표" value={finished ? "처리 종료" : slaLabel} tone={finished ? "neutral" : overdue ? "danger" : "info"} icon={Clock3} description={finished ? "현재 종료 또는 답변 완료 상태입니다" : `접수 후 ${slaTargetsByPriority[ticket.priority]}시간 기준 · 영업시간 미반영`} />
+      <SignalCard label="응답 목표" value={responseTarget.label} tone={finished ? "neutral" : responseTarget.tone === "breached" ? "danger" : responseTarget.tone === "risk" ? "warning" : "info"} icon={Clock3} description={responseTarget.description} />
       <SignalCard label="담당 상담원" value={getTicketAssigneeLabel(ticket)} tone={!ticket.assignee_id && !finished ? "warning" : "neutral"} icon={UserRound} description={ticket.assignee_id ? "배정된 상담원이 문의를 처리합니다" : finished ? "배정된 상담원이 없습니다" : "처리 속성에서 상담원을 배정해 주세요"} />
       <SignalCard label="최신 대화 응답" value={hasPublicReply ? "답변 완료" : "답변 대기"} tone={hasPublicReply ? "success" : "info"} icon={MessageSquareText} description={hasPublicReply ? "지원팀의 공개 답변이 마지막 메시지입니다" : "고객 메시지를 확인하고 답변해 주세요"} />
     </section>
@@ -342,12 +323,14 @@ function ReplyList({
   replies,
   emptyText,
   isCustomerView = false,
+  attachments,
 }: {
   title: string;
   description: string;
   replies: TicketReplyItem[];
   emptyText: string;
   isCustomerView?: boolean;
+  attachments: Attachment[];
 }) {
   const groupedReplies = groupItemsByDate(replies, (reply) => reply.created_at);
 
@@ -375,6 +358,7 @@ function ReplyList({
                   <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">
                     {reply.content}
                   </p>
+                  <AttachmentList attachments={attachments.filter(file=>file.reply_id===reply.id)} />
                   <p className="mt-2 text-xs text-muted-foreground">
                     {formatReplyAuthor(reply, isCustomerView)} ·{" "}
                     {formatTime(reply.created_at)}
@@ -417,6 +401,7 @@ function ReplyComposerCard({
       </CardHeader>
       <CardContent>
         <TicketReplyForm
+          key={`${profile.id}:${ticketId}:${isInternal}`}
           ticketId={ticketId}
           profile={profile}
           isInternal={isInternal}
@@ -602,12 +587,14 @@ function TicketOperationsPanel({
   );
 }
 
-function TicketAIAssistant({ ticket, profile, canUseReplyDraft, onUseReplyDraft }: {
+function TicketAIAssistant({ ticket, profile, latestReplyOrder, onUseReplyDraft }: {
   ticket: TicketDetail;
   profile: Pick<Tables<"profiles">, "id" | "role">;
-  canUseReplyDraft: boolean;
+  latestReplyOrder: number;
   onUseReplyDraft: (draft: string) => void;
 }) {
+  const analysisQuery = useAIAnalysis({ ticketId: ticket.id, profile });
+  const outdated = !!analysisQuery.data && isAnalysisOutdated(analysisQuery.data.source_reply_order, latestReplyOrder);
   const [expanded, setExpanded] = useState(Boolean(ticket.ai_needs_review));
   return (
     <details
@@ -618,11 +605,11 @@ function TicketAIAssistant({ ticket, profile, canUseReplyDraft, onUseReplyDraft 
       <summary className="cursor-pointer rounded-lg px-5 py-4 text-base font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-ring">
         <Sparkles className="mr-2 inline size-5 text-indigo-500 dark:text-[#b0b8de]" aria-hidden="true" />AI 요약과 답변 초안
         <span className="ml-2 text-xs font-normal text-muted-foreground">
-          {ticket.ai_needs_review ? "검토 필요" : "상담원 전용"}
+          {outdated ? "업데이트 필요" : ticket.ai_needs_review ? "검토 필요" : "상담원 전용"}
         </span>
       </summary>
       <div className="px-5 pb-5">
-        <AIAssistantPanel ticketId={ticket.id} profile={profile} canUseReplyDraft={canUseReplyDraft} onUseReplyDraft={onUseReplyDraft} />
+        <AIAssistantPanel ticketId={ticket.id} profile={profile} latestReplyOrder={latestReplyOrder} onUseReplyDraft={onUseReplyDraft} />
       </div>
     </details>
   );
@@ -710,12 +697,14 @@ function TicketDetailContent({
               <p className="max-w-[72ch] whitespace-pre-wrap break-words text-base leading-7 text-foreground">
                 {ticket.content}
               </p>
+              <AttachmentList attachments={data.attachments.filter(file=>!file.reply_id)} />
             </CardContent>
           </Card>
 
           {data.replies.length > 0 || isCustomer ? <ReplyList
             title="고객과의 대화"
             description="고객 메시지와 지원팀의 공개 답변을 시간순으로 확인합니다."
+            attachments={data.attachments}
             replies={data.replies}
             emptyText="아직 대화가 없습니다. 추가로 전달할 내용이 있으면 아래에 남겨 주세요."
             isCustomerView={isCustomer}
@@ -725,7 +714,7 @@ function TicketDetailContent({
             <TicketAIAssistant
               ticket={ticket}
               profile={profile}
-              canUseReplyDraft={!data.replies.some(reply => reply.author_role === "customer")}
+              latestReplyOrder={data.replies.reduce((latest, reply) => reply.is_internal ? latest : Math.max(latest, reply.reply_order), 0)}
               onUseReplyDraft={(draft) => replyComposerRef.current?.useDraft(draft)}
             />
           ) : null}
@@ -744,7 +733,8 @@ function TicketDetailContent({
               {data.internalNotes.length > 0 ? <ReplyList
                 title="내부 메모"
                 description="지원팀 내부에서만 공유하는 메모입니다."
-                replies={data.internalNotes}
+                attachments={data.attachments}
+            replies={data.internalNotes}
                 emptyText="아직 등록된 내부 메모가 없습니다."
               /> : null}
               <ReplyComposerCard
@@ -824,6 +814,7 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
           replies: [],
           internalNotes: [],
           logs: [],
+        attachments: [],
         }
       }
       profile={profile}

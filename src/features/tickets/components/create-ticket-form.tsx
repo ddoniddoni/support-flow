@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { AttachmentPicker } from "@/features/attachments/attachment-picker";
+import { useAttachments } from "@/features/attachments/use-attachments";
 import { FormActions } from "@/components/common/form-actions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { createSubmissionRequest } from "../utils/submission-request";
 import { useCreateTicket } from "../hooks/use-create-ticket";
 import {
   createTicketSchema,
@@ -51,7 +54,9 @@ function getCreateTicketErrorMessage(message: string) {
   return "문의를 등록하지 못했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
-export function CreateTicketForm() {
+export function CreateTicketForm({ accountId }: { accountId: string }) {
+  const attachments = useAttachments({scope:`${accountId}:create`});
+  const [submission] = useState(() => createSubmissionRequest(`${accountId}:create`));
   const router = useRouter();
   const createTicketMutation = useCreateTicket();
   const [formError, setFormError] = useState<string | null>(null);
@@ -59,7 +64,7 @@ export function CreateTicketForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CreateTicketInput>({
     resolver: zodResolver(createTicketSchema),
     defaultValues: {
@@ -73,7 +78,11 @@ export function CreateTicketForm() {
     setFormError(null);
 
     try {
-      const ticket = await createTicketMutation.mutateAsync(input);
+      const attachmentIds = attachments.queue.getIds();
+      const requestId = await submission.getId({...input,attachmentIds});
+      const ticket = await createTicketMutation.mutateAsync({ ...input, requestId, attachmentIds });
+      submission.clear(requestId);
+      attachments.queue.clear();
       router.replace(`/tickets?created=${ticket.id}`);
       router.refresh();
     } catch (error) {
@@ -82,7 +91,7 @@ export function CreateTicketForm() {
     }
   }
 
-  const isPending = createTicketMutation.isPending;
+  const isPending = isSubmitting || createTicketMutation.isPending;
 
   return (
     <form className="grid gap-6" onSubmit={handleSubmit(onSubmit)}>
@@ -133,6 +142,8 @@ export function CreateTicketForm() {
           <p id="ticket-content-error" role="alert" className="text-sm text-red-600">{errors.content.message}</p>
         ) : null}
       </div>
+
+      <AttachmentPicker selection={attachments} disabled={isPending} />
 
       {formError ? (
         <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

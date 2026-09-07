@@ -5,12 +5,16 @@ import { Loader2, LockKeyhole, Send } from "lucide-react";
 import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { useForm } from "react-hook-form";
 
+import { AttachmentPicker } from "@/features/attachments/attachment-picker";
+import { useAttachments } from "@/features/attachments/use-attachments";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ActionDialog } from "@/components/common/action-dialog";
 import type { Tables } from "@/types/database";
 
+import { createSubmissionRequest } from "../utils/submission-request";
+import { useReplyDraft } from "../hooks/use-reply-draft";
 import { useCreateTicketReply } from "../hooks/use-create-ticket-reply";
 import {
   ticketReplySchema,
@@ -53,11 +57,14 @@ export function TicketReplyForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [pendingDraft, setPendingDraft] = useState<string | null>(null);
   const source = useRef<"manual" | "ai_draft">("manual");
+  const attachments = useAttachments({scope:`${profile.id}:${ticketId}:${isInternal}`,ticketId,internal:isInternal});
   const createReply = useCreateTicketReply();
+  const [submission] = useState(() => createSubmissionRequest(`${profile.id}:${ticketId}:${isInternal ? "internal" : "public"}`));
   const formId = isInternal ? "internal-note-content" : "reply-content";
 
   const {
     register,
+    watch,
     handleSubmit,
     reset,
     getValues,
@@ -71,6 +78,8 @@ export function TicketReplyForm({
     },
   });
 
+  const draftStatus = useReplyDraft({ accountId: profile.id, ticketId, internal: isInternal, sourceRef: source, watch, reset });
+
   function focusComposer() {
     setFocus("content");
     document.getElementById(formId)?.scrollIntoView({ block: "center", behavior: "instant" });
@@ -78,6 +87,7 @@ export function TicketReplyForm({
 
   function applyDraft(draft: string, append = false) {
     const current = getValues("content");
+    source.current = "ai_draft";
     setValue("content", append ? `${current}\n\n${draft}` : draft, { shouldDirty: true, shouldValidate: true });
     source.current = "ai_draft";
     setPendingDraft(null);
@@ -98,13 +108,19 @@ export function TicketReplyForm({
     setSuccessMessage(null);
 
     try {
+      const attachmentIds = attachments.queue.getIds();
+      const requestId = await submission.getId({ content: input.content, source: source.current, attachmentIds });
       await createReply.mutateAsync({
+        requestId,
+        attachmentIds,
         ticketId,
         profile,
         isInternal,
         content: input.content,
         source: source.current,
       });
+      submission.clear(requestId);
+      attachments.queue.clear();
       reset({ content: "" });
       source.current = "manual";
       setSuccessMessage(
@@ -146,6 +162,8 @@ export function TicketReplyForm({
         ) : null}
       </div>
 
+      <AttachmentPicker selection={attachments} disabled={pending} internal={isInternal} />
+      <p className="text-xs leading-5 text-muted-foreground">{draftStatus}</p>
       {formError ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{formError}</p> : null}
       {successMessage ? (
         <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{successMessage}</p>

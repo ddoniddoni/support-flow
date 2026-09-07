@@ -13,6 +13,8 @@ export function useAIAnalysis({ ticketId, profile }: UseAIAnalysisParams) {
   return useQuery({
     queryKey: ["ticket-ai-analysis", ticketId, profile.id, profile.role],
     queryFn: () => getLatestTicketAIAnalysis({ ticketId, profile }),
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     enabled: profile.role !== "customer",
   });
 }

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { NextResponse } from "next/server";
 
 import { generateTicketAIAnalysis } from "@/features/ai/api/generate-ticket-ai-analysis";
@@ -23,7 +24,7 @@ function getErrorMessage(error: unknown) {
 
 export async function POST(request: Request) {
   const payload = await request.json().catch(() => null);
-  const parsedPayload = createTicketSchema.safeParse(payload);
+  const parsedPayload = createTicketSchema.extend({ requestId: z.uuid().optional(), attachmentIds: z.array(z.uuid()).max(5).optional() }).safeParse(payload);
 
   if (!parsedPayload.success) {
     return NextResponse.json(
@@ -70,16 +71,13 @@ export async function POST(request: Request) {
   }
 
   const input = parsedPayload.data;
-  const { data: ticket, error: ticketError } = await supabase
-    .from("tickets")
-    .insert({
-      title: input.title,
-      content: input.content,
-      category: input.category,
-      customer_id: user.id,
-    })
-    .select("id")
-    .single();
+  const { data, error: ticketError } = await supabase.rpc("submit_support_ticket", {
+    p_request_id: input.requestId ?? crypto.randomUUID(),
+    p_title: input.title,
+    p_content: input.content,
+    p_category: input.category,
+    p_attachment_ids: input.attachmentIds ?? [],
+  });
 
   if (ticketError) {
     return NextResponse.json(
@@ -88,9 +86,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const ticket = data as { id: string; replayed: boolean };
+
   let aiTriageStatus: CreateTicketResponse["aiTriageStatus"] = "skipped";
 
-  if (hasSupabaseServiceRoleKey()) {
+  if (!ticket.replayed && hasSupabaseServiceRoleKey()) {
     try {
       const serviceRoleSupabase = createSupabaseServiceRoleClient();
 

@@ -31,7 +31,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : null;
     if (code === "40001") {
-      return NextResponse.json({ message: "다른 분석이 먼저 저장되었습니다. 새로고침 후 확인해 주세요." }, { status: 409 });
+      return NextResponse.json({ message: "대화 또는 분석이 변경되었습니다. 최신 내용을 확인하고 다시 분석해 주세요." }, { status: 409 });
     }
     if (code === "42501") {
       return NextResponse.json({ message: "문의 접근 권한이 변경되었습니다. 새로고침해 주세요." }, { status: 403 });

@@ -11,6 +11,8 @@ const db = new PGlite();
 await db.exec(`
 create role anon; create role authenticated; create role service_role bypassrls;
 create schema auth;
+create schema storage;
+create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
 create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb);
 create function auth.uid() returns uuid language sql stable as $$
  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
@@ -82,6 +84,18 @@ await check('customer can update their display name', () => asUser(customer, asy
 {
   const { runNotificationTests } = await import('../tests/database/notifications.mjs');
   await runNotificationTests({ db, check, asUser, customer, agent, admin, other });
+}
+{
+  const { runConversationAITests } = await import('../tests/database/conversation-ai.mjs');
+  await runConversationAITests({ db, check, asUser, customer, agent });
+}
+{
+ const { runSubmissionResponseTests } = await import('../tests/database/submission-response.mjs');
+ await runSubmissionResponseTests({ db, check, asUser, customer, agent, other });
+}
+{
+ const { runAttachmentTests } = await import('../tests/database/attachments.mjs');
+ await runAttachmentTests({ db, check, asUser, customer, agent, admin, other });
 }
 await db.close();
 assert.equal(failures, 0, `${failures} database regression(s)`);

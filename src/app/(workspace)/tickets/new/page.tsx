@@ -4,7 +4,7 @@ import { requireServerRole } from "@/features/auth/api/server-auth";
 import { CreateTicketForm } from "@/features/tickets/components/create-ticket-form";
 
 export default async function NewTicketPage() {
-  await requireServerRole(["customer"]);
+  const profile = await requireServerRole(["customer"]);
   return (
     <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
       <div className="mb-8 max-w-2xl">
@@ -16,7 +16,7 @@ export default async function NewTicketPage() {
         <section aria-labelledby="inquiry-heading" className="rounded-2xl border border-border bg-card p-5 sm:p-8">
           <h2 id="inquiry-heading" className="text-xl font-semibold">문의 작성</h2>
           <p className="mb-7 mt-2 text-sm leading-6 text-muted-foreground">아래 항목을 모두 작성해 주세요.</p>
-          <CreateTicketForm />
+          <CreateTicketForm accountId={profile.id} />
         </section>
         <aside aria-label="문의 안내" className="grid gap-7 lg:pt-2">
           <div>

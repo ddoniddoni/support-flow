@@ -35,6 +35,7 @@ import {
 } from "../schemas/review-ai-analysis-schema";
 import type { TicketAIAnalysis } from "../types";
 import { formatAIVisibleText } from "../utils/ai-display-text";
+import { isAnalysisOutdated } from "../utils/conversation-context";
 import { useAIAnalysis } from "../hooks/use-ai-analysis";
 import { useAnalyzeTicket } from "../hooks/use-analyze-ticket";
 import { useReviewAIAnalysis, useSendAIAnalysisToReview } from "../hooks/use-review-ai-analysis";
@@ -44,7 +45,7 @@ import { AIReplyDraftBox } from "./ai-reply-draft-box";
 type AIAssistantPanelProps = {
   ticketId: string;
   profile: Pick<Tables<"profiles">, "id" | "role">;
-  canUseReplyDraft: boolean;
+  latestReplyOrder: number;
   onUseReplyDraft: (draft: string, analysisId: string) => void;
 };
 
@@ -265,7 +266,7 @@ function CorrectAnalysisForm({
 export function AIAssistantPanel({
   ticketId,
   profile,
-  canUseReplyDraft,
+  latestReplyOrder,
   onUseReplyDraft,
 }: AIAssistantPanelProps) {
   const [message, setMessage] = useState<string | null>(null);
@@ -299,6 +300,7 @@ export function AIAssistantPanel({
   }
 
   const analysis = analysisQuery.data ?? null;
+  const outdated = !!analysis && isAnalysisOutdated(analysis.source_reply_order, latestReplyOrder);
   const pending = analyzeTicket.isPending || reviewAnalysis.isPending || sendToReview.isPending || isEditing;
 
   async function review(decision: "approved" | "rejected" | "request_review") {
@@ -322,6 +324,12 @@ export function AIAssistantPanel({
         {analysis ? <AIReviewStateBadge analysis={analysis} /> : null}
       </div>
       <CardContent className="grid gap-5 px-0">
+        {outdated ? <div role="status" className="rounded-xl border border-amber-300/40 bg-amber-500/10 p-4 text-sm leading-6">
+          <p className="font-semibold text-amber-700 dark:text-amber-200">분석 업데이트 필요</p>
+          <p className="mt-1 text-muted-foreground">새 공개 메시지가 있어 기존 분석과 초안이 최신 대화를 반영하지 않습니다.</p>
+          <Button type="button" className="mt-3" size="sm" disabled={pending} onClick={() => void runAnalysis(true)}>{analyzeTicket.isPending ? "분석 중…" : "최신 대화로 재분석"}</Button>
+        </div> : null}
+        {analysis && !outdated ? <p className="text-xs text-muted-foreground">최초 문의와 최근 공개 메시지 최대 20개 기준 · 내부 메모 제외</p> : null}
         {analysisQuery.isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
             <div className="flex gap-2">
@@ -375,8 +383,8 @@ export function AIAssistantPanel({
 
             <AIReplyDraftBox
               draft={analysis.reply_draft}
-              canUseDraft={canUseReplyDraft && !pending && analysis.review_decision !== "rejected"}
-              disabledReason={!canUseReplyDraft ? "고객 추가 메시지가 있습니다. 최초 문의 기준 초안을 그대로 사용하지 말고 대화 내용을 확인해 직접 답변해 주세요." : analysis.review_decision === "rejected" ? "제외된 분석의 초안은 사용할 수 없습니다." : isEditing ? "AI 분석 수정을 마친 뒤 초안을 사용할 수 있습니다." : pending ? "AI 작업을 처리 중입니다. 완료 후 다시 시도해 주세요." : undefined}
+              canUseDraft={!outdated && !pending && analysis.review_decision !== "rejected"}
+              disabledReason={outdated ? "최신 대화로 재분석한 뒤 초안을 사용할 수 있습니다." : analysis.review_decision === "rejected" ? "제외된 분석의 초안은 사용할 수 없습니다." : isEditing ? "AI 분석 수정을 마친 뒤 초안을 사용할 수 있습니다." : pending ? "AI 작업을 처리 중입니다. 완료 후 다시 시도해 주세요." : undefined}
               onUseDraft={(draft) => {
                 onUseReplyDraft(draft, analysis.id);
                 setMessage(null);
@@ -396,10 +404,10 @@ export function AIAssistantPanel({
             </Button>
           ) : !isEditing ? (
             <>
-              {analysis.review_decision === "approved" || analysis.review_decision === "corrected" ? (
+              {!outdated && (analysis.review_decision === "approved" || analysis.review_decision === "corrected") ? (
                 <p className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"><Check className="size-4" aria-hidden="true" />상담원 검토 완료</p>
               ) : analysis.review_decision !== "rejected" ? (
-                <Button type="button" size="sm" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-[#414b63] dark:text-[#c4cde6] dark:hover:bg-[#252e43]" disabled={pending} onClick={() => void review("approved")}>
+                <Button type="button" size="sm" variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-[#414b63] dark:text-[#c4cde6] dark:hover:bg-[#252e43]" disabled={pending || outdated} onClick={() => void review("approved")}>
                   <Check className="size-4" aria-hidden="true" />{reviewAnalysis.isPending ? "처리 중…" : "AI 분석 검토 완료"}
                 </Button>
               ) : null}
@@ -410,7 +418,7 @@ export function AIAssistantPanel({
                     {analyzeTicket.isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="size-4" aria-hidden="true" />}
                     {analyzeTicket.isPending ? "재분석 중…" : "재분석"}
                   </Button>
-                  <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => setIsEditing(true)}><Edit3 className="size-4" aria-hidden="true" />분석 수정</Button>
+                  <Button type="button" size="sm" variant="outline" disabled={pending || outdated} onClick={() => setIsEditing(true)}><Edit3 className="size-4" aria-hidden="true" />분석 수정</Button>
                   {!analysis.needs_review && analysis.review_decision !== "rejected" ? <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => void review("request_review")}>검토 요청</Button> : null}
                   <Button type="button" size="sm" variant="destructive" disabled={pending || analysis.review_decision === "rejected"} onClick={() => setConfirmExclude(true)}>분석 제외</Button>
                 </div>

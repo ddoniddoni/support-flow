@@ -1,5 +1,7 @@
 import "server-only";
 
+import { buildConversationContext } from "../utils/conversation-context";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database, Json, Tables } from "@/types/database";
@@ -74,6 +76,14 @@ export async function generateTicketAIAnalysis({
     throw new Error("문의를 찾을 수 없거나 접근 권한이 없습니다.");
   }
 
+  const { data: messages, error: messagesError } = await supabase
+    .from("ticket_replies").select("content,author_role,reply_order")
+    .eq("ticket_id", ticketId).eq("is_internal", false)
+    .order("reply_order", { ascending: false }).limit(20);
+  if (messagesError) throw messagesError;
+  const conversation = [...(messages ?? [])].reverse();
+  const expectedReplyOrder = messages?.[0]?.reply_order ?? 0;
+  const contextTicket = { ...ticket, content: buildConversationContext(ticket.content, conversation) };
   const promptVersion = await getActivePromptVersion({
     providerName: provider.provider,
     supabase,
@@ -83,16 +93,17 @@ export async function generateTicketAIAnalysis({
   }
   const providerResult = await provider.analyzeTicket({
     ticket,
+    conversation,
     promptVersion,
   });
   const validatedResult = validateAIProviderResult({
     output: providerResult.output,
     rawResponse: providerResult.rawResponse,
-    ticket,
+    ticket: contextTicket,
   });
   const analysisOutput = ticketAIAnalysisSchema.parse(applyAIReviewRules({
     analysis: validatedResult.output,
-    ticket,
+    ticket: contextTicket,
     validationFailed: validatedResult.validationStatus === "fallback",
   }));
 
@@ -101,6 +112,7 @@ export async function generateTicketAIAnalysis({
     p_action: "save_analysis",
     p_payload: {
       actorId,
+      expectedReplyOrder,
       expectedAnalysisId: ticket.latest_ai_analysis_id,
       analysis: {
         prompt_version_id: promptVersion?.id ?? null,

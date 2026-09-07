@@ -29,6 +29,7 @@ export type TicketSortOption =
   | "title_asc";
 
 export type TicketDetailData = {
+  attachments: import("@/features/attachments/validation").Attachment[];
   ticket: TicketDetail | null;
   replies: TicketReplyItem[];
   internalNotes: TicketReplyItem[];

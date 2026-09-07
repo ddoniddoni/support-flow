@@ -448,8 +448,10 @@ export function createMockAIProvider(): AIProvider {
   return {
     provider: "mock",
     model: "mock-ticket-triage-v1",
-    async analyzeTicket({ ticket, promptVersion }) {
-      const normalizedText = `${ticket.title} ${ticket.content}`.toLowerCase();
+    async analyzeTicket({ ticket, promptVersion, conversation = [] }) {
+      const latestCustomer = conversation.findLast(message => message.author_role === "customer");
+      // Classify the current customer request; review rules still inspect the full supplied context.
+      const normalizedText = (latestCustomer?.content ?? `${ticket.title} ${ticket.content}`).toLowerCase();
       const category = getMockCategory(normalizedText, ticket.category);
       const intent = getMockIntent(normalizedText);
       const sentiment = getMockSentiment(normalizedText);
@@ -479,7 +481,7 @@ export function createMockAIProvider(): AIProvider {
           category,
           intent,
           sentiment,
-          ticketTitle: ticket.title,
+          ticketTitle: latestCustomer ? `최근 고객 메시지: ${latestCustomer.content.slice(0,180)}` : ticket.title,
           urgency,
         }),
         reason: getReasonText({

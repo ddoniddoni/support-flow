@@ -16,7 +16,7 @@ import type { TicketDetailData, TicketSortOption } from "../types";
 
 const ticketSelectQuery = "*";
 
-export async function createTicket(input: CreateTicketInput) {
+export async function createTicket(input: CreateTicketInput & { requestId: string; attachmentIds?: string[] }) {
   const response = await fetch("/api/tickets", {
     body: JSON.stringify(input),
     headers: {
@@ -75,6 +75,8 @@ export type CreateTicketReplyInput = TicketReplyInput & {
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
   source?: "manual" | "ai_draft";
+  requestId: string;
+  attachmentIds?: string[];
 };
 
 const defaultPageSize = 10;
@@ -200,6 +202,7 @@ export async function getTicketDetail({
       replies: [],
       internalNotes: [],
       logs: [],
+      attachments: [],
     };
   }
 
@@ -232,7 +235,11 @@ export async function getTicketDetail({
     throw logsError;
   }
 
+  const { data: attachments, error: attachmentError } = await supabase.from("ticket_attachments")
+    .select("id,name,mime_type,size,reply_id,is_internal").eq("ticket_id",ticketId).order("created_at");
+  if (attachmentError) throw attachmentError;
   return {
+    attachments: attachments ?? [],
     ticket,
     replies: (replies ?? []).filter((reply) => !reply.is_internal),
     internalNotes:
@@ -280,6 +287,8 @@ export async function createTicketReply(input: CreateTicketReplyInput) {
     p_ticket_id: input.ticketId,
     p_action: "reply",
     p_payload: {
+      requestId: input.requestId,
+      attachmentIds: input.attachmentIds ?? [],
       content: input.content,
       isInternal: input.isInternal,
       source: input.source ?? "manual",
