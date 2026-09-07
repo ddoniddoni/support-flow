@@ -4,9 +4,12 @@ import { getResponseTarget } from "../../src/features/tickets/utils/response-tar
 import { createSubmissionRequest } from "../../src/features/tickets/utils/submission-request";
 const now = Date.parse("2026-09-07T12:00:00Z");
 const ticket = {status:"open" as const, priority:"medium" as const, created_at:"2026-09-01T00:00:00Z",response_started_at:"2026-09-06T12:35:00Z"};
-test("response target uses current waiting period and minute precision",()=>{
+test("response target keeps remaining minutes and shows overdue duration in whole days",()=>{
  assert.equal(getResponseTarget(ticket,now).label,"35분 남음");
- assert.equal(getResponseTarget({...ticket,response_started_at:"2026-09-06T09:50:00Z"},now).label,"2시간 10분 초과");
+ assert.equal(getResponseTarget({...ticket,response_started_at:"2026-09-06T09:50:00Z"},now).label,"1일 미만 초과");
+ for (const [minutes, label] of [[0,"1일 미만 초과"],[1439,"1일 미만 초과"],[1440,"1일 초과"],[1278*60+43,"53일 초과"],[1500*60+8,"62일 초과"]] as const) {
+  assert.equal(getResponseTarget({...ticket,response_due_at:new Date(now-minutes*60000).toISOString()},now).label,label);
+ }
  assert.equal(getResponseTarget({...ticket,status:"resolved"},now).label,"응답 완료");
  assert.equal(getResponseTarget({...ticket,status:"closed"},now).label,"종료");
  assert.equal(getResponseTarget({...ticket,response_started_at:"2026-09-06T12:00:00Z"},now).tone,"breached");

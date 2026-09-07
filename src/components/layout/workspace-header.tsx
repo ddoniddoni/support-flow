@@ -2,6 +2,9 @@
 
 import {
   Activity,
+  Clock3,
+  BookOpen,
+  ThumbsUp,
   BarChart3,
   Inbox,
   LayoutDashboard,
@@ -108,6 +111,9 @@ function getNavItems(role: Tables<"profiles">["role"]): NavItem[] {
 
 
   if (role === "admin") {
+    items.push({ href: "/admin/response-policy", icon: Clock3, label: "응답 목표 설정" });
+    items.push({ href: "/admin/templates", icon: BookOpen, label: "답변 템플릿" });
+    items.push({ href: "/admin/feedback", icon: ThumbsUp, label: "고객 만족도" });
   items.push({
     href: "/settings/integrations",
     icon: Plug,

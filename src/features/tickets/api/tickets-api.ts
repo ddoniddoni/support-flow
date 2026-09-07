@@ -77,6 +77,7 @@ export type CreateTicketReplyInput = TicketReplyInput & {
   source?: "manual" | "ai_draft";
   requestId: string;
   attachmentIds?: string[];
+  expectedReplyOrder?: number | null;
 };
 
 const defaultPageSize = 10;
@@ -283,10 +284,10 @@ export async function updateTicketAction(input: TicketActionInput) {
 
 export async function createTicketReply(input: CreateTicketReplyInput) {
   const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase.rpc("support_ticket_command", {
+  const { data, error } = await supabase.rpc("submit_ticket_reply", {
     p_ticket_id: input.ticketId,
-    p_action: "reply",
     p_payload: {
+      expectedReplyOrder: input.expectedReplyOrder,
       requestId: input.requestId,
       attachmentIds: input.attachmentIds ?? [],
       content: input.content,

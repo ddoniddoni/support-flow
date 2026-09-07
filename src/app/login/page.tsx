@@ -8,7 +8,7 @@ export default async function LoginPage() {
   return (
     <AuthFormShell
       title="로그인"
-      description="문의 등록과 답변 확인을 위해 로그인해 주세요."
+      description="역할별 데모를 체험하거나, 내 계정으로 로그인하세요."
       footerText="아직 계정이 없나요?"
       footerHref="/signup"
       footerLinkText="회원가입"

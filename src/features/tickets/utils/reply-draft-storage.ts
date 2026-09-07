@@ -1,4 +1,4 @@
-export type ReplyDraft = { content: string; source: "manual" | "ai_draft"; savedAt: number };
+export type ReplyDraft = { content: string; source: "manual" | "ai_draft"; savedAt: number; expectedReplyOrder?: number | null };
 const maxAge = 7 * 24 * 60 * 60 * 1000;
 export function replyDraftKey(accountId: string, ticketId: string, internal: boolean) {
   return `supportflow:reply-draft:v1:${accountId}:${ticketId}:${internal ? "internal" : "public"}`;
@@ -12,6 +12,7 @@ export function parseReplyDraft(raw: string | null, now = Date.now()): ReplyDraf
     if (typeof content !== "string" || content.length > 4000 || !content.trim() ||
       (source !== "manual" && source !== "ai_draft") || typeof savedAt !== "number" ||
       !Number.isFinite(savedAt) || savedAt > now || now - savedAt > maxAge) return null;
-    return { content, source, savedAt };
+    const version = "expectedReplyOrder" in draft && typeof draft.expectedReplyOrder === "number" && Number.isSafeInteger(draft.expectedReplyOrder) && draft.expectedReplyOrder >= 0 ? draft.expectedReplyOrder : null;
+    return { content, source, savedAt, expectedReplyOrder: version };
   } catch { return null; }
 }

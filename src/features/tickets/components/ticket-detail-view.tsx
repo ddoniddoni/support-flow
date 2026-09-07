@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowLeft, Clock3, UserRound, MessageSquareText, Sparkles, LockKeyhole, Send } from "lucide-react";
+import { AlertCircle, CheckCircle2, ArrowLeft, Clock3, UserRound, MessageSquareText, Sparkles, LockKeyhole, Send } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, type Ref } from "react";
 
@@ -36,6 +36,8 @@ import type {
 } from "../types";
 import { TicketPropertySelect, type TicketPropertyOption } from "./ticket-property-select";
 import { TicketDetailSkeleton } from "./ticket-detail-skeleton";
+import { CustomerTicketConversation } from "./customer-ticket-conversation";
+import { CustomerFeedback } from "@/features/feedback/customer-feedback";
 import { AttachmentList } from "@/features/attachments/attachment-list";
 import type { Attachment } from "@/features/attachments/validation";
 import { useResponseTarget } from "../hooks/use-response-target";
@@ -117,6 +119,7 @@ const actionLabels: Record<string, string> = {
   priority_changed: "우선순위 변경",
   assignee_changed: "담당자 변경",
   reply_added: "지원팀 답변 등록",
+  customer_feedback_submitted: "고객 답변 평가",
   customer_message_added: "고객 추가 메시지",
   internal_note_added: "내부 메모 추가",
   ai_analysis_generated: "AI 분석 생성",
@@ -126,13 +129,6 @@ const actionLabels: Record<string, string> = {
   ai_analysis_rejected: "AI 분석 제외",
   ai_analysis_sent_to_review: "AI 검토 필요 표시",
   ai_draft_used_as_customer_reply: "AI 답변 초안 사용",
-};
-
-const customerStatusLabels: Record<TicketStatus, string> = {
-  open: "답변 대기",
-  in_progress: "답변 대기",
-  resolved: "답변 완료",
-  closed: "종료",
 };
 
 const authorRoleLabels: Record<Tables<"profiles">["role"], string> = {
@@ -217,6 +213,8 @@ function formatLogValue(value: string | null) {
   if (!value) {
     return "없음";
   }
+  if (value === "helpful") return "도움이 됐어요";
+  if (value === "unresolved") return "미해결 · 재상담 요청";
 
   if (value in statusLabels) {
     return statusLabels[value as TicketStatus];
@@ -263,6 +261,26 @@ function TicketAttentionSummary({ ticket, hasPublicReply }: { ticket: TicketDeta
   );
 }
 
+const customerDeadlineFormat = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" });
+function CustomerResponseEstimate({ ticket, latestStaffReplyId }: { ticket: TicketDetail; latestStaffReplyId?: string }) {
+  const target = useResponseTarget(ticket);
+  if (ticket.status === "resolved" || ticket.status === "closed") {
+    return <section aria-label="응답 안내" className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+      <div className="flex items-start gap-3">
+        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
+        <div><p className="font-semibold">{ticket.status === "closed" ? "종료된 문의입니다" : "지원팀 답변이 등록되었습니다"}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{latestStaffReplyId ? "답변을 확인해 주세요. 더 궁금한 점이 있다면 이어서 문의할 수 있어요." : "추가로 궁금한 점이 있다면 아래에서 이어서 문의할 수 있어요."}</p></div>
+      </div>
+      {latestStaffReplyId ? <a href={`#customer-reply-${latestStaffReplyId}`} className={buttonVariants({variant:"outline",className:"shrink-0"})}>최신 답변 보기 ↓</a> : null}
+    </section>;
+  }
+  if (!target.deadline) return null;
+  return <section aria-label="응답 안내" className="flex items-start gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+    <Clock3 className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+    <div><p className="text-sm font-semibold">{target.tone === "breached" ? "답변이 지연되고 있습니다" : "목표 응답 기한"}</p>
+    <p className="mt-1 text-sm leading-6 text-muted-foreground">{target.tone === "breached" ? "기한 내 답변을 드리지 못했습니다. 추가로 전달할 내용이 있으면 아래 대화에 남겨 주세요." : customerDeadlineFormat.format(new Date(target.deadline)) + "까지 답변하는 것을 목표로 합니다."}</p></div>
+  </section>;
+}
+
 function getTicketTags(ticket: TicketDetail) {
   const tags = [
     categoryLabels[ticket.category] ?? ticket.category,
@@ -305,14 +323,6 @@ function PriorityBadge({ priority }: { priority: TicketPriority }) {
       )}
     >
       {priorityLabels[priority]}
-    </Badge>
-  );
-}
-
-function CustomerStatusBadge({ status }: { status: TicketStatus }) {
-  return (
-    <Badge variant="outline" className="border-border bg-muted/60 text-foreground">
-      {customerStatusLabels[status]}
     </Badge>
   );
 }
@@ -380,28 +390,31 @@ function ReplyComposerCard({
   profile,
   isInternal,
   composerRef,
+  latestReplyOrder,
 }: {
   ticketId: string;
+  latestReplyOrder: number;
   profile: Pick<Tables<"profiles">, "id" | "role">;
   isInternal: boolean;
   composerRef?: Ref<ReplyComposerHandle>;
 }) {
   return (
-    <Card className={cn("rounded-xl", isInternal ? "border border-dashed border-border bg-muted/20 dark:border-slate-700 dark:bg-slate-800/15" : "ring-blue-200/60 dark:ring-slate-700")} >
+    <Card id={!isInternal && profile.role === "customer" ? "customer-reply-composer" : undefined} className={cn("scroll-mt-6 rounded-xl", isInternal ? "border border-dashed border-border bg-muted/20 dark:border-slate-700 dark:bg-slate-800/15" : "ring-blue-200/60 dark:ring-slate-700")} >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {isInternal ? <LockKeyhole className="size-5 text-amber-600 dark:text-amber-300" aria-hidden="true" /> : <Send className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />}
-          {isInternal ? "내부 메모 추가" : profile.role === "customer" ? "메시지 이어 보내기" : "고객 답변 등록"}
+          {isInternal ? "내부 메모 추가" : profile.role === "customer" ? "추가로 문의하기" : "고객 답변 등록"}
         </CardTitle>
         <CardDescription>
           {isInternal
             ? "고객에게 보이지 않는 응대 맥락과 인수인계 내용을 남깁니다."
-            : profile.role === "customer" ? "추가 메시지를 보내면 완료·종료된 문의도 다시 열립니다. 기존 담당자를 유지하며 대화를 이어갑니다." : "고객에게 표시되는 공식 답변을 남깁니다."}
+            : profile.role === "customer" ? "궁금한 점이나 추가 정보를 남겨 주세요. 답변 완료·종료된 문의도 다시 접수됩니다." : "고객에게 표시되는 공식 답변을 남깁니다."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <TicketReplyForm
           key={`${profile.id}:${ticketId}:${isInternal}`}
+          latestReplyOrder={latestReplyOrder}
           ticketId={ticketId}
           profile={profile}
           isInternal={isInternal}
@@ -644,10 +657,11 @@ function TicketDetailContent({
   const ticket = data.ticket;
   const canViewOperations = profile.role !== "customer";
   const isCustomer = profile.role === "customer";
+  const lastStaffReply = data.replies.findLast(reply => reply.author_role !== "customer");
   const canResolve = data.replies.length > 0 && data.replies[data.replies.length - 1].author_role !== "customer";
 
   return (
-    <div className="mx-auto grid max-w-[1360px] gap-6 px-4 py-6 sm:px-6 lg:px-8 dark:[--muted-foreground:#a8b5c8] [&_[data-slot=card]]:[--card-spacing:1.25rem] [&_[data-slot=card-title]]:text-lg [&_[data-slot=card-title]]:font-semibold">
+    <div className={cn("mx-auto grid gap-6 px-4 py-6 sm:px-6 lg:px-8 dark:[--muted-foreground:#a8b5c8] [&_[data-slot=card]]:[--card-spacing:1.25rem] [&_[data-slot=card-title]]:text-lg [&_[data-slot=card-title]]:font-semibold", isCustomer ? "max-w-[960px] sm:py-10" : "max-w-[1360px]")}>
       <TicketReadReceipt key={profile.id} ticketId={ticket.id} replyOrder={Math.max(0,...data.replies.map(reply=>reply.reply_order))} />
       <div className="flex flex-col gap-3">
         <Link
@@ -655,12 +669,12 @@ function TicketDetailContent({
           href="/tickets"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          문의함
+          {isCustomer ? "내 문의 목록" : "문의함"}
         </Link>
         <div>
           <div className="flex flex-wrap items-center gap-2">
             {isCustomer ? (
-              <CustomerStatusBadge status={ticket.status} />
+              <StatusBadge status={ticket.status} />
             ) : (
               <>
                 <StatusBadge status={ticket.status} />
@@ -677,20 +691,21 @@ function TicketDetailContent({
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px] leading-6 text-muted-foreground">
             <span className="font-mono font-medium text-foreground">{formatTicketNumber(ticket.ticket_number)}</span>
             <span>접수 {formatDateTime(ticket.created_at)}</span>
-            <span>최근 수정 {formatDateTime(ticket.updated_at)}</span>
+            {!isCustomer ? <span>최근 수정 {formatDateTime(ticket.updated_at)}</span> : null}
+            {isCustomer ? <a href="#customer-reply-composer" className="rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring">추가 문의 작성 ↓</a> : null}
           </div>
         </div>
       </div>
 
-      {canViewOperations ? <TicketAttentionSummary ticket={ticket} hasPublicReply={canResolve} /> : null}
+      {canViewOperations ? <TicketAttentionSummary ticket={ticket} hasPublicReply={canResolve} /> : <CustomerResponseEstimate ticket={ticket} latestStaffReplyId={lastStaffReply?.id} />}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={cn("grid gap-6", canViewOperations && "xl:grid-cols-[minmax(0,1fr)_320px]")}>
         <div className="grid min-w-0 content-start gap-4">
-          <Card className="rounded-xl border-l-[3px] border-l-blue-400 dark:border-l-[#739ac7] dark:bg-[#1a2433]">
+          <Card className={cn("rounded-xl", isCustomer ? "bg-muted/20" : "border-l-[3px] border-l-blue-400 dark:border-l-[#739ac7] dark:bg-[#1a2433]")}>
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
-                <CardTitle className="flex items-center gap-2"><MessageSquareText className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />문의 내용</CardTitle>
-                <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-200">고객 원문</Badge>
+                <CardTitle className="flex items-center gap-2"><MessageSquareText className="size-5 text-blue-600 dark:text-blue-300" aria-hidden="true" />{isCustomer ? "내가 남긴 문의" : "문의 내용"}</CardTitle>
+                {!isCustomer ? <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-200">고객 원문</Badge> : null}
               </div>
             </CardHeader>
             <CardContent>
@@ -701,7 +716,7 @@ function TicketDetailContent({
             </CardContent>
           </Card>
 
-          {data.replies.length > 0 || isCustomer ? <ReplyList
+          {isCustomer ? <CustomerTicketConversation replies={data.replies} attachments={data.attachments} /> : data.replies.length > 0 ? <ReplyList
             title="고객과의 대화"
             description="고객 메시지와 지원팀의 공개 답변을 시간순으로 확인합니다."
             attachments={data.attachments}
@@ -709,6 +724,8 @@ function TicketDetailContent({
             emptyText="아직 대화가 없습니다. 추가로 전달할 내용이 있으면 아래에 남겨 주세요."
             isCustomerView={isCustomer}
           /> : null}
+
+          {lastStaffReply ? <CustomerFeedback key={lastStaffReply.id} ticketId={ticket.id} replyId={lastStaffReply.id} profileId={profile.id} isCustomer={isCustomer} canRate={canResolve && (ticket.status === "resolved" || ticket.status === "closed")} /> : null}
 
           {canViewOperations ? (
             <TicketAIAssistant
@@ -721,6 +738,7 @@ function TicketDetailContent({
 
           {(
             <ReplyComposerCard
+                latestReplyOrder={Math.max(0,...data.replies.map(reply=>reply.reply_order))}
               ticketId={ticket.id}
               profile={profile}
               isInternal={false}
@@ -738,6 +756,7 @@ function TicketDetailContent({
                 emptyText="아직 등록된 내부 메모가 없습니다."
               /> : null}
               <ReplyComposerCard
+                latestReplyOrder={Math.max(0,...data.replies.map(reply=>reply.reply_order))}
                 ticketId={ticket.id}
                 profile={profile}
                 isInternal
@@ -746,7 +765,7 @@ function TicketDetailContent({
           ) : null}
         </div>
 
-        <div className="grid min-w-0 content-start gap-4">
+        {canViewOperations ? <div className="grid min-w-0 content-start gap-4">
           {canViewOperations ? <TicketOperationsPanel ticket={ticket} profile={profile} hasPublicReply={canResolve} /> : null}
 
           <Card className="rounded-xl">
@@ -757,7 +776,7 @@ function TicketDetailContent({
                   <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-800 dark:bg-blue-950 dark:text-blue-200">{ticket.customer?.name?.slice(0, 1) ?? <UserRound className="size-4" />}</span>
                   <div className="min-w-0"><p className="font-semibold">{ticket.customer?.name ?? "고객 정보 없음"}</p><p className="mt-1 break-all text-xs leading-5 text-muted-foreground">{ticket.customer?.email}</p></div>
                 </div>
-              ) : <div className="flex items-center justify-between"><span className="text-muted-foreground">답변 상태</span><CustomerStatusBadge status={ticket.status} /></div>}
+              ) : <div className="flex items-center justify-between"><span className="text-muted-foreground">답변 상태</span><StatusBadge status={ticket.status} /></div>}
               <div className="border-t border-border pt-4">
                 <p className="mb-2 text-xs font-medium text-muted-foreground">{canViewOperations ? "문의 태그" : "문의 유형"}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -773,7 +792,7 @@ function TicketDetailContent({
               <ActivityLogList logs={data.logs} />
             </details>
           ) : null}
-        </div>
+        </div> : null}
       </div>
     </div>
   );
@@ -783,7 +802,7 @@ export function TicketDetailView({ ticketId, profile }: TicketDetailViewProps) {
   const ticketQuery = useTicket({ ticketId, profile });
 
   if (ticketQuery.isLoading) {
-    return <TicketDetailSkeleton />;
+    return <TicketDetailSkeleton isCustomer={profile.role === "customer"} />;
   }
 
   if (ticketQuery.isError) {

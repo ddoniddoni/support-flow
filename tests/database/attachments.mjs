@@ -1,3 +1,4 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runAttachmentTests({db,check,asUser,customer,agent,admin,other}) {
  const ticket='83000000-0000-4000-8000-000000000001';
@@ -6,7 +7,7 @@ export async function runAttachmentTests({db,check,asUser,customer,agent,admin,o
  await db.query("insert into tickets(id,title,content,category,customer_id,assignee_id) values($1,'Attachment test','A customer inquiry with attachments','account',$2,$3)",[ticket,customer,agent]);
  const stage=async(id,owner,internal,target)=>db.query("insert into ticket_attachments(id,owner_id,upload_ticket_id,is_internal,name,mime_type,size,object_path,sha256) values($1,$2,$3,$4,'test.png','image/png',100,$1::uuid::text,'hash')",[id,owner,target,internal]);
  await stage(publicFile,agent,false,ticket);await stage(internalFile,agent,true,ticket);await stage(intakeFile,customer,false,null);
- const command=async(ids,internal=false)=>(await db.query("select support_ticket_command($1,'reply',$2) result",[ticket,JSON.stringify({content:'Reply with attachment',isInternal:internal,requestId:token,attachmentIds:ids})])).rows[0].result;
+ const command=async(ids,internal=false)=>(await db.query("select support_ticket_command($1,'reply',$2) result",[ticket,JSON.stringify(await versionedReply(db,ticket,'reply',{content:'Reply with attachment',isInternal:internal,requestId:token,attachmentIds:ids}))])).rows[0].result;
  const read=async()=> (await db.query('select id from ticket_attachments order by id')).rows.map(r=>r.id);
  await check('staged attachments are visible only to uploader',()=>asUser(customer,async()=>{assert.deepEqual(await read(),[intakeFile]);}));
  await check('reply and attachments bind atomically and retry returns same reply',()=>asUser(agent,async()=>{

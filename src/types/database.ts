@@ -21,6 +21,31 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      response_policies: {
+        Row: {id:string;calendar:Json;targets:Json;warning_minutes:number;alerts_enabled:boolean;created_by:string|null;created_at:string};
+        Insert: never; Update: never; Relationships: [];
+      };
+      response_settings: {
+        Row: {singleton:boolean;policy_id:string;alerts_enabled:boolean}; Insert: never; Update: never;
+        Relationships: [{foreignKeyName:"response_settings_policy_id_fkey";columns:["policy_id"];isOneToOne:false;referencedRelation:"response_policies";referencedColumns:["id"]}];
+      };
+
+      reply_templates: {
+        Row: {id:string;title:string;category:string;content:string;is_active:boolean;created_by:string;updated_by:string;created_at:string;updated_at:string};
+        Insert: {id:string;title:string;category:string;content:string;is_active?:boolean;created_by:string;updated_by:string};
+        Update: {title?:string;category?:string;content?:string;is_active?:boolean};
+        Relationships: [];
+      };
+      ticket_feedback: {
+        Row: {id:string;ticket_id:string;reply_id:string;customer_id:string;responder_id:string;helpful:boolean;comment:string;created_at:string};
+        Insert: {ticket_id:string;reply_id:string;customer_id:string;responder_id:string;helpful:boolean;comment?:string};
+        Update: {comment?:string};
+        Relationships: [
+          {foreignKeyName:"ticket_feedback_ticket_id_fkey";columns:["ticket_id"];isOneToOne:false;referencedRelation:"tickets";referencedColumns:["id"]},
+          {foreignKeyName:"ticket_feedback_customer_id_fkey";columns:["customer_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]},
+          {foreignKeyName:"ticket_feedback_responder_id_fkey";columns:["responder_id"];isOneToOne:false;referencedRelation:"profiles";referencedColumns:["id"]}
+        ];
+      };
       ticket_attachments: {
         Row: { id:string; owner_id:string; upload_ticket_id:string|null; ticket_id:string|null; reply_id:string|null; is_internal:boolean; name:string; mime_type:string; size:number; object_path:string; sha256:string; created_at:string };
         Insert: { id:string; owner_id:string; upload_ticket_id?:string|null; ticket_id?:string|null; reply_id?:string|null; is_internal?:boolean; name:string; mime_type:string; size:number; object_path:string; sha256:string; created_at?:string };
@@ -28,7 +53,7 @@ export type Database = {
         Relationships: [];
       };
       support_notifications: {
-        Row: {id:number;recipient_id:string;ticket_id:string;reply_id:string|null;kind:string;created_at:string;read_at:string|null};
+        Row: {id:number;recipient_id:string;ticket_id:string;reply_id:string|null;kind:string;created_at:string;read_at:string|null;response_due_at:string|null;response_cycle:string|null};
         Insert: never;
         Update: {read_at?:string|null};
         Relationships: [{foreignKeyName:"support_notifications_ticket_id_fkey";columns:["ticket_id"];isOneToOne:false;referencedRelation:"tickets";referencedColumns:["id"]}];
@@ -67,6 +92,12 @@ export type Database = {
       tickets: {
         Row: {
           response_started_at: string | null;
+          response_due_at: string | null;
+          response_warning_at: string | null;
+          response_policy_id: string | null;
+          response_calendar: Json;
+          response_target_minutes: number | null;
+          response_cycle: string | null;
           id: string;
           title: string;
           content: string;
@@ -435,6 +466,15 @@ export type Database = {
       };
     };
     Functions: {
+      submit_ticket_reply: {Args:{p_ticket_id:string;p_payload:Json};Returns:Json};
+      save_response_policy: {Args:{p_id:string;p_expected_id:string;p_calendar:Json;p_targets:Json;p_warning:number;p_alerts:boolean};Returns:string};
+      response_scheduler_health: {Args:Record<PropertyKey,never>;Returns:Json};
+      reply_collaboration: {Args:{p_ticket_id:string;p_session_id:string;p_typing:boolean};Returns:Json};
+      find_reply_submission: {Args:{p_ticket_id:string;p_request_id:string};Returns:Json};
+
+      save_reply_template: {Args:{p_id:string;p_payload:Json};Returns:Json};
+      submit_ticket_feedback: {Args:{p_ticket_id:string;p_reply_id:string;p_helpful:boolean;p_comment?:string};Returns:Json};
+      support_feedback_stats: {Args:Record<string,never>;Returns:Json};
       submit_support_ticket: { Args: { p_request_id: string; p_title: string; p_content: string; p_category: string; p_attachment_ids?: string[] }; Returns: Json };
       unread_ticket_notifications: {Args:{p_ticket_ids:string[]};Returns:{ticket_id:string;unread_count:number}[]};
       read_ticket_notifications: {Args:{p_ticket_id:string;p_reply_order:number};Returns:number};

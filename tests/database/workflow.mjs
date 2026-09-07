@@ -1,3 +1,4 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runWorkflowTests({ db, check, asUser, customer, agent, admin, other }) {
   const ticket = '10000000-0000-4000-8000-000000000001';
@@ -6,7 +7,7 @@ export async function runWorkflowTests({ db, check, asUser, customer, agent, adm
     values ($1,'Payment failed','Payment failed repeatedly, please help.','billing',$2,$3),
     ($4,'Other ticket','Private customer ticket content','other',$5,null)`, [ticket,customer,agent,otherTicket,other]);
   const command = async (action, payload, id = ticket) => {
-    const { rows } = await db.query('select support_ticket_command($1,$2,$3) as result', [id,action,JSON.stringify(payload)]);
+    const { rows } = await db.query('select support_ticket_command($1,$2,$3) as result', [id,action,JSON.stringify(await versionedReply(db,id,action,payload))]);
     return rows[0].result;
   };
   const analysis = {

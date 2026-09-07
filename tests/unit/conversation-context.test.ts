@@ -26,7 +26,7 @@ test("draft keys isolate account, ticket and public/internal destination", () =>
 
 test("draft recovery rejects expired, corrupt and oversized data and preserves AI provenance", () => {
   const draft = { content: "작성 중 답변", source: "ai_draft", savedAt: 1000 };
-  assert.deepEqual(parseReplyDraft(JSON.stringify(draft), 2000), draft);
+  assert.deepEqual(parseReplyDraft(JSON.stringify(draft), 2000), { ...draft, expectedReplyOrder: null });
   assert.equal(parseReplyDraft(JSON.stringify(draft), 8 * 86400000), null);
   assert.equal(parseReplyDraft("{broken"), null);
   assert.equal(parseReplyDraft(JSON.stringify({ ...draft, content: "x".repeat(4001) }), 2000), null);

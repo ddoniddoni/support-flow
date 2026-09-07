@@ -1,8 +1,9 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runCustomerFollowupTests({db,check,asUser,customer,agent,other}) {
  const id='50000000-0000-4000-8000-000000000001';
  await db.query("insert into tickets(id,title,content,category,customer_id,assignee_id) values($1,'Follow up test','Please help resolve my account issue.','account',$2,$3)",[id,customer,agent]);
- const reply=(content,extra={})=>db.query("select support_ticket_command($1,'reply',$2) as result",[id,JSON.stringify({content,...extra})]);
+ const reply=async(content,extra={})=>db.query("select support_ticket_command($1,'reply',$2) as result",[id,JSON.stringify(await versionedReply(db,id,'reply',{content,...extra}))]);
  const switchTo=actor=>db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor]);
  await check('customer message reopens resolved inquiry, retains assignee and staff can answer again',()=>asUser(agent,async()=>{
   await reply('First staff answer');await switchTo(customer);await reply('It is still not working');

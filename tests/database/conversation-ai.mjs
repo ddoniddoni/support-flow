@@ -1,8 +1,9 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runConversationAITests({db,check,asUser,customer,agent}) {
  const id='81000000-0000-4000-8000-000000000001';
  await db.query("insert into tickets(id,title,content,category,customer_id,assignee_id) values($1,'Original','Original account request','account',$2,$3)",[id,customer,agent]);
- const command=async(action,payload)=> (await db.query('select support_ticket_command($1,$2,$3) result',[id,action,JSON.stringify(payload)])).rows[0].result;
+ const command=async(action,payload)=> (await db.query('select support_ticket_command($1,$2,$3) result',[id,action,JSON.stringify(await versionedReply(db,id,action,payload))])).rows[0].result;
  const analysis={provider:'mock',category:'account',sentiment:'neutral',urgency:'medium',intent:'account_help',summary:'Summary',reason:'Reason',reply_draft:'Draft',confidence:0.8,needs_review:false,validation_status:'valid'};
  await check('AI snapshot captures public conversation order and ignores internal notes',()=>asUser(agent,async()=>{
    const reply=await command('reply',{content:'Public answer',isInternal:false});

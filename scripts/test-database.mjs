@@ -97,5 +97,13 @@ await check('customer can update their display name', () => asUser(customer, asy
  const { runAttachmentTests } = await import('../tests/database/attachments.mjs');
  await runAttachmentTests({ db, check, asUser, customer, agent, admin, other });
 }
+{
+ const { runSupportQualityTests } = await import('../tests/database/support-quality.mjs');
+ await runSupportQualityTests({ db, check, asUser, customer, agent, admin, other });
+}
+{
+ const { runResponsePolicyCollisionTests } = await import('../tests/database/response-policy-collision.mjs');
+ await runResponsePolicyCollisionTests({ db, check, asUser, customer, agent, admin, other });
+}
 await db.close();
 assert.equal(failures, 0, `${failures} database regression(s)`);

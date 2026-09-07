@@ -282,6 +282,23 @@ function CustomerStatusBadge({ status }: { status: TicketStatus }) {
   );
 }
 
+function UnreadIndicator({ count = 0 }: { count?: number }) {
+  if (count <= 0) return null;
+
+  const label = `읽지 않은 알림 ${count}개`;
+
+  return (
+    <span
+      aria-label={label}
+      title={label}
+      className="inline-flex h-5 shrink-0 items-center gap-1 rounded-full bg-primary/10 px-1.5 text-xs leading-none font-semibold text-primary tabular-nums"
+    >
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+      <span aria-hidden="true">{count > 99 ? "99+" : count}</span>
+    </span>
+  );
+}
+
 function MobileTicketCard({
   href,
   ticket,
@@ -301,8 +318,12 @@ function MobileTicketCard({
       className="grid gap-3 rounded-lg border border-border bg-card p-3 shadow-xs"
     >
       <div>
-        {(unreadCounts?.get(ticket.id) ?? 0)>0 ? <Badge className="mb-2">새 알림 {unreadCounts?.get(ticket.id)}</Badge> : null}
-        <p className="font-medium text-foreground">{ticket.title}</p>
+        <div className="flex min-w-0 items-start gap-2">
+          <p className="min-w-0 font-medium text-foreground">{ticket.title}</p>
+          <span className="flex h-6 shrink-0 items-center">
+            <UnreadIndicator count={unreadCounts?.get(ticket.id)} />
+          </span>
+        </div>
         {isCustomer ? null : (
           <p className="mt-1 text-xs text-muted-foreground">
             {formatTicketNumber(ticket.ticket_number)}
@@ -378,7 +399,7 @@ export function TicketListTable({
               <TableHead>문의</TableHead>
               <TableHead>답변 상태</TableHead>
               {isCustomer ? null : <TableHead>우선순위</TableHead>}
-              {isCustomer ? null : <TableHead title="이번 응답 대기의 시작 시각과 우선순위 기준입니다. 영업시간은 반영하지 않습니다.">응답 목표</TableHead>}
+              {isCustomer ? null : <TableHead title="이번 응답 대기에 적용된 운영시간과 우선순위별 응답 목표입니다.">응답 목표</TableHead>}
               {role === "admin" ? <TableHead>담당자</TableHead> : null}
               {role === "admin" ? <TableHead>태그</TableHead> : null}
               {isCustomer ? null : <TableHead>AI</TableHead>}
@@ -396,12 +417,14 @@ export function TicketListTable({
               >
                 {canSelect ? <TableCell><SelectionCheckbox label={`${formatTicketNumber(ticket.ticket_number)} 선택`} checked={selection.ids.includes(ticket.id)} disabled={selection.disabled} onChange={() => selection.onToggle(ticket.id)} /></TableCell> : null}
                 <TableCell className={cn("min-w-0", isAgent && "py-5 pr-5")}>
-                  {(unreadCounts?.get(ticket.id) ?? 0)>0 ? <Badge className="mb-2">새 알림 {unreadCounts?.get(ticket.id)}</Badge> : null}
                   <Link
                     href={resolveTicketHref(ticket.id)}
-                    className={cn("font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", isAgent ? "line-clamp-2 whitespace-normal break-words text-sm leading-6" : "block truncate")}
+                    className="flex min-w-0 items-center gap-2 font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {ticket.title}
+                    <span className={cn("min-w-0", isAgent ? "line-clamp-2 whitespace-normal break-words text-sm leading-6" : "truncate")}>
+                      {ticket.title}
+                    </span>
+                    <UnreadIndicator count={unreadCounts?.get(ticket.id)} />
                   </Link>
                   {isCustomer ? null : (
                     <p className="mt-1 max-w-md truncate text-xs text-muted-foreground">

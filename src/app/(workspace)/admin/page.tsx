@@ -55,6 +55,8 @@ export default async function AdminPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link className={buttonVariants({ variant: "outline" })} href="/admin/users">사용자 관리</Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/admin/templates">답변 템플릿</Link>
+            <Link className={buttonVariants({ variant: "outline" })} href="/admin/feedback">고객 만족도</Link>
             <Link className={buttonVariants()} href="/tickets">
               문의함
             </Link>

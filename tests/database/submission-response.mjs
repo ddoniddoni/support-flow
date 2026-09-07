@@ -1,9 +1,10 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runSubmissionResponseTests({db,check,asUser,customer,agent,other}) {
  const id='82000000-0000-4000-8000-000000000001';
  const token='82000000-0000-4000-8000-000000000099';
  await db.query("insert into tickets(id,title,content,category,customer_id,assignee_id,created_at,response_started_at) values($1,'Old inquiry','Original account request','account',$2,$3,now()-interval '3 days',now()-interval '3 days')",[id,customer,agent]);
- const command=async(action,payload)=> (await db.query('select support_ticket_command($1,$2,$3) result',[id,action,JSON.stringify(payload)])).rows[0].result;
+ const command=async(action,payload)=> (await db.query('select support_ticket_command($1,$2,$3) result',[id,action,JSON.stringify(await versionedReply(db,id,action,payload))])).rows[0].result;
  const state=async()=> (await db.query('select response_started_at,status from tickets where id=$1',[id])).rows[0];
  const reply={content:'Public support answer',isInternal:false,requestId:token};
  await check('reply retry returns original result and creates one message, audit and notification',()=>asUser(agent,async()=>{

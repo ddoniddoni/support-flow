@@ -1,0 +1,100 @@
+.picker {
+  border: 1px solid #d8e5fc;
+  background: #f3f7ff;
+  border-radius: 12px;
+  padding: 17px;
+  margin-bottom: 13px;
+  color: #132d4a;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.heading h2 {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+.heading > span {
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+  color: #245ee7;
+}
+.intro {
+  font-size: 11px;
+  color: #627389;
+  margin-top: 6px;
+  line-height: 1.8;
+}
+.options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.options button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  justify-content: center;
+  min-height: 72px;
+  border: 1px solid #d1ddea;
+  border-radius: 8px;
+  background: #fff;
+  color: #50677f;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.options button:hover:not(:disabled) {
+  border-color: #729afa;
+  background: #eef4ff;
+}
+.options button[aria-pressed="true"] {
+  background: #e7efff;
+  color: #1f55d4;
+  border-color: #245ee7;
+  box-shadow: 0 0 0 1px #245ee7;
+  font-weight: 600;
+}
+.options button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.check {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+.selectedDescription {
+  min-height: 39px;
+  padding-top: 12px;
+  color: #576d86;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.selectedDescription strong {
+  color: #245ee7;
+  margin-right: 7px;
+  font-weight: 500;
+}
+.note {
+  border-top: 1px solid #d8e5fc;
+  padding-top: 9px;
+  color: #627389;
+  font-size: 10px;
+  line-height: 1.7;
+}
+@media (prefers-reduced-motion: reduce) {
+  .options button {
+    transition: none;
+  }
+}

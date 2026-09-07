@@ -1,8 +1,9 @@
+import { versionedReply } from "./reply-fixture.mjs";
 import assert from 'node:assert/strict';
 export async function runNotificationTests({db,check,asUser,customer,agent,admin,other}) {
  const id='60000000-0000-4000-8000-000000000001';
  await db.query("insert into tickets(id,title,content,category,customer_id) values($1,'Notification test','Please help with notifications on this ticket.','other',$2)",[id,customer]);
- const command=(action,payload)=>db.query('select support_ticket_command($1,$2,$3) as result',[id,action,JSON.stringify(payload)]);
+ const command=async(action,payload)=>db.query('select support_ticket_command($1,$2,$3) as result',[id,action,JSON.stringify(await versionedReply(db,id,action,payload))]);
  const switchTo=actor=>db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor]);
  const rows=()=>db.query('select * from support_notifications where ticket_id=$1',[id]);
  await check('assignment alerts are recipient-only and repeat assignment adds no duplicate',()=>asUser(admin,async()=>{

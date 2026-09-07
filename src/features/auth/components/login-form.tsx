@@ -1,103 +1,119 @@
 "use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-
 import { loginSchema, type LoginInput } from "../schemas/auth-schema";
-
-function getDefaultPath(role?: string) {
-  return role === "customer" ? "/tickets/new" : role === "agent" ? "/tickets" : "/dashboard";
-}
-
+import { getAuthFailure, getLoginDestination } from "../utils/auth-feedback";
+import { AuthField } from "./auth-field";
+import { AuthSubmit } from "./auth-submit";
+import styles from "./auth.module.css";
+import type { Role } from "@/types/domain";
+import { DemoAccountPicker } from "@/features/demo/components/demo-account-picker";
+import { getDemoAccount } from "@/features/demo/demo-accounts";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [formError, setFormError] = useState<string | null>(null);
-
+  const [navigating, setNavigating] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const selectedAccount = getDemoAccount(selectedRole);
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    mode: "onTouched",
+    defaultValues: { email: "", password: "" },
   });
-
+  const pending = isSubmitting || navigating;
   async function onSubmit(input: LoginInput) {
-    setFormError(null);
-
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword(input);
-
-    if (error) {
-      setFormError("이메일 또는 비밀번호를 확인해 주세요.");
-      return;
+    clearErrors("root");
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase.auth.signInWithPassword(input);
+      if (error) {
+        const failure = getAuthFailure(error, "login");
+        setError(
+          failure.field,
+          { type: "server", message: failure.message },
+          { shouldFocus: true },
+        );
+        return;
+      }
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      setNavigating(true);
+      router.replace(
+        getLoginDestination(
+          selectedAccount ? null : searchParams.get("next"),
+          profile?.role,
+        ),
+      );
+      router.refresh();
+    } catch {
+      setError("root.server", {
+        message:
+          "로그인을 완료하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.",
+      });
     }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { data: profile } = user
-      ? await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle()
-      : { data: null };
-
-    router.replace(searchParams.get("next") ?? getDefaultPath(profile?.role));
-    router.refresh();
   }
-
   return (
-    <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid gap-2">
-        <Label htmlFor="email">이메일</Label>
-        <Input
+    <form
+      className={styles.form}
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      onChange={() => {
+        clearErrors("root");
+        setSelectedRole(null);
+      }}
+      aria-busy={pending}
+    >
+      <fieldset disabled={pending}>
+        <DemoAccountPicker
+          selectedRole={selectedRole}
+          disabled={pending}
+          onSelect={(role) => {
+            const account = getDemoAccount(role);
+            if (!account) return;
+            reset({ email: account.email, password: account.password });
+            setSelectedRole(role);
+          }}
+        />
+        <AuthField
           id="email"
+          label="이메일"
+          type="email"
           autoComplete="email"
-          aria-invalid={Boolean(errors.email)}
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="name@example.com"
+          error={errors.email?.message}
           {...register("email")}
         />
-        {errors.email ? (
-          <p className="text-sm text-red-600">{errors.email.message}</p>
-        ) : null}
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="password">비밀번호</Label>
-        <Input
+        <AuthField
           id="password"
+          label="비밀번호"
           type="password"
           autoComplete="current-password"
-          aria-invalid={Boolean(errors.password)}
+          placeholder="비밀번호를 입력해 주세요"
+          error={errors.password?.message}
           {...register("password")}
         />
-        {errors.password ? (
-          <p className="text-sm text-red-600">{errors.password.message}</p>
-        ) : null}
-      </div>
-
-      {formError ? <p className="text-sm text-red-600">{formError}</p> : null}
-
-      <Button className="w-full" disabled={isSubmitting} type="submit">
-        {isSubmitting ? (
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        ) : null}
-        로그인
-      </Button>
+        <AuthSubmit
+          pending={pending}
+          label={selectedAccount?.submitLabel ?? "로그인"}
+          error={errors.root?.server?.message}
+        />
+      </fieldset>
     </form>
   );
 }
